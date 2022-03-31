@@ -69,7 +69,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
 	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
@@ -79,7 +79,7 @@ func TestPrepareResource(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -184,7 +184,7 @@ func TestPrepareResource(t *testing.T) {
 }
 
 func TestBuildConfig(t *testing.T) {
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -242,7 +242,7 @@ func TestScaleOutCluster(t *testing.T) {
 		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 	deployment.M = mockTiupManager
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -285,7 +285,7 @@ func TestScaleInCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -369,7 +369,7 @@ func TestFreeInstanceResource(t *testing.T) {
 	clusterRW.EXPECT().DeleteInstance(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -401,7 +401,7 @@ func TestFreeInstanceResource(t *testing.T) {
 	})
 
 	t.Run("delete not found", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -430,7 +430,7 @@ func TestFreeInstanceResource(t *testing.T) {
 	})
 
 	t.Run("recycle fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -466,7 +466,7 @@ func TestClearBackupData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -515,7 +515,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 	clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "testCluster").Return(management.ClusterTopologySnapshot{}, nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -544,7 +544,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 	})
 
 	t.Run("backup fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -570,7 +570,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 	})
 
 	t.Run("wait workflow fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -599,7 +599,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 	})
 
 	t.Run("no backup", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -613,7 +613,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 	})
 
 	t.Run("skip", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -637,7 +637,7 @@ func TestApplyParameterGroup(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -662,7 +662,7 @@ func TestBackupSourceCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -702,7 +702,7 @@ func TestRestoreNewCluster(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -725,7 +725,7 @@ func TestRestoreNewCluster(t *testing.T) {
 	})
 
 	t.Run("restore fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -744,7 +744,7 @@ func TestRestoreNewCluster(t *testing.T) {
 	})
 
 	t.Run("no backup id", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -762,13 +762,13 @@ func TestWaitWorkFlow(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("no found workflow", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		err := waitWorkFlow(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextWorkflowID, "111")
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
@@ -782,7 +782,7 @@ func TestWaitWorkFlow(t *testing.T) {
 	})
 
 	t.Run("workflow fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextWorkflowID, "111")
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
@@ -804,7 +804,7 @@ func TestSetClusterFailure(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -829,7 +829,7 @@ func TestSetClusterOnline(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -864,7 +864,7 @@ func TestSetClusterOffline(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -896,7 +896,7 @@ func TestRevertResourceAfterFailure(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextAllocResource, &structs.BatchAllocResponse{
 			BatchResults: []*structs.AllocRsp{
 				{
@@ -914,7 +914,7 @@ func TestRevertResourceAfterFailure(t *testing.T) {
 	})
 
 	t.Run("recycle fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextAllocResource, &structs.BatchAllocResponse{
 			BatchResults: []*structs.AllocRsp{
 				{
@@ -932,7 +932,7 @@ func TestRevertResourceAfterFailure(t *testing.T) {
 	})
 
 	t.Run("no alloc response", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		err := revertResourceAfterFailure(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
 	})
@@ -946,7 +946,7 @@ func TestEndMaintenance(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -972,7 +972,7 @@ func TestPersistCluster(t *testing.T) {
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().UpdateMeta(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1007,7 +1007,7 @@ func TestDeployCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1022,7 +1022,7 @@ func TestDeployCluster(t *testing.T) {
 	})
 
 	t.Run("no topology", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1042,7 +1042,7 @@ func TestDeployCluster(t *testing.T) {
 			gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1067,7 +1067,7 @@ func TestStartCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1086,7 +1086,7 @@ func TestStartCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1110,7 +1110,7 @@ func TestRestartCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1129,7 +1129,7 @@ func TestRestartCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1147,7 +1147,7 @@ func TestSyncBackupStrategy(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1221,7 +1221,7 @@ func TestSyncBackupStrategy(t *testing.T) {
 }
 
 func TestGetFirstScaleOutTypes(t *testing.T) {
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1274,7 +1274,8 @@ func TestGetFirstScaleOutTypes(t *testing.T) {
 	})
 	err := getFirstScaleOutTypes(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
-	types := flowContext.GetData(ContextInstanceTypes).([]string)
+	var types []string
+	flowContext.GetData(ContextInstanceTypes, &types)
 	assert.Equal(t, len(types), 1)
 	assert.Equal(t, types[0], "TiFlash")
 }
@@ -1291,7 +1292,7 @@ func TestSyncParameters(t *testing.T) {
 			return "1", []*parameter.ClusterParamDetail{}, 1, fmt.Errorf("query cluster fail")
 		})
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1316,7 +1317,7 @@ func TestRestoreCluster(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("normal", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1340,7 +1341,7 @@ func TestRestoreCluster(t *testing.T) {
 	})
 
 	t.Run("restore fail", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1360,7 +1361,7 @@ func TestRestoreCluster(t *testing.T) {
 	})
 
 	t.Run("no backup id", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1385,7 +1386,7 @@ func TestStopCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1404,7 +1405,7 @@ func TestStopCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1431,7 +1432,7 @@ func TestDestroyCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1450,7 +1451,7 @@ func TestDestroyCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1466,7 +1467,7 @@ func TestDestroyCluster(t *testing.T) {
 	t.Run("skip", func(t *testing.T) {
 		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).AnyTimes()
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1490,7 +1491,7 @@ func TestDeleteCluster(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().Delete(gomock.Any(), "111").Return(nil)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1516,7 +1517,7 @@ func TestClearCDCLinks(t *testing.T) {
 
 	t.Run("query error", func(t *testing.T) {
 		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1537,7 +1538,7 @@ func TestClearCDCLinks(t *testing.T) {
 		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
 		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, nil).Times(1)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1559,7 +1560,7 @@ func TestDeleteClusterPhysically(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1576,7 +1577,7 @@ func TestFreedClusterResource(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1606,7 +1607,7 @@ func TestInitDatabaseAccount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -1714,7 +1715,7 @@ func TestInitGrafanaAccount(t *testing.T) {
 		models.SetClusterReaderWriter(rw)
 
 		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil)
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, clusterMeta)
 		metadata := &spec.Specification{
 			Grafanas: []*spec.GrafanaSpec{
@@ -1729,7 +1730,7 @@ func TestInitGrafanaAccount(t *testing.T) {
 	})
 
 	t.Run("not found grafana", func(t *testing.T) {
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, clusterMeta)
 		metadata := &spec.Specification{}
 		bytes, err := yaml.Marshal(metadata)
@@ -1743,7 +1744,7 @@ func TestInitGrafanaAccount(t *testing.T) {
 		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 
 		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("create DBUser error"))
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, clusterMeta)
 		metadata := &spec.Specification{
 			Grafanas: []*spec.GrafanaSpec{
@@ -1785,7 +1786,7 @@ func Test_testConnectivity(t *testing.T) {
 	})
 	*/
 	t.Run("error", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				//DBUser:     "root",
@@ -1822,7 +1823,7 @@ func Test_initDatabaseData(t *testing.T) {
 	defer ctrl.Finish()
 
 	t.Run("normal", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				//DBUser:     "root",
@@ -1867,7 +1868,7 @@ func Test_initDatabaseData(t *testing.T) {
 		assert.Contains(t, node.Result, "recover data from backup record")
 	})
 	t.Run("skip", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				//DBUser:     "root",
@@ -1910,7 +1911,7 @@ func Test_testRebuildTopologyFromConfig(t *testing.T) {
 	rw.EXPECT().UpdateInstance(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		clusterMeta := &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -1970,7 +1971,7 @@ func TestTakeoverResource(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2067,7 +2068,7 @@ func Test_syncTopology(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().UpdateTopologySnapshotConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2115,7 +2116,7 @@ func Test_syncConnectionKey(t *testing.T) {
 	models.SetClusterReaderWriter(clusterRW)
 	clusterRW.EXPECT().CreateClusterTopologySnapshot(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2204,7 +2205,7 @@ func Test_rebuildTiupSpaceForCluster(t *testing.T) {
 		PrivateKey: "333",
 	}, nil).AnyTimes()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2245,7 +2246,7 @@ func Test_validateHostsStatus(t *testing.T) {
 
 		context := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
@@ -2267,7 +2268,7 @@ func Test_validateHostsStatus(t *testing.T) {
 
 		context := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
@@ -2291,7 +2292,7 @@ func Test_validateHostsStatus(t *testing.T) {
 
 		context := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
@@ -2323,7 +2324,7 @@ func Test_validateHostsStatus(t *testing.T) {
 
 		context := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
@@ -2350,7 +2351,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		validateHostTimeout = time.Second * 6
 		context := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Instances: map[string][]*management.ClusterInstance{
@@ -2375,7 +2376,7 @@ func Test_syncIncrData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2448,7 +2449,7 @@ func Test_fetchTopologyFile(t *testing.T) {
 
 	context := &workflow.FlowContext{
 		Context:  context.TODO(),
-		FlowData: map[string]interface{}{},
+		FlowData: make(map[string]string),
 	}
 	context.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{},
@@ -2472,7 +2473,7 @@ func TestCheckInstanceStatus(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2597,7 +2598,7 @@ func Test_applyParameterGroup(t *testing.T) {
 		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2611,7 +2612,7 @@ func Test_applyParameterGroup(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("query group empty", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2647,7 +2648,7 @@ func Test_chooseParameterGroup(t *testing.T) {
 		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		node := &workflowModel.WorkFlowNode{}
 		err := chooseParameterGroup(&meta.ClusterMeta{
 			Cluster: &management.Cluster{
@@ -2663,7 +2664,7 @@ func Test_chooseParameterGroup(t *testing.T) {
 		assert.Contains(t, node.Result, "will be applied to cluster")
 	})
 	t.Run("empty", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		node := &workflowModel.WorkFlowNode{}
 		err := chooseParameterGroup(&meta.ClusterMeta{
 			Cluster: &management.Cluster{
@@ -2678,7 +2679,7 @@ func Test_chooseParameterGroup(t *testing.T) {
 		assert.Contains(t, node.Result, "no default group found")
 	})
 	t.Run("error", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		node := &workflowModel.WorkFlowNode{}
 		err := chooseParameterGroup(&meta.ClusterMeta{
 			Cluster: &management.Cluster{
@@ -2714,7 +2715,7 @@ func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
 		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2728,7 +2729,7 @@ func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("query group empty", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2751,7 +2752,7 @@ func Test_adjustParameters(t *testing.T) {
 	models.SetClusterParameterReaderWriter(parameterRW)
 
 	t.Run("query parameter error", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2770,7 +2771,7 @@ func Test_adjustParameters(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("query parameter empty", func(t *testing.T) {
-		ctx := workflow.NewFlowContext(context.TODO())
+		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		ctx.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2815,7 +2816,7 @@ func init() {
 }
 
 func TestGenerateDBUser(t *testing.T) {
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2824,7 +2825,8 @@ func TestGenerateDBUser(t *testing.T) {
 			Version: "v5.0.0",
 		},
 	})
-	clusterMeta := flowContext.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	flowContext.GetData(ContextClusterMeta, &clusterMeta)
 	type args struct {
 		context *workflow.FlowContext
 		roleTyp constants.DBUserRoleType
@@ -2855,7 +2857,7 @@ func Test_initializeUpgrade(t *testing.T) {
 }
 
 func Test_selectTargetUpgradeVersion(t *testing.T) {
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2870,7 +2872,7 @@ func Test_selectTargetUpgradeVersion(t *testing.T) {
 }
 
 func Test_mergeUpgradeConfig(t *testing.T) {
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 		Cluster: &management.Cluster{
 			Entity: common.Entity{
@@ -2894,7 +2896,7 @@ func Test_checkRegionHealth(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any()).Return("All regions are healthy", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2913,7 +2915,7 @@ func Test_checkRegionHealth(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any()).Return("", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2932,7 +2934,7 @@ func Test_checkRegionHealth(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any()).Return("not healthy", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2956,7 +2958,7 @@ func Test_upgradeCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{
@@ -2977,7 +2979,7 @@ func Test_upgradeCluster(t *testing.T) {
 			gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", fmt.Errorf("fail")).AnyTimes()
 		deployment.M = mockTiupManager
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
 				Entity: common.Entity{

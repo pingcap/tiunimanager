@@ -34,7 +34,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"testing"

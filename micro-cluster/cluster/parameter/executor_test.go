@@ -26,6 +26,7 @@ package parameter
 import (
 	"context"
 	"errors"
+	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"math"
 	"testing"
 
@@ -63,7 +64,7 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 func TestExecutor_asyncMaintenance_Success(t *testing.T) {
@@ -82,10 +83,10 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), nil
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", nil
 			})
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
 		data := map[string]interface{}{}
@@ -117,8 +118,8 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), errors.New("create workflow fail")
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", errors.New("create workflow fail")
 			})
 		data := map[string]interface{}{}
 		data[contextModifyParameters] = mockModifyParameter()
@@ -135,10 +136,10 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), nil
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", nil
 			})
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes().Return(errors.New("async start fail"))
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes().Return(errors.New("async start fail"))
 		data := map[string]interface{}{}
 		data[contextModifyParameters] = mockModifyParameter()
 		data[contextMaintenanceStatusChange] = true
@@ -161,12 +162,12 @@ func TestExecutor_endMaintenance_Success(t *testing.T) {
 
 		ctx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		ctx.SetData(contextClusterMeta, mockClusterMeta())
 		ctx.SetData(contextModifyParameters, mockModifyParameter())
 		ctx.SetData(contextMaintenanceStatusChange, true)
-		err := defaultEnd(mockWorkFlowAggregation().CurrentNode, ctx)
+		err := defaultEnd(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 	})
 }
@@ -174,7 +175,7 @@ func TestExecutor_endMaintenance_Success(t *testing.T) {
 func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 	applyCtx := &workflow.FlowContext{
 		Context:  context.TODO(),
-		FlowData: map[string]interface{}{},
+		FlowData: make(map[string]string),
 	}
 	v, err := convertRealParameterType(applyCtx, 0, "1")
 	assert.NoError(t, err)
@@ -208,7 +209,7 @@ func TestExecutor_convertRealParameterType_Success(t *testing.T) {
 func TestExecutor_convertRealParameterType_Error(t *testing.T) {
 	applyCtx := &workflow.FlowContext{
 		Context:  context.TODO(),
-		FlowData: map[string]interface{}{},
+		FlowData: make(map[string]string),
 	}
 
 	_, err := convertRealParameterType(applyCtx, 2, "debug")
@@ -225,18 +226,18 @@ func TestExecutor_validationParameters(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
 
-		err := validationParameter(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := validationParameter(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -256,7 +257,7 @@ func TestExecutor_validationParameters(t *testing.T) {
 			},
 		})
 
-		err := validationParameter(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := validationParameter(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 }
@@ -364,12 +365,12 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
 		modifyCtx.SetData(contextHasApplyParameter, true)
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -382,7 +383,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -400,7 +401,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 		})
 		modifyCtx.SetData(contextHasApplyParameter, true)
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -413,7 +414,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -430,7 +431,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 				},
 			},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 
@@ -443,7 +444,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -461,7 +462,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 		})
 		modifyCtx.SetData(contextHasApplyParameter, true)
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -474,7 +475,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, &meta.ClusterMeta{Cluster: mockCluster()})
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -491,7 +492,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 				},
 			},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 
@@ -501,7 +502,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -523,7 +524,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 
@@ -536,7 +537,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -558,7 +559,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			Nodes: []string{"172.16.1.12:9000"},
 		})
 		modifyCtx.SetData(contextHasApplyParameter, true)
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -571,7 +572,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -592,7 +593,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -607,7 +608,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -629,7 +630,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			Nodes: []string{"172.16.1.12:9000"},
 		})
 		modifyCtx.SetData(contextHasApplyParameter, true)
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -644,7 +645,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -665,7 +666,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
 
@@ -679,7 +680,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -700,7 +701,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 
@@ -714,7 +715,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -735,7 +736,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 
@@ -749,7 +750,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -770,7 +771,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 
@@ -784,7 +785,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
@@ -805,7 +806,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			},
 			Nodes: []string{"172.16.1.12:9000"},
 		})
-		err := modifyParameters(mockWorkFlowAggregation().CurrentNode, modifyCtx)
+		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.Error(t, err)
 	})
 }
@@ -822,14 +823,14 @@ func TestDefaultFail(t *testing.T) {
 
 		refreshCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := parameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := parameterFail(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.NoError(t, err)
 	})
 
@@ -839,14 +840,14 @@ func TestDefaultFail(t *testing.T) {
 
 		refreshCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
 		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
-		err := parameterFail(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := parameterFail(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.Error(t, err)
 	})
 }
@@ -863,26 +864,26 @@ func TestExecutor_refreshParameter(t *testing.T) {
 
 		refreshCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		err := refreshParameter(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := refreshParameter(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.NoError(t, err)
 	})
 
 	t.Run("success2", func(t *testing.T) {
 		refreshCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		refreshCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = false
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		err := refreshParameter(mockWorkFlowAggregation().CurrentNode, refreshCtx)
+		err := refreshParameter(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.NoError(t, err)
 	})
 }
@@ -904,12 +905,12 @@ func TestExecutor_persistParameter(t *testing.T) {
 
 		applyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
 		applyCtx.SetData(contextHasApplyParameter, true)
-		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
+		err := persistParameter(&workflowModel.WorkFlowNode{}, applyCtx)
 		assert.NoError(t, err)
 	})
 }
@@ -928,12 +929,12 @@ func TestExecutor_persistParameter2(t *testing.T) {
 
 		applyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		applyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		applyCtx.SetData(contextModifyParameters, mockModifyParameter())
 		applyCtx.SetData(contextHasApplyParameter, false)
-		err := persistParameter(mockWorkFlowAggregation().CurrentNode, applyCtx)
+		err := persistParameter(&workflowModel.WorkFlowNode{}, applyCtx)
 		assert.NoError(t, err)
 	})
 }
@@ -960,7 +961,7 @@ func TestManager_fillParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextHasApplyParameter, true)
@@ -1029,7 +1030,7 @@ func TestManager_fillParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextHasApplyParameter, true)
@@ -1056,7 +1057,7 @@ func TestManager_fillParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextHasApplyParameter, true)
@@ -1083,7 +1084,7 @@ func TestManager_fillParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextHasApplyParameter, true)
@@ -1111,7 +1112,7 @@ func TestManager_fillParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextHasApplyParameter, true)
@@ -1138,7 +1139,7 @@ func TestManager_fillParameters(t *testing.T) {
 
 		modifyCtx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextHasApplyParameter, true)

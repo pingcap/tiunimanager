@@ -42,7 +42,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -737,7 +737,6 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (flowID string, err error) {
 
-	var flow *workflow.WorkFlowAggregation
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
 			// update maintenance statue
@@ -751,12 +750,14 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			return clusterMeta.StartMaintenance(transactionCtx, status)
 		}).BreakIf(func() error {
 			// create flow
-			if newFlow, flowError := workflow.GetWorkFlowService().
+			if newFlowId, flowError := workflow.GetWorkFlowService().
 				CreateWorkFlow(transactionCtx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
-				flow = newFlow
-				flowID = newFlow.Flow.ID
+				flowID = newFlowId
 				for key, value := range data {
-					flow.Context.SetData(key, value)
+					err = workflow.GetWorkFlowService().InitContext(ctx, flowID, key, value)
+					if err != nil {
+						return err
+					}
 				}
 				return nil
 			} else {
@@ -764,7 +765,7 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			}
 		}).BreakIf(func() error {
 			// async start flow
-			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
+			return workflow.GetWorkFlowService().Start(transactionCtx, flowID)
 		}).If(func(err error) {
 			framework.LogWithContext(ctx).Errorf(
 				"maintenance cluster %s failed", clusterMeta.Cluster.ID)

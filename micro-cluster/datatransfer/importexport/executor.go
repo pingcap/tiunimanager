@@ -29,17 +29,25 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin buildDataImportConfig")
 	defer framework.LogWithContext(ctx).Info("end buildDataImportConfig")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
-	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
+	var meta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMetaKey, &meta)
+	if err != nil {
+		return err
+	}
+	var info importInfo
+	err = ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 
-	config := NewDataImportConfig(ctx, meta, info)
+	config := NewDataImportConfig(ctx, &meta, &info)
 	if config == nil {
 		framework.LogWithContext(ctx).Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
 		return fmt.Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
@@ -65,7 +73,11 @@ func importDataToCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	framework.LogWithContext(ctx).Info("begin importDataToCluster")
 	defer framework.LogWithContext(ctx).Info("end importDataToCluster")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
+	var info importInfo
+	err := ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 
 	framework.LogWithContext(ctx).Infof("begin do tiup tidb-lightning -config %s/tidb-lightning.toml, timeout: %d", info.ConfigPath, lightningTimeout)
 	//tiup tidb-lightning -config tidb-lightning.toml
@@ -85,10 +97,14 @@ func updateDataImportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Info("begin updateDataImportRecord")
 	defer framework.LogWithContext(ctx).Info("end updateDataImportRecord")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
+	var info importInfo
+	err := ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 
 	rw := models.GetImportExportReaderWriter()
-	err := rw.UpdateDataTransportRecord(ctx, info.RecordId, string(constants.DataImportExportFinished), time.Now())
+	err = rw.UpdateDataTransportRecord(ctx, info.RecordId, string(constants.DataImportExportFinished), time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
@@ -102,8 +118,16 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	framework.LogWithContext(ctx).Info("begin exportDataFromCluster")
 	defer framework.LogWithContext(ctx).Info("end exportDataFromCluster")
 
-	meta := ctx.GetData(contextClusterMetaKey).(*meta.ClusterMeta)
-	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
+	var meta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMetaKey, &meta)
+	if err != nil {
+		return err
+	}
+	var info exportInfo
+	err = ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 
 	tidbServers := meta.GetClusterConnectAddresses()
 	if len(tidbServers) == 0 {
@@ -168,10 +192,14 @@ func updateDataExportRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Info("begin updateDataExportRecord")
 	defer framework.LogWithContext(ctx).Info("end updateDataExportRecord")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
+	var info exportInfo
+	err := ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 
 	rw := models.GetImportExportReaderWriter()
-	err := rw.UpdateDataTransportRecord(ctx, info.RecordId, string(constants.DataImportExportFinished), time.Now())
+	err = rw.UpdateDataTransportRecord(ctx, info.RecordId, string(constants.DataImportExportFinished), time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
@@ -186,7 +214,11 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	framework.LogWithContext(ctx).Info("begin importDataFailed")
 	defer framework.LogWithContext(ctx).Info("end importDataFailed")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*importInfo)
+	var info importInfo
+	err := ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 	if err := updateTransportRecordFailed(ctx, info.RecordId); err != nil {
 		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return fmt.Errorf("update data transport record failed, %s", err.Error())
@@ -199,7 +231,11 @@ func exportDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	framework.LogWithContext(ctx).Info("begin exportDataFailed")
 	defer framework.LogWithContext(ctx).Info("end exportDataFailed")
 
-	info := ctx.GetData(contextDataTransportRecordKey).(*exportInfo)
+	var info exportInfo
+	err := ctx.GetData(contextDataTransportRecordKey, &info)
+	if err != nil {
+		return err
+	}
 	if err := updateTransportRecordFailed(ctx, info.RecordId); err != nil {
 		framework.LogWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return fmt.Errorf("update data transport record failed, %s", err.Error())

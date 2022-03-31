@@ -43,7 +43,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 type Manager struct {
@@ -242,20 +242,20 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		}
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
+	flowId, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", flowName, err.Error())
 		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"create %s workflow failed: %s", flowName, err.Error())
 	}
 
-	flowManager.AddContext(flow, wfContextReqKey, req)
-	flowManager.AddContext(flow, wfContextOldSyncChangeFeedTaskIDKey, oldSyncChangeFeedTaskId)
-	flowManager.AddContext(flow, wfContextOtherSlavesMapToOldSyncCDCTaskKey, otherSlavesMapToOldSyncCDCTaskStr)
+	flowManager.InitContext(ctx, flowId, wfContextReqKey, req)
+	flowManager.InitContext(ctx, flowId, wfContextOldSyncChangeFeedTaskIDKey, oldSyncChangeFeedTaskId)
+	flowManager.InitContext(ctx, flowId, wfContextOtherSlavesMapToOldSyncCDCTaskKey, otherSlavesMapToOldSyncCDCTaskStr)
 
 	var cancelFps []func()
 	cancelFps = append(cancelFps, func() {
-		flowManager.Destroy(ctx, flow, "start maintenance failed")
+		flowManager.Cancel(ctx, flowId, "start maintenance failed")
 	})
 	cancelFlag := true
 	cancel := func() {
@@ -277,7 +277,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfSource.Cluster.MaintenanceStatus))
+	flowManager.InitContext(ctx, flowId, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfSource.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfSource.EndMaintenance(ctx, metaOfSource.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -296,7 +296,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfTarget.Cluster.MaintenanceStatus))
+	flowManager.InitContext(ctx, flowId, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfTarget.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfTarget.EndMaintenance(ctx, metaOfTarget.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -326,7 +326,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		})
 	}
 
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
 		return nil, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"async start %s workflow failed, %s", flowName, err.Error())
@@ -336,7 +336,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 
 	return &cluster.MasterSlaveClusterSwitchoverResp{
 		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
-			WorkFlowID: flow.Flow.ID,
+			WorkFlowID: flowId,
 		},
 	}, nil
 }

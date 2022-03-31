@@ -37,7 +37,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 
 	"github.com/pingcap-inc/tiem/common/errors"
 
@@ -96,17 +96,17 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 		return
 	}
 
-	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, buildLogConfigDefine.FlowName); err != nil {
+	if flowId, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, buildLogConfigDefine.FlowName); err != nil {
 		framework.LogWithContext(ctx).Errorf("create flow failed, clusterID = %s, error = %s", clusterMeta.Cluster.ID, err.Error())
 		return "", err
 	} else {
-		flowID = flow.Flow.ID
-		flow.Context.SetData(contextClusterMeta, clusterMeta)
-		if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
-			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
+		flowID = flowId
+		workflow.GetWorkFlowService().InitContext(ctx, flowId, contextClusterMeta, clusterMeta)
+		if err = workflow.GetWorkFlowService().Start(ctx, flowId); err != nil {
+			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", buildLogConfigDefine.FlowName, clusterMeta.Cluster.ID, err.Error())
 			return flowID, err
 		}
-		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", flow.Flow.Name, clusterMeta.Cluster.ID)
+		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", buildLogConfigDefine.FlowName, clusterMeta.Cluster.ID)
 	}
 	return flowID, nil
 }

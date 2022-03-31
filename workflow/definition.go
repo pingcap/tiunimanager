@@ -16,6 +16,7 @@
 
 package workflow
 
+/*
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -80,3 +81,4 @@ func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
 		return nil
 	}
 }
+*/

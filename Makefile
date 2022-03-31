@@ -276,7 +276,7 @@ mock:
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockchangefeed/mock_change_feed_interface.go -package mockchangefeed -source ./models/cluster/changefeed/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockaccount/mock_account.go -package mock_account -source ./models/user/account/readerwriter.go
-	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow/workflow.go
+	mockgen -destination ./test/mockworkflow/mock_workflow.go -package mock_workflow_service -source ./workflow2/service.go
 	mockgen -destination ./test/mockbr/mock_br.go -package mock_br_service -source ./micro-cluster/cluster/backuprestore/service.go
 	mockgen -destination ./test/mockdeployment/mock_deployment.go -package mock_deployment -source ./deployment/deploymentInterface.go
 	mockgen -destination ./test/mockresource/mockinitiator/mock_initiator_interface.go -package mockinitiator -source ./micro-cluster/resourcemanager/resourcepool/hostinitiator/hostinitiator.go

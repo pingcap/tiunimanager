@@ -15,6 +15,7 @@
 
 package workflow
 
+/*
 type NodeReturnType string
 
 const (
@@ -31,3 +32,4 @@ const (
 const (
 	maxPollingSequence int32 = 10 * 24 * 3600
 )
+*/

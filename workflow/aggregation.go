@@ -15,6 +15,7 @@
 
 package workflow
 
+/*
 import (
 	"context"
 	"encoding/json"
@@ -258,3 +259,4 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	}
 	return true
 }
+*/

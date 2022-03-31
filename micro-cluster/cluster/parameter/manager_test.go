@@ -60,7 +60,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 func TestManager_QueryClusterParameters(t *testing.T) {
@@ -154,10 +154,11 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 			})
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), nil
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", nil
 			})
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
 		resp, err := mockManager.UpdateClusterParameters(context.TODO(), cluster.UpdateClusterParametersReq{
@@ -239,10 +240,11 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 			})
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), nil
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", nil
 			})
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
 		resp, err := mockManager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{

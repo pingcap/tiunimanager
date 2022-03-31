@@ -15,6 +15,7 @@
 
 package workflow
 
+/*
 import (
 	"context"
 	"sync"
@@ -267,3 +268,4 @@ func (mgr *WorkFlowManager) Complete(ctx context.Context, flow *WorkFlowAggregat
 	framework.LogWithContext(ctx).Infof("Begin complete workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
 	flow.complete(success)
 }
+*/

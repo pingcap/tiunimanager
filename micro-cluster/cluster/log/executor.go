@@ -38,7 +38,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"gopkg.in/yaml.v2"
 )
 
@@ -46,10 +46,14 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 	framework.LogWithContext(ctx).Info("begin collector cluster log config executor method")
 	defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 
 	// get current cluster hosts
-	hosts := listClusterHosts(clusterMeta)
+	hosts := listClusterHosts(&clusterMeta)
 	framework.LogWithContext(ctx).Infof("cluster [%s] list host: %v", clusterMeta.Cluster.ID, hosts)
 
 	node.Record("get instance log info")
@@ -76,7 +80,7 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 		collectorYaml := string(bs)
 
 		// Get the deploy info of push
-		clusterComponentType, clusterName, home, deployDir, err := getDeployInfo(clusterMeta, ctx, hostIP)
+		clusterComponentType, clusterName, home, deployDir, err := getDeployInfo(&clusterMeta, ctx, hostIP)
 		if err != nil {
 			return err
 		}

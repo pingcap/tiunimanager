@@ -29,7 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 type ResourcePool struct {
@@ -162,13 +162,12 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	if err != nil {
 		return flowIds, hostIds, err
 	}
-	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	flowName := p.selectImportFlowName(condition)
 	hostSSHPort := p.getSSHConfigPort(ctx)
 	framework.LogWithContext(ctx).Infof("import hosts select %s, with ssh port %d", flowName, hostSSHPort)
 	for i, host := range hosts {
-		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
+		flowId, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", flowName, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
@@ -176,14 +175,13 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		}
 
 		host.SSHPort = int32(hostSSHPort)
-		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
-		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 		// Whether ignore warnings when verify host
 		ignoreWarnings := condition.IgnoreWarings || framework.Current.GetClientArgs().IgnoreHostWarns
-		flowManager.AddContext(flow, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
 
-		flows = append(flows, flow)
-		flowIds = append(flowIds, flow.Flow.ID)
+		flowIds = append(flowIds, flowId)
 	}
 	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
 	operationName := fmt.Sprintf(
@@ -194,13 +192,13 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		// Unset EmTiup Using flag after all flows in this task done
 		defer framework.UnsetInEmTiupProcess()
-		for i, flow := range flows {
-			if err = flowManager.Start(ctx, flow); err != nil {
-				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
+		for i, flowId := range flowIds {
+			if err = flowManager.Start(ctx, flowId); err != nil {
+				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP, err.Error())
 				framework.LogWithContext(ctx).Errorln(errMsg)
 				continue
 			} else {
-				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP)
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP)
 			}
 		}
 		return nil
@@ -210,7 +208,6 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 }
 
 func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
-	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
 		hosts, count, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
@@ -227,18 +224,17 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		flowName := p.selectDeleteFlowName(&hosts[0], force)
 		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
 
-		flow, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, flowName)
+		flowId, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, flowName)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", flowName, hostId, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
 			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
-		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
-		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, hosts)
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostIDArrayKey, []string{hostId})
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostInfoArrayKey, hosts)
 
-		flows = append(flows, flow)
-		flowIds = append(flowIds, flow.Flow.ID)
+		flowIds = append(flowIds, flowId)
 	}
 
 	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
@@ -253,12 +249,12 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		// Unset EmTiup Using flag after all flows in this task done
 		defer framework.UnsetInEmTiupProcess()
-		for i, flow := range flows {
-			if err = flowManager.Start(ctx, flow); err != nil {
-				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())
+		for i, flowId := range flowIds {
+			if err = flowManager.Start(ctx, flowId); err != nil {
+				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flowId, hostIds[i], err.Error())
 				framework.LogWithContext(ctx).Errorln(errMsg)
 			} else {
-				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i])
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flowId, hostIds[i])
 			}
 		}
 		return nil

@@ -25,12 +25,11 @@ import (
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/platform/config"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -69,12 +68,9 @@ func TestImportExportManager_ExportData_case1(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
 	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyExportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
@@ -129,12 +125,9 @@ func TestImportExportManager_ExportData_case2(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
 	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyExportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
@@ -314,12 +307,9 @@ func TestImportExportManager_ImportData_case1(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
 	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyImportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()
@@ -369,12 +359,9 @@ func TestImportExportManager_ImportData_case2(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
 	configService.EXPECT().GetConfig(gomock.Any(), constants.ConfigKeyImportShareStoragePath).Return(&config.SystemConfig{ConfigValue: "./testdata"}, nil).AnyTimes()

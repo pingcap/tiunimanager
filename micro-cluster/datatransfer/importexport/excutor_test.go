@@ -33,7 +33,7 @@ import (
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockimportexport"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +41,7 @@ func TestExecutor_buildDataImportConfig(t *testing.T) {
 	os.MkdirAll("./testdata", 0755)
 	defer os.RemoveAll("./testdata")
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	instanceMap := make(map[string][]*management.ClusterInstance)
 	tidb := make([]*management.ClusterInstance, 1)
 	tidb[0] = &management.ClusterInstance{}
@@ -76,7 +76,7 @@ func TestExecutor_importDataToCluster(t *testing.T) {
 	mockTiupManager.EXPECT().Lightning(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).AnyTimes()
 	deployment.M = mockTiupManager
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextDataTransportRecordKey, &importInfo{ConfigPath: "./testdata"})
 	err := importDataToCluster(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -90,7 +90,7 @@ func TestExecutor_updateDataImportRecord(t *testing.T) {
 	mockImportExportRW.EXPECT().UpdateDataTransportRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextDataTransportRecordKey, &importInfo{RecordId: "record-xxx"})
 	err := updateDataImportRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -104,7 +104,7 @@ func TestExecutor_updateDataExportRecord(t *testing.T) {
 	mockImportExportRW.EXPECT().UpdateDataTransportRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextDataTransportRecordKey, &exportInfo{RecordId: "record-xxx"})
 	err := updateDataExportRecord(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -118,7 +118,7 @@ func TestExecutor_importDataFailed(t *testing.T) {
 	mockImportExportRW.EXPECT().UpdateDataTransportRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextDataTransportRecordKey, &importInfo{RecordId: "record-xxx"})
 	err := importDataFailed(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -132,7 +132,7 @@ func TestExecutor_exportDataFailed(t *testing.T) {
 	mockImportExportRW.EXPECT().UpdateDataTransportRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetImportExportReaderWriter(mockImportExportRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextDataTransportRecordKey, &exportInfo{RecordId: "record-xxx"})
 	err := exportDataFailed(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Nil(t, err)
@@ -153,7 +153,7 @@ func TestExecutor_exportDataFromCluster(t *testing.T) {
 	os.MkdirAll("./testdata", 0755)
 	defer os.RemoveAll("./testdata")
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextDataTransportRecordKey, &exportInfo{
 		StorageType: "nfs",
 		FileType:    "csv",

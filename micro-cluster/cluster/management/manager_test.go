@@ -50,7 +50,7 @@ import (
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_upgrade "github.com/pingcap-inc/tiem/test/mockmodels/mockupgrade"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
@@ -84,11 +84,9 @@ func TestAsyncMaintenance(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		meta := &meta.ClusterMeta{
 			Cluster: &management.Cluster{Entity: common.Entity{ID: "cluster01"}},
 		}
@@ -104,11 +102,9 @@ func TestAsyncMaintenance(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, fmt.Errorf("create workflow error")).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", fmt.Errorf("create workflow error")).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		meta := &meta.ClusterMeta{
 			Cluster: &management.Cluster{Entity: common.Entity{ID: "cluster01"}},
 		}
@@ -123,11 +119,9 @@ func TestAsyncMaintenance(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(fmt.Errorf("start workflow error")).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(fmt.Errorf("start workflow error")).AnyTimes()
 		meta := &meta.ClusterMeta{
 			Cluster: &management.Cluster{Entity: common.Entity{ID: "cluster01"}},
 		}
@@ -148,11 +142,9 @@ func TestManager_ScaleOut(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		mockTiup := mock_deployment.NewMockInterface(ctrl)
@@ -317,11 +309,9 @@ func TestManager_ScaleIn(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
@@ -418,11 +408,9 @@ func TestManager_Clone(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
@@ -587,11 +575,9 @@ func TestManager_CreateCluster(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
@@ -727,11 +713,9 @@ func TestManager_StopCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		_, err := manager.StopCluster(context.TODO(), cluster.StopClusterReq{
 			ClusterID: "111",
@@ -784,11 +768,9 @@ func TestManager_RestartCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		_, err := manager.RestartCluster(context.TODO(), cluster.RestartClusterReq{
 			ClusterID: "111",
@@ -841,11 +823,9 @@ func TestManager_DeleteCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		_, err := manager.DeleteCluster(context.TODO(), cluster.DeleteClusterReq{
 			ClusterID: "111",
@@ -1027,11 +1007,9 @@ func TestManager_RestoreNewCluster(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	brService := mock_br_service.NewMockBRService(ctrl)
 	brService.EXPECT().QueryClusterBackupRecords(gomock.Any(), gomock.Any()).Return(
@@ -1514,11 +1492,9 @@ func TestManager_TakeoverCluster(t *testing.T) {
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		openSftpClient = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
@@ -2114,11 +2090,9 @@ func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
 			ClusterID:  "111",
@@ -2140,11 +2114,9 @@ func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil).AnyTimes()
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
 			ClusterID:  "111",

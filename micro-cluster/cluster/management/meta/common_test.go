@@ -55,6 +55,9 @@ func TestContain(t *testing.T) {
 
 	got = Contain(hosts, "127.0.0.3")
 	assert.Equal(t, got, false)
+
+	got = Contain("127.0.0.1,127.0.0.2,127.0.0.3", "127.0.0.2")
+	assert.Equal(t, got, true)
 }
 
 func TestCompareTiDBVersion(t *testing.T) {
@@ -123,6 +126,10 @@ func TestScaleOutPreCheck(t *testing.T) {
 		computes := []structs.ClusterResourceParameterCompute{
 			{
 				Type: "TiFlash",
+			},
+			{
+				Count: 2,
+				Type: "PD",
 			},
 		}
 
@@ -675,4 +682,15 @@ func mockQueryTiDBFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 			SuggestedInstancesCount: []int32{},
 		},
 	}, nil).Times(1)
+}
+
+func TestCreateSQLLink(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		_, err := CreateSQLLink(context.TODO(), nil)
+		assert.Error(t, err)
+	})
+	t.Run("empty", func(t *testing.T) {
+		_, err := CreateSQLLink(context.TODO(), &ClusterMeta{})
+		assert.Error(t, err)
+	})
 }

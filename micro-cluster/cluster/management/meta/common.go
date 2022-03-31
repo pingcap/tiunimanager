@@ -370,24 +370,6 @@ func getRetainedPortRange(ctx context.Context) ([]int, error) {
 	return portRange, nil
 }
 
-func GetProductDetail(ctx context.Context, vendor, region, clusterType string) (*structs.ProductDetail, error) {
-	//products, err := models.GetProductReaderWriter().QueryProductDetail(ctx, vendor, region, clusterType, constants.ProductStatusOnline, constants.EMInternalProductNo)
-	//if err != nil {
-	//	errMsg := fmt.Sprintf("get product detail failed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
-	//	framework.LogWithContext(ctx).Errorf("%s, err = %s", errMsg, err.Error())
-	//	return nil, err
-	//}
-	//if product, ok := products[clusterType]; !ok {
-	//	errMsg := fmt.Sprintf("product is not existed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
-	//	framework.LogWithContext(ctx).Error(errMsg)
-	//	return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, errMsg)
-	//} else {
-	//	return &product, nil
-	//}
-	// todo replace it with new product interface
-	return nil, nil
-}
-
 // GetRandomString get random password
 func GetRandomString(n int) string {
 	randBytes := make([]byte, n/2)

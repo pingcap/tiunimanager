@@ -254,11 +254,14 @@ type ImportCondition struct {
 }
 
 type HostFilter struct {
-	HostID  string `json:"hostId" form:"hostId"`
-	Purpose string `json:"purpose" form:"purpose"`
-	Status  string `json:"status" form:"status"`
-	Stat    string `json:"loadStat" form:"loadStat"`
-	Arch    string `json:"arch" form:"arch"`
+	HostID       string `json:"hostId" form:"hostId"`
+	Purpose      string `json:"purpose" form:"purpose"`
+	Status       string `json:"status" form:"status"`
+	Stat         string `json:"loadStat" form:"loadStat"`
+	Arch         string `json:"arch" form:"arch"`
+	ClusterType  string `json:"clusterType" form:"clusterType"`
+	HostDiskType string `json:"hostDiskType" form:"hostDiskType"`
+	HostName     string `json:"hostName" form:"hostName"`
 }
 
 type DiskFilter struct {

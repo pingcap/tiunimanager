@@ -6368,7 +6368,16 @@ paths:
         name: arch
         type: string
       - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -6521,10 +6530,19 @@ paths:
         name: arch
         type: string
       - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
         type: string
       - in: query
         name: hostIp
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -6641,16 +6659,25 @@ paths:
         name: capacity
         type: integer
       - in: query
+        name: clusterType
+        type: string
+      - in: query
         name: diskStatus
         type: string
       - in: query
         name: diskType
         type: string
       - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
         type: string
       - in: query
         name: hostIp
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat

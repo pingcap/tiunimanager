@@ -241,6 +241,10 @@ func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBa
 		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v not found", request)
 		return resp, errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster %s backup record %s not found", request.ClusterID, request.BackupID))
 	}
+	if string(constants.ClusterBackupProcessing) != records[0].Status {
+		framework.LogWithContext(ctx).Errorf("backup record %+v status not processing", records[0])
+		return resp, errors.NewErrorf(errors.TIEM_BACKUP_RECORD_CANCEL_FAILED, fmt.Sprintf("query cluster %s backup record %s status not processing", request.ClusterID, request.BackupID))
+	}
 
 	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {

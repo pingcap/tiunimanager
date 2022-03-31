@@ -1320,6 +1320,10 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	for _, rt := range roleType {
+		if _, ok := clusterMeta.DBUsers[string(rt)]; ok {
+			node.Record(fmt.Sprintf("user %s exists, no need to init", constants.DBUserName[rt]))
+			continue
+		}
 		node.Record(fmt.Sprintf("init database account, type: %s", rt))
 		dbUser := GenerateDBUser(context, rt)
 		err = utilsql.CreateDBUser(context, conn, dbUser, node.ID)

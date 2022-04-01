@@ -452,7 +452,7 @@ func preCheckStock(ctx context.Context, region string, arch string, instanceReso
 
 	for _, instance := range instanceResource {
 		for _, resource := range instance.Resource {
-			enough := true
+			enough := true // nolint
 			if zoneResource, ok := stocks[resource.Zone]; ok &&
 				zoneResource.FreeHostCount >= int32(resource.Count) &&
 				zoneResource.FreeDiskCount >= int32(resource.Count) &&
@@ -664,7 +664,7 @@ type openSftpClientFunc func(ctx context.Context, req cluster.TakeoverClusterReq
 
 var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
 	conf := ssh.ClientConfig{User: req.TiUPUserName,
-		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
+		Auth: []ssh.AuthMethod{ssh.Password(string(req.TiUPUserPassword))},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
@@ -706,7 +706,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		return
 	}
 	meta := &meta.ClusterMeta{}
-	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBPassword); err != nil {
+	if err = meta.BuildForTakeover(ctx, req.ClusterName, string(req.DBPassword)); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
 		return
 	}
@@ -865,7 +865,7 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 
 func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.RestoreNewClusterReq) error {
 	if req.BackupID == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "restore new cluster input backupId empty")
 	}
 
 	brService := backuprestore.GetBRService()
@@ -883,7 +883,7 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
 	}
 	if resp.BackupRecords[0].Status != string(constants.ClusterBackupFinished) {
-		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, "backup record status invalid")
 	}
 
 	return nil
@@ -1014,7 +1014,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	}
 
 	runningInstanceTypes := make([]string, 0)
-	for instanceType, _ := range clusterMeta.Instances {
+	for instanceType := range clusterMeta.Instances {
 		runningInstanceTypes = append(runningInstanceTypes, instanceType)
 	}
 

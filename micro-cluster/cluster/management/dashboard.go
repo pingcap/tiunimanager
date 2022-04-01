@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
@@ -39,8 +40,8 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Token  string    `json:"token"`
-	Expire time.Time `json:"expire"`
+	Token  structs.SensitiveText `json:"token"`
+	Expire time.Time             `json:"expire"`
 }
 
 const loginUrlSuffix string = "api/user/login"
@@ -73,7 +74,7 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 
 	resp.ClusterID = request.ClusterID
 	resp.Url = url
-	resp.Token = token
+	resp.Token = structs.SensitiveText(token)
 	return resp, nil
 }
 
@@ -113,7 +114,7 @@ func getLoginToken(ctx context.Context, dashboardUrl, userName, password string)
 	}
 	framework.LogWithContext(ctx).Infof("getLoginToken resp: %v", loginResp)
 
-	return loginResp.Token, nil
+	return string(loginResp.Token), nil
 }
 
 func post(ctx context.Context, url string, body interface{}, headers map[string]string) (*http.Response, error) {

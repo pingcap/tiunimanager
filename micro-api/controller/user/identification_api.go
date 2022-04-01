@@ -19,6 +19,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	utils "github.com/pingcap-inc/tiem/util/stringutil"
@@ -42,7 +43,7 @@ func Login(c *gin.Context) {
 		controller.InvokeRpcMethod(c, client.ClusterClient.Login, respBody,
 			requestBody,
 			controller.DefaultTimeout)
-		c.Header("Token", respBody.TokenString)
+		c.Header("Token", string(respBody.TokenString))
 	}
 }
 
@@ -61,7 +62,7 @@ func Logout(c *gin.Context) {
 	bearerTokenStr := c.GetHeader("Authorization")
 	token , _ := utils.GetTokenFromBearer(bearerTokenStr)
 	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.LogoutReq{
-		TokenString: token,
+		TokenString: structs.SensitiveText(token),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.Logout, &message.LogoutResp{},
 			requestBody,

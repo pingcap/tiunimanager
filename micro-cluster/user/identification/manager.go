@@ -18,6 +18,7 @@ package identification
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -39,7 +40,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
 	}
 
-	loginSuccess, err := user.CheckPassword(request.Password)
+	loginSuccess, err := user.CheckPassword(string(request.Password))
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_LOGIN_FAILED, "incorrect username or password", err)
 	}
@@ -49,7 +50,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 	}
 
 	// check password update time
-	resp.PasswordExpired, err = user.FinalHash.CheckUpdateTimeExpired()
+	resp.PasswordExpired, err = user.FinalHash.CheckUpdateTimeExpired() // nolint
 
 	// create token
 	tokenString := uuid.New().String()
@@ -59,7 +60,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 		return resp, errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "login failed", err)
 	}
 
-	resp.TokenString = tokenString
+	resp.TokenString = structs.SensitiveText(tokenString)
 	resp.UserID = user.ID
 	resp.TenantID = user.DefaultTenantID
 
@@ -68,7 +69,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 
 func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.LogoutResp, error) {
 	resp := message.LogoutResp{UserID: ""}
-	token, err := models.GetTokenReaderWriter().GetToken(ctx, req.TokenString)
+	token, err := models.GetTokenReaderWriter().GetToken(ctx, string(req.TokenString))
 	if err != nil {
 		return resp, errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
 	}
@@ -85,7 +86,7 @@ func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.Lo
 
 func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq) (message.AccessibleResp, error) {
 	resp := message.AccessibleResp{}
-	token, err := models.GetTokenReaderWriter().GetToken(ctx, request.TokenString)
+	token, err := models.GetTokenReaderWriter().GetToken(ctx, string(request.TokenString))
 	if err != nil {
 		return resp, errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
 	}

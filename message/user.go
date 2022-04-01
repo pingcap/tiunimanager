@@ -29,12 +29,12 @@ import (
 
 // LoginReq login
 type LoginReq struct {
-	Name     string `json:"userName" form:"userName" validate:"required,min=5,max=32"`
-	Password string `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
+	Name     string                `json:"userName" form:"userName" validate:"required,min=5,max=32"`
+	Password structs.SensitiveText `json:"userPassword" form:"userPassword" validate:"required,min=5,max=32"`
 }
 
 type LoginResp struct {
-	TokenString     string `json:"token" form:"token"`
+	TokenString     structs.SensitiveText `json:"token" form:"token"`
 	UserID          string `json:"userId" form:"userId"`
 	TenantID        string `json:"tenantId" form:"tenantId"`
 	PasswordExpired bool   `json:"passwordExpired" form:"passwordExpired"`
@@ -42,7 +42,7 @@ type LoginResp struct {
 
 // LogoutReq logout
 type LogoutReq struct {
-	TokenString string `json:"token" form:"token" validate:"required,min=8,max=64"`
+	TokenString structs.SensitiveText `json:"token" form:"token" validate:"required,min=8,max=64"`
 }
 
 type LogoutResp struct {
@@ -51,7 +51,7 @@ type LogoutResp struct {
 
 // AccessibleReq identify
 type AccessibleReq struct {
-	TokenString string `json:"token" form:"token" validate:"required,min=8,max=64"`
+	TokenString structs.SensitiveText `json:"token" form:"token" validate:"required,min=8,max=64"`
 }
 
 type AccessibleResp struct {
@@ -61,12 +61,12 @@ type AccessibleResp struct {
 
 //CreateUserReq user message
 type CreateUserReq struct {
-	Name     string `json:"name" validate:"required,min=5,max=32"`
-	TenantID string `json:"tenantId"`
-	Email    string `json:"email" validate:"required,email"`
-	Phone    string `json:"phone"`
-	Password string `json:"password" validate:"required,min=5,max=32"`
-	Nickname string `json:"nickname"`
+	Name     string                `json:"name" validate:"required,min=5,max=32"`
+	TenantID string                `json:"tenantId"`
+	Email    string                `json:"email" validate:"required,email"`
+	Phone    string                `json:"phone"`
+	Password structs.SensitiveText `json:"password" validate:"required,min=5,max=32"`
+	Nickname string                `json:"nickname"`
 }
 
 type CreateUserResp struct {
@@ -102,8 +102,8 @@ type UpdateUserProfileResp struct {
 }
 
 type UpdateUserPasswordReq struct {
-	ID       string `json:"id"`
-	Password string `json:"password" validate:"required,min=5,max=32"`
+	ID       string                `json:"id"`
+	Password structs.SensitiveText `json:"password" validate:"required,min=5,max=32"`
 }
 type UpdateUserPasswordResp struct {
 }

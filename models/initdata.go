@@ -101,6 +101,11 @@ var allVersionInitializers = []system.VersionInitializer{
 	{"v1.0.0-beta.13", func() error {
 		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
 			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&config.SystemConfig{
+					ConfigKey:   constants.ConfigKeyExtraVMFacturer,
+					ConfigValue: "",
+				}).Error
+			}).BreakIf(func() error {
 				return tx.Create(&system.VersionInfo{
 					ID:          "v1.0.0-beta.13",
 					Desc:        "beta 13",
@@ -110,6 +115,15 @@ var allVersionInitializers = []system.VersionInitializer{
 				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.0-beta.13.sql"
 				return initBySql(tx, parameterSqlFile, "parameters")
 			}).Present()
+		})
+	}},
+	{"v1.0.0", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return tx.Create(&system.VersionInfo{
+				ID:          "v1.0.0",
+				Desc:        "",
+				ReleaseNote: "",
+			}).Error
 		})
 	}},
 

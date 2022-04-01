@@ -27,7 +27,6 @@ package deployment
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -777,7 +776,6 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		}
 
 		updateStatus(ctx, id, "operation finished", Finished, t0)
-		return
 	}()
 }
 
@@ -803,7 +801,7 @@ func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int, allInf
 
 	data, err := cmd.Output()
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data)))
+		return "", fmt.Errorf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data))
 	}
 	if allInfo {
 		return fmt.Sprintf("%s%s", string(data), stderr.String()), nil

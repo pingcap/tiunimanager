@@ -174,7 +174,7 @@ func (mgr *RBACManager) QueryRoles(ctx context.Context, request message.QueryRol
 		roles, err := mgr.enforcer.GetRolesForUser(request.UserID)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("call enforcer GetRolesForUser failed %s", err.Error())
-			return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_QUERY_FAILED, fmt.Sprintf("call enforcer GetRolesForUser failed"), err)
+			return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_QUERY_FAILED, "call enforcer GetRolesForUser failed", err)
 		}
 		return message.QueryRolesResp{
 			Roles: roles,
@@ -194,12 +194,12 @@ func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRo
 
 	if _, err = mgr.enforcer.DeletePermissionsForUser(request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer DeletePermissionsForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_DELETE_FAILED, fmt.Sprintf("call enforcer DeletePermissionsForUser failed"), err)
+		return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_DELETE_FAILED, "call enforcer DeletePermissionsForUser failed", err)
 	}
 
 	if _, err = mgr.enforcer.DeleteRole(request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer DeleteRole failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_DELETE_FAILED, fmt.Sprintf("call enforcer DeleteRole failed"), err)
+		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_DELETE_FAILED, "call enforcer DeleteRole failed", err)
 	}
 
 	return
@@ -221,7 +221,7 @@ func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRo
 
 	if _, err = mgr.enforcer.AddRoleForUser("", request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_CREATE_FAILED, fmt.Sprintf("call enforcer AddRoleForUser failed"), err)
+		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_CREATE_FAILED, "call enforcer AddRoleForUser failed", err)
 	}
 	return
 }
@@ -254,7 +254,7 @@ func (mgr *RBACManager) BindRolesForUser(ctx context.Context, request message.Bi
 
 	if _, err = mgr.enforcer.AddRolesForUser(request.UserID, request.Roles); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRolesForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_BIND_FAILED, fmt.Sprintf("call enforcer AddRolesForUser failed"), err)
+		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_BIND_FAILED, "call enforcer AddRolesForUser failed", err)
 	}
 	return resp, nil
 }

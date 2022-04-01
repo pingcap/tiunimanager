@@ -869,7 +869,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if clusterMeta.Cluster.Version == sourceClusterMeta.Cluster.Version {
 		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
 		reboot := false
-		for instanceType, _ := range clusterMeta.Instances {
+		for instanceType := range clusterMeta.Instances {
 			if _, ok := sourceClusterMeta.Instances[instanceType]; ok {
 				sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
 					cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID, InstanceType: instanceType})
@@ -1122,7 +1122,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	}
 
 	// todo metaYaml contains password
-	//node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("%s", metaYaml))
+	//node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), metaYaml)
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 
@@ -1671,7 +1671,7 @@ func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.Flow
 				ticker.Stop()
 				return err
 			}
-			break
+			break // nolint
 		default:
 			err := errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "host %s status is %s", ip, hostInfo.Status)
 			framework.LogWithContext(context).Error(err.Error())
@@ -1941,7 +1941,7 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		return errors.NewErrorf(errors.TIEM_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
 	}
 
-	node.Record(fmt.Sprintf("check all regions are healthy"))
+	node.Record("check all regions are healthy")
 	return nil
 }
 
@@ -2026,9 +2026,9 @@ func checkUpgradeConfig(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	return nil
 }
 
-func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	return nil
-}
+//func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+//	return nil
+//}
 
 func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)

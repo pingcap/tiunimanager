@@ -43,21 +43,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
-	return nil
-}
-
-func getEmptyFlow(name string) *workflow.WorkFlowDefine {
-	return &workflow.WorkFlowDefine{
-		FlowName: name,
-		TaskNodes: map[string]*workflow.NodeDefine{
-			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"fail":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-		},
-	}
-}
-
 func genHostInfo(hostName string) *structs.HostInfo {
 	host := structs.HostInfo{
 		IP:       "192.168.56.11",
@@ -163,7 +148,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
@@ -216,7 +201,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
@@ -306,7 +291,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)

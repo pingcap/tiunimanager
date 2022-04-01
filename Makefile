@@ -247,7 +247,7 @@ failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)
 
-lint:
+lint: mock
 	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
 	-golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
 

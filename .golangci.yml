@@ -1,8 +1,6 @@
 # options for analysis running
 run:
   timeout: 10m
-  skip-dirs:
-    - test
 
 linters:
   enable:

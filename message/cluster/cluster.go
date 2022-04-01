@@ -47,7 +47,7 @@ type DeleteClusterReq struct {
 	Force                    bool   `json:"force" form:"force"`
 }
 
-// DeleteClusterResp Reply message for delete a new cluster
+// DeleteClusterResp Reply message for delete a cluster
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID string `json:"clusterID"`
@@ -96,7 +96,6 @@ type PreviewScaleOutClusterReq struct {
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
-
 	structs.ClusterResourceInfo
 }
 
@@ -152,7 +151,12 @@ type MasterSlaveClusterSwitchoverReq struct {
 	TargetClusterID string `json:"targetClusterID" validate:"required,min=4,max=64"`
 	Force           bool   `json:"force"`
 	// only check if this flag is true
-	OnlyCheck bool `json:"onlyCheck"`
+	OnlyCheck               bool `json:"onlyCheck"`
+	CheckSlaveReadOnlyFlag  bool `json:"checkSlaveReadOnlyFlag"`
+	CheckMasterWritableFlag bool `json:"checkMasterWritableFlag"`
+	// check if cluster specified in `SourceClusterID` is standalone, i.e. no cluster relation and no cdc
+	// if this flag is true, always only check
+	CheckStandaloneClusterFlag bool `json:"checkStandaloneClusterFlag"`
 }
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message
@@ -175,6 +179,16 @@ type TakeoverClusterReq struct {
 type TakeoverClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID string `json:"clusterId"`
+}
+
+// DeleteMetadataPhysicallyReq Message for delete a cluster metadata
+type DeleteMetadataPhysicallyReq struct {
+	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
+	Reason    string `json:"reason" form:"reason" validate:"required,min=8"`
+}
+
+// DeleteMetadataPhysicallyResp Reply message for delete a new cluster
+type DeleteMetadataPhysicallyResp struct {
 }
 
 // QueryClustersReq Query cluster list messages

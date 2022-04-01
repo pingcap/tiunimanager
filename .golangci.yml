@@ -1,6 +1,10 @@
 # options for analysis running
 run:
   timeout: 10m
+  skip-dirs:
+    - test
+  skip-files:
+    - ".*_test\\.go$"
 
 linters:
   enable:

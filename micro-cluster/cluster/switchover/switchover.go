@@ -65,54 +65,52 @@ func GetManager() *Manager {
 			FlowName: constants.FlowMasterSlaveSwitchoverNormal,
 			TaskNodes: map[string]*workflow.NodeDefine{
 				"start": {
-					"checkHealthStatus", "checkSyncChangeFeedTaskMaxLagTime", "fail", workflow.SyncFuncNode, wfStepCheckOldSyncChangeFeedTaskHealth},
+					"checkHealthStatus", "checkSyncChangeFeedTaskMaxLagTime", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckOldSyncChangeFeedTaskHealth, wfStepFail)},
 				"checkSyncChangeFeedTaskMaxLagTime": {
-					"checkSyncChangeFeedTaskMaxLagTime", "setOldMasterReadOnly", "fail", workflow.SyncFuncNode, wfStepCheckSyncChangeFeedTaskMaxLagTime},
+					"checkSyncChangeFeedTaskMaxLagTime", "setOldMasterReadOnly", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckSyncChangeFeedTaskMaxLagTime, wfStepFail)},
 				"setOldMasterReadOnly": {
-					"setOldMasterReadOnly", "waitOldMasterCDCsCaughtUp", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+					"setOldMasterReadOnly", "waitOldMasterCDCsCaughtUp", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetOldMasterReadOnly, wfStepFail)},
 				"waitOldMasterCDCsCaughtUp": {
-					"waitOldMasterCDCsCaughtUp", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepWaitOldMasterCDCsCaughtUp},
+					"waitOldMasterCDCsCaughtUp", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepWaitOldMasterCDCsCaughtUp, wfStepFail)},
 				"pauseOldSyncChangeFeedTask": {
-					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
+					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepPauseOldSyncChangeFeedTask, wfStepFail)},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
-				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCreateReverseSyncChangeFeedTask, wfStepFail)},
 				"checkNewSyncChangeFeedTaskHealth": {
-					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
+					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckNewSyncChangeFeedTaskHealth, wfStepFail)},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
-					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster, wfStepFail)},
+				"setNewMasterReadWrite": {
+					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetNewMasterReadWrite, wfStepFail)},
 				"swapMasterSlaveRelationInDB": {
-					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
+					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSwapMasterSlaveRelationInDB, wfStepFail)},
 				"end": {
-					"finish", "", "", workflow.SyncFuncNode, wfStepFinish},
+					"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 				"fail": {
-					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
+					"fail", "", "", workflow.SyncFuncNode, wfStepNOP},
 			},
 		})
 		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverForce, &workflow.WorkFlowDefine{
 			FlowName: constants.FlowMasterSlaveSwitchoverForce,
 			TaskNodes: map[string]*workflow.NodeDefine{
 				"start": {
-					"setOldMasterReadOnly", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+					"setOldMasterReadOnly", "pauseOldSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetOldMasterReadOnly, wfStepFail)},
 				"pauseOldSyncChangeFeedTask": {
-					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfStepPauseOldSyncChangeFeedTask},
+					"pauseOldSyncChangeFeedTask", "createReverseSyncChangeFeedTask", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepPauseOldSyncChangeFeedTask, wfStepFail)},
 				"createReverseSyncChangeFeedTask": {
-					"createReverseSyncChangeFeedTask", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepCreateReverseSyncChangeFeedTask},
-				"setNewMasterReadWrite": {
-					"setNewMasterReadWrite", "checkNewMasterReadWriteHealth", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
-				"checkNewMasterReadWriteHealth": {
-					"checkNewMasterReadWriteHealth", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfStepCheckNewMasterReadWriteHealth},
+					"createReverseSyncChangeFeedTask", "checkNewSyncChangeFeedTaskHealth", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCreateReverseSyncChangeFeedTask, wfStepFail)},
 				"checkNewSyncChangeFeedTaskHealth": {
-					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfStepCheckNewSyncChangeFeedTaskHealth},
+					"checkNewSyncChangeFeedTaskHealth", "migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepCheckNewSyncChangeFeedTaskHealth, wfStepFail)},
 				"migrateAllDownStreamSyncChangeFeedTasksToNewMaster": {
-					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster},
+					"migrateAllDownStreamSyncChangeFeedTasksToNewMaster", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepMigrateAllDownStreamSyncChangeFeedTasksToNewMaster, wfStepFail)},
+				"setNewMasterReadWrite": {
+					"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetNewMasterReadWrite, wfStepFail)},
 				"swapMasterSlaveRelationInDB": {
-					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
+					"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSwapMasterSlaveRelationInDB, wfStepFail)},
 				"end": {
-					"finish", "", "", workflow.SyncFuncNode, wfStepFinish},
+					"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 				"fail": {
-					"fail", "", "", workflow.SyncFuncNode, wfStepFail},
+					"fail", "", "", workflow.SyncFuncNode, wfStepNOP},
 			},
 		})
 		flowManager.RegisterWorkFlow(context.TODO(), constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable,
@@ -120,21 +118,22 @@ func GetManager() *Manager {
 				FlowName: constants.FlowMasterSlaveSwitchoverForceWithMasterUnavailable,
 				TaskNodes: map[string]*workflow.NodeDefine{
 					"start": {
-						"setOldMasterReadOnly", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfStepSetOldMasterReadOnly},
+						"setOldMasterReadOnly", "setNewMasterReadWrite", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetOldMasterReadOnly, wfStepFail)},
 					"setNewMasterReadWrite": {
-						"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfStepSetNewMasterReadWrite},
+						"setNewMasterReadWrite", "swapMasterSlaveRelationInDB", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSetNewMasterReadWrite, wfStepFail)},
 					"swapMasterSlaveRelationInDB": {
-						"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfStepSwapMasterSlaveRelationInDB},
+						"swapMasterSlaveRelationInDB", "end", "fail", workflow.SyncFuncNode, wfGenStepWithRollbackCB(wfStepSwapMasterSlaveRelationInDB, wfStepFail)},
 					"end": {
-						"finish", "", "", workflow.SyncFuncNode, wfStepFinish},
+						"end", "", "", workflow.SyncFuncNode, wfStepFinish},
 					"fail": {
-						"fail", "", "", workflow.SyncFuncNode, wfStepFail},
+						"fail", "", "", workflow.SyncFuncNode, wfStepNOP},
 				},
 			})
 	})
 	return mgr
 }
 
+// Switchover switchover between master and slave cluster
 func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveClusterSwitchoverReq) (resp *cluster.MasterSlaveClusterSwitchoverResp, err error) {
 	framework.LogWithContext(ctx).Info("Manager.Switchover")
 
@@ -148,6 +147,19 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	funcName := "Switchover"
 	oldMasterId := req.SourceClusterID
 	oldSlaveId := req.TargetClusterID
+	if req.CheckStandaloneClusterFlag {
+		err := mgr.clusterCheckNoRelation(ctx, oldMasterId)
+		framework.LogWithContext(ctx).Infof("req:%s clusterCheckNoRelation err:%v", reqJson, err)
+		if err != nil {
+			return resp, err
+		}
+		err = mgr.clusterCheckNoCDCs(ctx, oldMasterId)
+		framework.LogWithContext(ctx).Infof("req:%s clusterCheckNoCDCs err:%v", reqJson, err)
+		if err != nil {
+			return resp, err
+		}
+		return resp, err
+	}
 	// pre check
 	//   1. cluster relation is valid?
 	//   2. cdc sync task is valid?
@@ -171,6 +183,29 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	err = mgr.clusterCheckHasCDCComponent(ctx, oldSlaveId, emerr.Error(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT))
 	if err != nil {
 		return resp, err
+	}
+	if req.CheckSlaveReadOnlyFlag {
+		readonlyFlag, err := mgr.clusterGetReadWriteMode(ctx, oldSlaveId)
+		framework.LogWithContext(ctx).Infof("mgr.clusterGetReadWriteMode on oldSlaveId %s, ret readonlyFlag:%v err:%v",
+			oldSlaveId, readonlyFlag, err)
+		if err != nil {
+			return resp, fmt.Errorf("mgr.clusterGetReadWriteMode failed, err: %s", err)
+		}
+		if readonlyFlag {
+		} else {
+			return resp, fmt.Errorf("oldSlave readonlyFlag:%v but expect readonly", readonlyFlag)
+		}
+	}
+	if req.CheckMasterWritableFlag {
+		readonlyFlag, err := mgr.clusterGetReadWriteMode(ctx, oldMasterId)
+		framework.LogWithContext(ctx).Infof("mgr.clusterGetReadWriteMode on oldMasterId %s, ret readonlyFlag:%v err:%v",
+			oldMasterId, readonlyFlag, err)
+		if err != nil {
+			return resp, fmt.Errorf("mgr.clusterGetReadWriteMode failed, err: %s", err)
+		}
+		if readonlyFlag {
+			return resp, fmt.Errorf("oldMaster readonlyFlag:%v but expect writable", readonlyFlag)
+		}
 	}
 	if req.OnlyCheck {
 		return &cluster.MasterSlaveClusterSwitchoverResp{}, nil
@@ -304,6 +339,42 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			WorkFlowID: flow.Flow.ID,
 		},
 	}, nil
+}
+
+//CheckSwitchover check whether the master cluster and slave cluster are in normal state
+func (p *Manager) CheckSwitchover(ctx context.Context, masterClusterID, slaveClusterID string) (resp *structs.ClusterRelationsCheck, err error) {
+	funcName := "CheckSwitchover"
+	framework.LogWithContext(ctx).Infof("enter %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	oldMasterId := masterClusterID
+	oldSlaveId := slaveClusterID
+	// check
+	//   1. cluster relation is valid?
+	//   2. cdc sync task is valid?
+	//   3. get cdc task status
+	oldSyncChangeFeedTaskId, err := mgr.getOldSyncChangeFeedTaskId(ctx, "-", funcName, oldMasterId, oldSlaveId)
+	framework.LogWithContext(ctx).Infof("%s getOldSyncChangeFeedTaskId, oldMasterId:%s oldSlaveId:%s oldSyncChangeFeedTaskId:%s err:%v",
+		funcName, oldMasterId, oldSlaveId, oldSyncChangeFeedTaskId, err)
+	if err != nil {
+		return resp, err
+	}
+	if len(oldSyncChangeFeedTaskId) <= 0 {
+		return resp, emerr.Error(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND)
+	}
+	cdcTaskInfo, err := mgr.queryChangeFeedTask(ctx, oldSyncChangeFeedTaskId)
+	framework.LogWithContext(ctx).Infof("%s queryChangeFeedTask, oldSyncChangeFeedTaskId:%s err:%v",
+		funcName, oldSyncChangeFeedTaskId, err)
+	if err != nil {
+		return resp, err
+	}
+	retV := structs.ClusterRelationsCheck{
+		SourceClusterID: oldMasterId,
+		TargetClusterID: oldSlaveId,
+		Relation:        string(constants.ClusterRelationStandBy),
+		TaskID:          oldSyncChangeFeedTaskId,
+		TaskStatus:      cdcTaskInfo.Status,
+	}
+	return &retV, err
 }
 
 func (p *Manager) checkMasterSalveRelation(ctx context.Context, masterClusterID, slaveClusterID string) error {
@@ -443,6 +514,40 @@ func (m *Manager) clusterCheckHasCDCComponent(ctx context.Context, clusterId str
 	return myNotFoundErr
 }
 
+func (m *Manager) clusterCheckNoRelation(ctx context.Context, clusterId string) error {
+	funcName := "clusterCheckNoRelation"
+	mRels, err := models.GetClusterReaderWriter().GetMasters(ctx, clusterId)
+	framework.LogWithContext(ctx).Infof("%s: GetMasters len:%d err:%v", funcName, len(mRels), err)
+	if err != nil {
+		return err
+	}
+	if len(mRels) > 0 {
+		return fmt.Errorf("cluster should have no master, clusterID:%s, mastersCount:%d", clusterId, len(mRels))
+	}
+	sRels, err := models.GetClusterReaderWriter().GetSlaves(ctx, clusterId)
+	framework.LogWithContext(ctx).Infof("%s: GetSlaves len:%d err:%v", funcName, len(sRels), err)
+	if err != nil {
+		return err
+	}
+	if len(sRels) > 0 {
+		return fmt.Errorf("cluster should have no slave, clusterID:%s, slavesCount:%d", clusterId, len(sRels))
+	}
+	return nil
+}
+
+func (m *Manager) clusterCheckNoCDCs(ctx context.Context, clusterId string) error {
+	funcName := "clusterCheckNoCDCs"
+	tasks, err := mgr.getAllChangeFeedTasksOnCluster(ctx, clusterId)
+	framework.LogWithContext(ctx).Infof("%s: getAllChangeFeedTasksOnCluster clusterID:%s len:%d err:%v", funcName, clusterId, len(tasks), err)
+	if err != nil {
+		return err
+	}
+	if len(tasks) > 0 {
+		return fmt.Errorf("cluster should have no cdc, clusterID:%s, cdcCount:%d", clusterId, len(tasks))
+	}
+	return nil
+}
+
 func (m *Manager) clusterGetRelationByMasterSlaveClusterId(ctx context.Context, masterClusterId, slaveClusterId string) (relation *clusterMgr.ClusterRelation, err error) {
 	relations, err := models.GetClusterReaderWriter().GetRelations(ctx, slaveClusterId)
 	if err != nil {
@@ -553,6 +658,19 @@ func (m *Manager) createChangeFeedTask(ctx context.Context, task *cluster.Change
 		FilterRules:    task.FilterRules,
 		DownstreamType: task.DownstreamType,
 		Downstream:     task.Downstream,
+	}
+	{ //add default FilterRules and uniq
+		defaultFilterRules := constants.DefaultFilterRules
+		oldRulesM := make(map[string]bool)
+		for _, v := range req.FilterRules {
+			oldRulesM[v] = true
+		}
+		for _, v := range defaultFilterRules {
+			if oldRulesM[v] {
+			} else {
+				req.FilterRules = append(req.FilterRules, v)
+			}
+		}
 	}
 	resp, err := mgr.changefeedMgr.Create(ctx, req)
 	framework.LogWithContext(ctx).Infof("createChangeFeedTask clusterID:%s", task.ClusterID)

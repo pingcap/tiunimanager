@@ -22,7 +22,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
@@ -73,8 +72,8 @@ func Test_generateCheckInt32Result_Both_Nil(t *testing.T) {
 	assert.Equal(t, true, result["test_host1"].Valid)
 	assert.Equal(t, true, result["test_host2"].Valid)
 	assert.Equal(t, true, result["test_host3"].Valid)
-	assert.Equal(t, int32(-1), result["test_host3"].ExpectedValue)
-	assert.Equal(t, int32(-1), result["test_host3"].RealValue)
+	assert.Equal(t, int32(0), result["test_host3"].ExpectedValue)
+	assert.Equal(t, int32(0), result["test_host3"].RealValue)
 }
 
 func Test_generateCheckInt32Result_Either_Nil(t *testing.T) {
@@ -88,7 +87,7 @@ func Test_generateCheckInt32Result_Either_Nil(t *testing.T) {
 	assert.Equal(t, true, result["test_host1"].Valid)
 	assert.Equal(t, true, result["test_host2"].Valid)
 	assert.Equal(t, false, result["test_host3"].Valid)
-	assert.Equal(t, int32(-1), result["test_host3"].ExpectedValue)
+	assert.Equal(t, int32(0), result["test_host3"].ExpectedValue)
 	assert.Equal(t, int32(17), result["test_host3"].RealValue)
 }
 func Test_generateCheckStatusResult_Normal_Succeed(t *testing.T) {
@@ -172,11 +171,7 @@ func Test_CheckCpuAllocated_Resource_Internal_Error(t *testing.T) {
 	hostInspector := mockHostInspector(mockClient)
 	hosts := []structs.HostInfo{{ID: "test_host1"}, {ID: "test_host2"}, {ID: "test_host3"}}
 	result, err := hostInspector.CheckCpuAllocated(context.TODO(), hosts)
-	assert.NotNil(t, err)
-	emError, ok := err.(errors.EMError)
-	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, emError.GetCode())
-	assert.Equal(t, "used cores mismatch between hosts table and used_compute", emError.GetMsg())
+	assert.Nil(t, err)
 	for k := range result {
 		if k == "test_host1" {
 			assert.Equal(t, false, result[k].Valid)
@@ -197,11 +192,7 @@ func Test_CheckCpuAllocated_Mismatch_Resource_Cluster(t *testing.T) {
 	hostInspector := mockHostInspector(mockClient)
 	hosts := []structs.HostInfo{{ID: "test_host1"}, {ID: "test_host2"}, {ID: "test_host3"}}
 	result, err := hostInspector.CheckCpuAllocated(context.TODO(), hosts)
-	assert.NotNil(t, err)
-	emError, ok := err.(errors.EMError)
-	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, emError.GetCode())
-	assert.Equal(t, "used cores mismatch between resource module and cluster module", emError.GetMsg())
+	assert.Nil(t, err)
 	for k := range result {
 		if k == "test_host2" {
 			assert.Equal(t, false, result[k].Valid)
@@ -239,11 +230,7 @@ func Test_CheckMemAllocated_Resource_Internal_Error(t *testing.T) {
 	hostInspector := mockHostInspector(mockClient)
 	hosts := []structs.HostInfo{{ID: "test_host1"}, {ID: "test_host2"}, {ID: "test_host3"}}
 	result, err := hostInspector.CheckMemAllocated(context.TODO(), hosts)
-	assert.NotNil(t, err)
-	emError, ok := err.(errors.EMError)
-	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, emError.GetCode())
-	assert.Equal(t, "used memory mismatch between hosts table and used_compute", emError.GetMsg())
+	assert.Nil(t, err)
 	for k := range result {
 		if k == "test_host1" {
 			assert.Equal(t, false, result[k].Valid)
@@ -264,11 +251,7 @@ func Test_CheckMemAllocated_Mismatch_Resource_Cluster(t *testing.T) {
 	hostInspector := mockHostInspector(mockClient)
 	hosts := []structs.HostInfo{{ID: "test_host1"}, {ID: "test_host2"}, {ID: "test_host3"}}
 	result, err := hostInspector.CheckMemAllocated(context.TODO(), hosts)
-	assert.NotNil(t, err)
-	emError, ok := err.(errors.EMError)
-	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_CHECK_COMPUTES_ERROR, emError.GetCode())
-	assert.Equal(t, "used memory mismatch between resource module and cluster module", emError.GetMsg())
+	assert.Nil(t, err)
 	for k := range result {
 		if k == "test_host2" {
 			assert.Equal(t, false, result[k].Valid)
@@ -332,11 +315,7 @@ func Test_CheckDiskAllocated_Mismatch_Resource_Internal(t *testing.T) {
 	hostInspector := mockHostInspector(mockClient)
 	hosts := []structs.HostInfo{{ID: "test_host1"}, {ID: "test_host2"}, {ID: "test_host3"}}
 	result, err := hostInspector.CheckDiskAllocated(context.TODO(), hosts)
-	assert.NotNil(t, err)
-	emError, ok := err.(errors.EMError)
-	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_CHECK_DISKS_ERROR, emError.GetCode())
-	assert.Equal(t, "used disks mismatch between hosts table and used_compute", emError.GetMsg())
+	assert.Nil(t, err)
 	for k := range result {
 		for disk := range result[k] {
 			if k == "test_host2" && disk == "disk10" {
@@ -371,11 +350,7 @@ func Test_CheckDiskAllocated_Mismatch_Resource_Cluster(t *testing.T) {
 	hostInspector := mockHostInspector(mockClient)
 	hosts := []structs.HostInfo{{ID: "test_host1"}, {ID: "test_host2"}, {ID: "test_host3"}}
 	result, err := hostInspector.CheckDiskAllocated(context.TODO(), hosts)
-	assert.NotNil(t, err)
-	emError, ok := err.(errors.EMError)
-	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_CHECK_DISKS_ERROR, emError.GetCode())
-	assert.Equal(t, "used memory mismatch between resource module and cluster module", emError.GetMsg())
+	assert.Nil(t, err)
 	for k := range result {
 		for disk := range result[k] {
 			if k == "test_host3" && disk == "disk10" {

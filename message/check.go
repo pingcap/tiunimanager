@@ -23,7 +23,16 @@ type CheckPlatformReq struct {
 
 type CheckPlatformRsp struct {
 	structs.AsyncTaskWorkFlowInfo
-	CheckID string `json:"checkID"`
+	CheckID string `json:"checkId"`
+}
+
+type CheckClusterReq struct {
+	ClusterID string `json:"clusterId"`
+}
+
+type CheckClusterRsp struct {
+	structs.AsyncTaskWorkFlowInfo
+	CheckID string `json:"checkId"`
 }
 
 type QueryCheckReportsReq struct {
@@ -39,5 +48,5 @@ type GetCheckReportReq struct {
 }
 
 type GetCheckReportRsp struct {
-	ReportInfo structs.CheckReportInfo `json:"reportInfo"`
+	ReportInfo interface{} `json:"reportInfo"`
 }

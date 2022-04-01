@@ -29,7 +29,7 @@ import (
 
 const (
 	ContextCheckID    = "CheckID"
-	ContextReportInfo = "ReportInfo"
+	ContextClusterID  = "ClusterID"
 	DefaultCreator    = "System"
 	DefaultTenantID   = "admin"
 )
@@ -54,6 +54,7 @@ func NewCheckManager() *CheckManager {
 	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCheckPlatform, &checkDefine)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCheckCluster, &checkClusterDefine)
 
 	return &CheckManager{
 		autoCheckMgr: NewAutoCheckManager(),
@@ -87,6 +88,7 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	report := &check.CheckReport{
 		Report:  "{}",
 		Creator: creator,
+		Type:    string(constants.PlatformReport),
 		Status:  string(constants.CheckRunning),
 	}
 	report, err = rw.CreateReport(ctx, report)
@@ -98,13 +100,13 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	// create workflow
 	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypePlatform, checkDefine.FlowName)
 	if err != nil {
-		log.Errorf("create flow failed, check report %s, error: %s", report.ID, err.Error())
+		log.Errorf("create flow failed, check report %s error: %s", report.ID, err.Error())
 		return resp, err
 	}
 
 	flow.Context.SetData(ContextCheckID, report.ID)
 	if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
-		log.Errorf("start flow %s failed, check report %s, error: %s", flow.Flow.ID, report.ID, err.Error())
+		log.Errorf("start flow %s failed, check report %s error: %s", flow.Flow.ID, report.ID, err.Error())
 		return resp, err
 	}
 	log.Infof("create flow %s succeed, check report %s", flow.Flow.ID, report.ID)
@@ -112,6 +114,58 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	resp.CheckID = report.ID
 	resp.WorkFlowID = flow.Flow.ID
 
+	return resp, nil
+}
+
+var checkClusterDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowCheckCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":            {"checkCluster", "checkClusterDone", "fail", workflow.SyncFuncNode, checkCluster},
+		"checkClusterDone": {"end", "", "", workflow.SyncFuncNode, endCheck},
+		"fail":             {"end", "", "", workflow.SyncFuncNode, handleFail},
+	},
+}
+
+// CheckCluster
+// @Description	check specify cluster and generate check report
+// @Parameter	request
+// @Return		message.CheckClusterRsp
+// @Return		error
+func (manager *CheckManager) CheckCluster(ctx context.Context, request message.CheckClusterReq) (resp message.CheckClusterRsp, err error) {
+	// create and init check report
+	creator := framework.GetUserIDFromContext(ctx)
+	if len(creator) == 0 {
+		creator = DefaultCreator
+	}
+
+	report := &check.CheckReport{
+		Report:  "{}",
+		Creator: creator,
+		Type:    string(constants.ClusterReport),
+		Status:  string(constants.CheckRunning),
+	}
+	report, err = models.GetReportReaderWriter().CreateReport(ctx, report)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create check report error: %v", err)
+		return resp, err
+	}
+
+	// create workflow
+	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCluster, checkClusterDefine.FlowName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create flow failed, check report %s error: %s", report.ID, err.Error())
+		return resp, err
+	}
+
+	flow.Context.SetData(ContextCheckID, report.ID)
+	flow.Context.SetData(ContextClusterID, request.ClusterID)
+	if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
+		framework.LogWithContext(ctx).Errorf("start flow %s failed, check report %s error: %s", flow.Flow.ID, report.ID, err.Error())
+		return resp, err
+	}
+	framework.LogWithContext(ctx).Infof("create flow %s succeed, check report %s", flow.Flow.ID, report.ID)
+	resp.CheckID = report.ID
+	resp.WorkFlowID = flow.Flow.ID
 	return resp, nil
 }
 
@@ -140,7 +194,7 @@ func (manager *CheckManager) QueryCheckReports(ctx context.Context, request mess
 func (manager *CheckManager) GetCheckReport(ctx context.Context, request message.GetCheckReportReq) (resp message.GetCheckReportRsp, err error) {
 	log := framework.LogWithContext(ctx)
 	rw := models.GetReportReaderWriter()
-	resp.ReportInfo, err = rw.GetReport(ctx, request.ID)
+	resp.ReportInfo, _, err = rw.GetReport(ctx, request.ID)
 	if err != nil {
 		log.Errorf("get check report %s error: %v", request.ID, err)
 		return resp, errors.NewErrorf(errors.CheckReportNotExist,

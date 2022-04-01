@@ -226,6 +226,21 @@ func (p *ClusterMeta) GetInstanceByStatus(ctx context.Context, status constants.
 // @Receiver p
 // @return BDUser
 func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType constants.DBUserRoleType) (*management.DBUser, error) {
+	// replace br account with root
+	if roleType == constants.DBUserBackupRestore || roleType == constants.DBUserParameterManagement {
+		if cmp, e := CompareTiDBVersion(p.Cluster.Version, "v5.1.0"); e != nil {
+			return nil, e
+		} else if !cmp {
+			return p.DBUsers[string(constants.Root)], nil
+		}
+	}
+	if roleType == constants.DBUserCDCDataSync {
+		if cmp, e := CompareTiDBVersion(p.Cluster.Version, "v5.2.2"); e != nil {
+			return nil, e
+		} else if !cmp {
+			return nil, errors.NewErrorf(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR, "data sync account is not supported under version %s", p.Cluster.Version)
+		}
+	}
 	user := p.DBUsers[string(roleType)]
 	if user == nil {
 		msg := fmt.Sprintf("get %s user from cluser %s failed, empty user", roleType, p.Cluster.ID)
@@ -404,6 +419,7 @@ func (p *ClusterMeta) DisplayInstanceInfo(ctx context.Context) (structs.ClusterT
 				Version:   instance.Version,
 				Status:    instance.Status,
 				HostID:    instance.HostID,
+				DiskID:    instance.DiskID,
 				Addresses: instance.HostIP,
 				Ports:     instance.Ports,
 				Spec: structs.ProductSpecInfo{

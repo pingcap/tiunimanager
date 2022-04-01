@@ -250,21 +250,21 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
 		assert.NoError(t, err)
-		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID)
+		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID, "deleteIt")
 		assert.NoError(t, err)
-		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		err = testRW.DB(context.TODO()).First(&Cluster{}, "id = ?", cluster.ID).Error
 		assert.Error(t, err)
-		err = testRW.DB(context.TODO()).Where("cluster_id = ?", cluster.ID).First(&ClusterInstance{}).Error
+		err = testRW.DB(context.TODO()).First(&ClusterInstance{}, "cluster_id = ?", cluster.ID).Error
 		assert.Error(t, err)
-		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
+		assert.NoError(t, testRW.DB(context.TODO()).First(cluster2, "id = ?", cluster2.ID).Error)
 	})
 
-	t.Run("not found", func(t *testing.T) {
-		err := testRW.ClearClusterPhysically(context.TODO(), "whatever")
+	t.Run("parameter", func(t *testing.T) {
+		err := testRW.ClearClusterPhysically(context.TODO(), "whatever", "")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 
-		err = testRW.ClearClusterPhysically(context.TODO(), "")
+		err = testRW.ClearClusterPhysically(context.TODO(), "", "empty")
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})

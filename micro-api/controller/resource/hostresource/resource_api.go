@@ -74,6 +74,10 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Region = row[REGION_FIELD]
 			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
+			if host.Region == "" || host.AZ == "" || host.Rack == "" {
+				errMsg := fmt.Sprintf("input region (%s) zone (%s) rack (%s) should not be empty", host.Region, host.AZ, host.Rack)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+			}
 			if err = constants.ValidArchType(row[ARCH_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get arch(%s) failed, %v", irow, row[ARCH_FIELD], err)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
@@ -86,11 +90,19 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 				errMsg := fmt.Sprintf("Row %d get coreNum(%s) failed, %v", irow, row[CPU_FIELD], err)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
+			if coreNum <= 0 {
+				errMsg := fmt.Sprintf("input cpu core (%d) invalid", coreNum)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+			}
 			host.CpuCores = int32(coreNum)
 			host.UsedCpuCores = 0
 			mem, err := (strconv.Atoi(row[MEM_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
+				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+			}
+			if mem <= 0 {
+				errMsg := fmt.Sprintf("input memory size (%d) invalid", mem)
 				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.Memory = int32(mem)
@@ -109,6 +121,9 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Purpose = row[PURPOSE_FIELD]
 			purposes := host.GetPurposes()
 			for _, p := range purposes {
+				if p == "" {
+					continue
+				}
 				if err = constants.ValidPurposeType(p); err != nil {
 					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
 					return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
@@ -136,6 +151,9 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			for i := range host.Disks {
 				if host.Disks[i].Type == "" {
 					host.Disks[i].Type = host.DiskType
+				}
+				if err = host.Disks[i].ValidateDisk("", host.DiskType); err != nil {
+					return nil, err
 				}
 			}
 			hosts = append(hosts, host)
@@ -358,6 +376,110 @@ func UpdateHostStatus(c *gin.Context) {
 		}
 
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostStatus, &message.UpdateHostStatusResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// UpdateHost godoc
+// @Summary Update host info
+// @Description update host information
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body message.UpdateHostInfoReq true "update host information"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateHostInfoResp}
+// @Router /resources/host [put]
+func UpdateHost(c *gin.Context) {
+	var req message.UpdateHostInfoReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if req.NewHostInfo.ID == "" {
+			setGinContextForInvalidParam(c, "host id should be specified")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostInfo, &message.UpdateHostInfoResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// CreateDisks godoc
+// @Summary Add disks to the specified host
+// @Description add disks to the specified host
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param createDisksReq body message.CreateDisksReq true "specify the hostId and disks"
+// @Success 200 {object} controller.CommonResult{data=message.CreateDisksResp}
+// @Router /resources/disks [post]
+func CreateDisks(c *gin.Context) {
+	var req message.CreateDisksReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if req.HostID == "" {
+			setGinContextForInvalidParam(c, "host id should be specified")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateDisks, &message.CreateDisksResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// RemoveDisks godoc
+// @Summary Remove a batch of disks
+// @Description remove disks by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param diskIds body message.DeleteDisksReq true "list of disk IDs"
+// @Success 200 {object} controller.CommonResult{data=message.DeleteDisksResp}
+// @Router /resources/disks [delete]
+func RemoveDisks(c *gin.Context) {
+	var req message.DeleteDisksReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if str, dup := detectDuplicateElement(req.DiskIDs); dup {
+			setGinContextForInvalidParam(c, str+" is duplicated in request")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteDisks, &message.DeleteDisksResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// UpdateDisk godoc
+// @Summary Update disk info
+// @Description update disk information
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body message.UpdateDiskReq true "update disk information"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateDiskResp}
+// @Router /resources/disk [put]
+func UpdateDisk(c *gin.Context) {
+	var req message.UpdateDiskReq
+
+	requestBody, ok := controller.HandleJsonRequestFromBody(c, &req)
+	if ok {
+		if req.NewDiskInfo.ID == "" {
+			setGinContextForInvalidParam(c, "disk id should be specified")
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateDisk, &message.UpdateDiskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

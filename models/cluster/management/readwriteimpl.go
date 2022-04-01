@@ -51,12 +51,26 @@ func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err er
 	if err != nil {
 		return
 	}
-	err = g.DB(ctx).Delete(got).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
+	err = g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			return tx.Delete(got).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterTopologySnapshot{}).Error
+		}).If(func(e error) {
+			framework.LogWithContext(ctx).Errorf("delete cluster %s failed, err = %s", clusterID, e.Error())
+		}).Else(func() {
+			framework.LogWithContext(ctx).Infof("delete cluster %s succeed", clusterID)
+		}).Present()
+	})
 
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
 	return dbCommon.WrapDBError(err)
 }
 
@@ -537,20 +551,32 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 	return dbCommon.WrapDBError(g.DB(ctx).Save(snapshot).Error)
 }
 
-func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string) error {
-	got, err := g.Get(ctx, clusterID)
-	if err != nil {
-		return err
+func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string, reason string) error {
+	if len(clusterID) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "clusterId is empty")
 	}
-	err = g.DB(ctx).Unscoped().Delete(got).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
+	if len(reason) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "reason is empty")
 	}
-
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&DBUser{}).Error
-
+	err := g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Delete(&Cluster{Entity: dbCommon.Entity{ID: clusterID}}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterTopologySnapshot{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).If(func(err error) {
+			framework.LogWithContext(ctx).Errorf("clear cluster data physically failed, clusterId = %s, err = %s", clusterID, err.Error())
+		}).Else(func() {
+			framework.LogWithContext(ctx).Warnf("clear data of cluster %s physically, operatorId = %s, reason = %s", clusterID, framework.GetUserIDFromContext(ctx), reason)
+		}).Present()
+	})
 	return dbCommon.WrapDBError(err)
 }
 

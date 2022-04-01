@@ -18,8 +18,10 @@ package hostprovider
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"fmt"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/models/platform/product"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -499,4 +501,101 @@ func mockQueryLocalFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
 			PurposeType: "Schedule",
 		},
 	}, nil).Times(1)
+}
+
+func Test_UpdateHost(t *testing.T) {
+	fakeHostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	host := genHostInfo("TEST_HOST1")
+
+	mockClient.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, host resourcepool.Host) error {
+		if host.ID == fakeHostId1 {
+			return nil
+		} else {
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+		}
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	err := hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.NotNil(t, err)
+	assert.Equal(t, "update host failed without host id", err.(errors.EMError).GetMsg())
+
+	host.ID = fakeHostId1
+	host.UsedCpuCores = 20
+	host.UsedMemory = 20
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.NotNil(t, err)
+	assert.Equal(t, fmt.Sprintf("used cpu cores or used memory field should not be set while update host %s", host.ID), err.(errors.EMError).GetMsg())
+
+	host.UsedCpuCores = 0
+	host.UsedMemory = 0
+
+	host.CpuCores = -128
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.Equal(t, fmt.Sprintf("input cpu cores(%d) or memory(%d) is invalid to update host %s", -128, 0, host.ID), err.(errors.EMError).GetMsg())
+	assert.NotNil(t, err)
+
+	host.CpuCores = 128
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.Nil(t, err)
+}
+
+func Test_CreateDisks(t *testing.T) {
+	fakeHostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	host := genHostInfo("TEST_HOST1")
+	host.ID = fakeHostId1
+	mockClient.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostId string, disks []resourcepool.Disk) ([]string, error) {
+		return nil, nil
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	var disk structs.DiskInfo
+	_, err := hostprovider.CreateDisks(context.TODO(), fakeHostId1, []structs.DiskInfo{disk})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+		fakeHostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
+
+	_, err = hostprovider.CreateDisks(context.TODO(), fakeHostId1, nil)
+	assert.Nil(t, err)
+}
+
+func Test_UpdateDisks(t *testing.T) {
+	fakeDiskId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+
+	mockClient.EXPECT().UpdateDisk(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, disk resourcepool.Disk) error {
+		return nil
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	var disk structs.DiskInfo
+	err := hostprovider.UpdateDisk(context.TODO(), disk)
+	assert.NotNil(t, err)
+	assert.Equal(t, "update disk failed without disk id", err.(errors.EMError).GetMsg())
+
+	disk.ID = fakeDiskId1
+	err = hostprovider.UpdateDisk(context.TODO(), disk)
+	assert.Nil(t, err)
+}
+
+func Test_DeleteDisks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+
+	mockClient.EXPECT().DeleteDisks(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, diskIds []string) error {
+		return nil
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	err := hostprovider.DeleteDisks(context.TODO(), nil)
+	assert.Nil(t, err)
 }

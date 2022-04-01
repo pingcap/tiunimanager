@@ -48,7 +48,8 @@ type TopologyInfo struct {
 	Count int    `json:"count"`
 }
 type Report struct {
-	Info *structs.CheckReportInfo
+	PlatformInfo *structs.CheckPlatformReportInfo
+	ClusterInfo  *structs.CheckClusterReportInfo
 }
 
 type Replication struct {
@@ -93,21 +94,66 @@ type HealthInfo struct {
 	Health bool   `json:"health"`
 }
 
-type ReportInterface interface {
+var reportService ReportService
+
+func GetReportService() ReportService {
+	if reportService == nil {
+		return &Report{}
+	}
+	return reportService
+}
+
+func MockReportService(service ReportService) {
+	reportService = service
+}
+
+type ReportService interface {
 	ParseFrom(ctx context.Context, checkID string) error
 	CheckTenants(ctx context.Context) error
 	CheckHosts(ctx context.Context) error
+	CheckCluster(ctx context.Context, clusterID string) error
 	Serialize(ctx context.Context) (string, error)
 }
 
 func (p *Report) ParseFrom(ctx context.Context, checkID string) error {
 	rw := models.GetReportReaderWriter()
-	reportInfo, err := rw.GetReport(ctx, checkID)
+
+	reportInfo, reportType, err := rw.GetReport(ctx, checkID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get report %s error: %s", checkID, err.Error())
 		return err
 	}
-	p.Info = &reportInfo
+	if reportType == string(constants.PlatformReport) {
+		p.PlatformInfo = reportInfo.(*structs.CheckPlatformReportInfo)
+	} else if reportType == string(constants.ClusterReport) {
+		p.ClusterInfo = reportInfo.(*structs.CheckClusterReportInfo)
+	} else {
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"check report type %s not supported", reportType)
+	}
+
+	return nil
+}
+
+func (p *Report) CheckCluster(ctx context.Context, clusterID string) error {
+	// get cluster meta from clusterID
+	cluster, instances, users, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("cluster %s get meta error: %s", clusterID, err.Error())
+		return err
+	}
+
+	clusterChecks, err := p.CheckClusters(ctx, []*management.Result{
+		{
+			Cluster:   cluster,
+			Instances: instances,
+			DBUsers:   users,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	p.ClusterInfo = &structs.CheckClusterReportInfo{ClusterCheck: clusterChecks[0]}
 
 	return nil
 }
@@ -486,14 +532,14 @@ func (p *Report) CheckTenant(ctx context.Context, tenantID string) error {
 		framework.LogWithContext(ctx).Errorf("get tenant %s error: %s", tenantID, err.Error())
 		return err
 	}
-	if p.Info == nil {
-		p.Info = &structs.CheckReportInfo{}
+	if p.PlatformInfo == nil {
+		p.PlatformInfo = &structs.CheckPlatformReportInfo{}
 	}
-	if len(p.Info.Tenants) == 0 {
-		p.Info.Tenants = make(map[string]structs.TenantCheck)
+	if len(p.PlatformInfo.Tenants) == 0 {
+		p.PlatformInfo.Tenants = make(map[string]structs.TenantCheck)
 	}
-	if _, ok := p.Info.Tenants[tenantID]; !ok {
-		p.Info.Tenants[tenantID] = structs.TenantCheck{
+	if _, ok := p.PlatformInfo.Tenants[tenantID]; !ok {
+		p.PlatformInfo.Tenants[tenantID] = structs.TenantCheck{
 			ClusterCount: structs.CheckRangeInt32{
 				Valid:         len(clusterMetas) >= 0 && int32(len(clusterMetas)) <= tenantInfo.MaxCluster,
 				RealValue:     int32(len(clusterMetas)),
@@ -542,7 +588,7 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 	}
 
 	checkHosts := make(map[string]structs.HostCheck)
-	for key, _ := range cpu {
+	for key := range cpu {
 		diskAllocated := make(map[string]structs.CheckString)
 		for path, value := range disk[key] {
 			if _, ok := diskAllocated[path]; !ok {
@@ -558,26 +604,39 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 			}
 		}
 	}
-	if p.Info == nil {
-		p.Info = &structs.CheckReportInfo{}
+	if p.PlatformInfo == nil {
+		p.PlatformInfo = &structs.CheckPlatformReportInfo{}
 	}
-	p.Info.Hosts = structs.HostsCheck{
+	p.PlatformInfo.Hosts = structs.HostsCheck{
 		Hosts: checkHosts,
 	}
 	return nil
 }
 
 func (p *Report) Serialize(ctx context.Context) (string, error) {
-	report, err := json.Marshal(p.Info)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("serialize report info error: %s", err.Error())
-		return "", err
-	}
-	// format report
 	var out bytes.Buffer
-	err = json.Indent(&out, report, "", "\t")
-	if err != nil {
-		return "", err
+	if p.ClusterInfo != nil {
+		report, err := json.Marshal(p.ClusterInfo)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("serialize report info error: %s", err.Error())
+			return "", err
+		}
+		err = json.Indent(&out, report, "", "\t")
+		if err != nil {
+			return "", err
+		}
+	} else if p.PlatformInfo != nil {
+		report, err := json.Marshal(p.PlatformInfo)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("serialize report info error: %s", err.Error())
+			return "", err
+		}
+		// format report
+		err = json.Indent(&out, report, "", "\t")
+		if err != nil {
+			return "", err
+		}
 	}
+
 	return out.String(), nil
 }

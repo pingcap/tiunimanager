@@ -112,7 +112,7 @@ func Test_Verify_ignoreWarings(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, true)
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, true) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	err := fileInitiator.Verify(ctx, &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
 	assert.Nil(t, err)
@@ -144,7 +144,7 @@ func Test_Verify_Warings(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, false)
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, false) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	err := fileInitiator.Verify(ctx, &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
 	assert.NotNil(t, err)
@@ -336,7 +336,7 @@ func Test_JoinEMCluster(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id") //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	_, err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
@@ -352,7 +352,7 @@ func Test_LeaveEMCluster(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id") //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	_, err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
 	assert.Nil(t, err)
@@ -405,6 +405,7 @@ func Test_BuildCheckHostTemplateItems(t *testing.T) {
 	host := genHostInfo("Test_Host1", "Compute,Storage,Schedule")
 	templateInfo := templateCheckHost{}
 	host.SSHPort = 10086
+	host.Arch = string(constants.ArchX8664)
 	(&templateInfo).buildCheckHostTemplateItems(host)
 
 	assert.Equal(t, 2, len(templateInfo.TemplateItemsForCompute))
@@ -491,6 +492,19 @@ func Test_isVirtualMachine_Contains(t *testing.T) {
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
 	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("VMware, Inc.", nil).AnyTimes()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+	isVM, err := fileInitiator.isVirtualMachine(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
+	assert.Nil(t, err)
+	assert.True(t, isVM)
+}
+
+func Test_isVirtualMachine_AliBaBa(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("Alibaba Cloud", nil).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)

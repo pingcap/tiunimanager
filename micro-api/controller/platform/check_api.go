@@ -30,7 +30,7 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param checkPlatformReq query message.CheckPlatformReq false "check platform"
+// @Param checkPlatformReq body message.CheckPlatformReq false "check platform"
 // @Success 200 {object} controller.ResultWithPage{data=message.CheckPlatformRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -46,6 +46,29 @@ func Check(c *gin.Context) {
 	}
 }
 
+// CheckCluster platform check cluster
+// @Summary platform check cluster
+// @Description platform check cluster
+// @Tags platform
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.ResultWithPage{data=message.CheckClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /platform/check/{clusterId} [post]
+func CheckCluster(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.CheckClusterReq{
+		ClusterID: c.Param("clusterId"),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CheckCluster, &message.CheckClusterRsp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
 // GetCheckReport get check report based on checkId
 // @Summary get check report based on checkId
 // @Description get check report based on checkId
@@ -53,14 +76,14 @@ func Check(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param getCheckReportReq query message.GetCheckReportReq false "get check report"
+// @Param checkId path string true "check id"
 // @Success 200 {object} controller.ResultWithPage{data=message.GetCheckReportRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /platform/report/:checkId [get]
+// @Router /platform/report/{checkId} [get]
 func GetCheckReport(c *gin.Context) {
-	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &message.GetCheckReportReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.GetCheckReportReq{
 		ID: c.Param("checkId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.GetCheckReport, &message.GetCheckReportRsp{},

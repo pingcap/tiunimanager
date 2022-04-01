@@ -19,6 +19,15 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  cluster.CancelBackupReq:
+    properties:
+      backupId:
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.CancelBackupResp:
+    type: object
   cluster.CloneClusterReq:
     properties:
       cloneStrategy:
@@ -218,6 +227,15 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  cluster.DeleteMetadataPhysicallyReq:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  cluster.DeleteMetadataPhysicallyResp:
     type: object
   cluster.DetailChangeFeedTaskResp:
     properties:
@@ -453,6 +471,15 @@ definitions:
     type: object
   cluster.MasterSlaveClusterSwitchoverReq:
     properties:
+      checkMasterWritableFlag:
+        type: boolean
+      checkSlaveReadOnlyFlag:
+        type: boolean
+      checkStandaloneClusterFlag:
+        description: |-
+          check if cluster specified in `SourceClusterID` is standalone, i.e. no cluster relation and no cdc
+          if this flag is true, always only check
+        type: boolean
       force:
         type: boolean
       onlyCheck:
@@ -618,6 +645,12 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
+        type: string
       topology:
         items:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
@@ -781,6 +814,12 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
+        type: string
     type: object
   cluster.ScaleOutClusterResp:
     properties:
@@ -1028,6 +1067,14 @@ definitions:
     type: object
   message.BindRolesForUserResp:
     type: object
+  message.CheckClusterRsp:
+    properties:
+      checkId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   message.CheckPermissionForUserReq:
     properties:
       permissions:
@@ -1042,9 +1089,14 @@ definitions:
       result:
         type: boolean
     type: object
+  message.CheckPlatformReq:
+    properties:
+      displayMode:
+        type: string
+    type: object
   message.CheckPlatformRsp:
     properties:
-      checkID:
+      checkId:
         type: string
       workFlowId:
         description: Asynchronous task workflow ID
@@ -1066,6 +1118,22 @@ definitions:
       paramGroupId:
         example: "1"
         type: string
+    type: object
+  message.CreateDisksReq:
+    properties:
+      disks:
+        items:
+          $ref: '#/definitions/structs.DiskInfo'
+        type: array
+      hostId:
+        type: string
+    type: object
+  message.CreateDisksResp:
+    properties:
+      diskIds:
+        items:
+          type: string
+        type: array
     type: object
   message.CreateParameterGroupReq:
     properties:
@@ -1234,6 +1302,15 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  message.DeleteDisksReq:
+    properties:
+      diskIds:
+        items:
+          type: string
+        type: array
+    type: object
+  message.DeleteDisksResp:
+    type: object
   message.DeleteHostsReq:
     properties:
       force:
@@ -1336,7 +1413,7 @@ definitions:
   message.GetCheckReportRsp:
     properties:
       reportInfo:
-        $ref: '#/definitions/structs.CheckReportInfo'
+        type: object
     type: object
   message.GetHierarchyResp:
     properties:
@@ -1720,6 +1797,20 @@ definitions:
     type: object
   message.UnbindRoleForUserResp:
     type: object
+  message.UpdateDiskReq:
+    properties:
+      newDiskInfo:
+        $ref: '#/definitions/structs.DiskInfo'
+    type: object
+  message.UpdateDiskResp:
+    type: object
+  message.UpdateHostInfoReq:
+    properties:
+      newHostInfo:
+        $ref: '#/definitions/structs.HostInfo'
+    type: object
+  message.UpdateHostInfoResp:
+    type: object
   message.UpdateHostReservedReq:
     properties:
       hostIds:
@@ -1900,52 +1991,6 @@ definitions:
       period:
         type: string
     type: object
-  structs.CheckAny:
-    properties:
-      expectedValue:
-        type: object
-      realValue:
-        type: object
-      valid:
-        type: boolean
-    type: object
-  structs.CheckError:
-    properties:
-      message:
-        type: string
-      type:
-        type: string
-    type: object
-  structs.CheckInt32:
-    properties:
-      expectedValue:
-        type: integer
-      realValue:
-        type: integer
-      valid:
-        type: boolean
-    type: object
-  structs.CheckRangeInt32:
-    properties:
-      expectedRange:
-        description: Left closed right closed interval
-        items:
-          type: integer
-        type: array
-      realValue:
-        type: integer
-      valid:
-        type: boolean
-    type: object
-  structs.CheckReportInfo:
-    properties:
-      hosts:
-        $ref: '#/definitions/structs.HostsCheck'
-      tenants:
-        additionalProperties:
-          $ref: '#/definitions/structs.TenantCheck'
-        type: object
-    type: object
   structs.CheckReportMeta:
     properties:
       checkID:
@@ -1954,62 +1999,10 @@ definitions:
         type: string
       creator:
         type: string
-    type: object
-  structs.CheckStatus:
-    properties:
-      health:
-        type: boolean
-      message:
+      status:
         type: string
-    type: object
-  structs.CheckString:
-    properties:
-      expectedValue:
+      type:
         type: string
-      realValue:
-        type: string
-      valid:
-        type: boolean
-    type: object
-  structs.CheckSwitch:
-    properties:
-      enable:
-        type: boolean
-    type: object
-  structs.ClusterCheck:
-    properties:
-      accountStatus:
-        $ref: '#/definitions/structs.CheckStatus'
-      backupRecordValid:
-        additionalProperties:
-          type: boolean
-        type: object
-      backupStrategy:
-        $ref: '#/definitions/structs.CheckString'
-      clusterID:
-        type: string
-      copies:
-        $ref: '#/definitions/structs.CheckInt32'
-      cpu:
-        type: integer
-      healthStatus:
-        $ref: '#/definitions/structs.CheckStatus'
-      instances:
-        items:
-          $ref: '#/definitions/structs.InstanceCheck'
-        type: array
-      maintenanceStatus:
-        type: string
-      memory:
-        type: integer
-      regionStatus:
-        $ref: '#/definitions/structs.CheckStatus'
-      runningStatus:
-        type: string
-      storage:
-        type: integer
-      topology:
-        $ref: '#/definitions/structs.CheckString'
     type: object
   structs.ClusterInfo:
     properties:
@@ -2099,6 +2092,8 @@ definitions:
         type: array
       cpuUsage:
         $ref: '#/definitions/structs.Usage'
+      diskId:
+        type: string
       hostID:
         type: string
       id:
@@ -2296,6 +2291,12 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
+        type: string
     type: object
   structs.ClusterResourceParameterCompute:
     properties:
@@ -2315,8 +2316,12 @@ definitions:
         type: integer
       diskCapacity:
         type: integer
+      diskId:
+        type: string
       diskType:
         description: NVMeSSD/SSD/SATA
+        type: string
+      hostIp:
         type: string
       specCode:
         description: 4C8G/8C16G ?
@@ -2440,36 +2445,14 @@ definitions:
           $ref: '#/definitions/structs.HierarchyTreeNode'
         type: array
     type: object
-  structs.HostCheck:
-    properties:
-      address:
-        type: string
-      cpuAllocated:
-        $ref: '#/definitions/structs.CheckInt32'
-      diskAllocated:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckString'
-        type: object
-      errors:
-        items:
-          $ref: '#/definitions/structs.CheckError'
-        type: array
-      firewall:
-        $ref: '#/definitions/structs.CheckSwitch'
-      memoryAllocated:
-        $ref: '#/definitions/structs.CheckInt32'
-      selinux:
-        $ref: '#/definitions/structs.CheckSwitch'
-      storageRatio:
-        type: number
-      swap:
-        $ref: '#/definitions/structs.CheckSwitch'
-    type: object
   structs.HostInfo:
     properties:
       arch:
         description: x86 or arm64
         type: string
+      availableDiskCount:
+        description: available disk count which could be used for allocation
+        type: integer
       az:
         type: string
       clusterType:
@@ -2502,7 +2485,7 @@ definitions:
       kernel:
         type: string
       loadStat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        description: Host load stat, Loadless, Inused, Exhaust, etc
         type: string
       memory:
         description: Host memory, init while importing
@@ -2530,7 +2513,7 @@ definitions:
       sshPort:
         type: integer
       status:
-        description: Host Status, 0 for Online, 1 for offline
+        description: Host status, Online, Offline, Failed, Deleted, etc
         type: string
       sysLabels:
         items:
@@ -2552,29 +2535,6 @@ definitions:
       vendor:
         type: string
     type: object
-  structs.HostsCheck:
-    properties:
-      delay:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckRangeInt32'
-        type: object
-      hosts:
-        additionalProperties:
-          $ref: '#/definitions/structs.HostCheck'
-        type: object
-      ntp:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckRangeInt32'
-        type: object
-      ping:
-        additionalProperties:
-          type: boolean
-        type: object
-      timeZoneConsistency:
-        additionalProperties:
-          type: boolean
-        type: object
-    type: object
   structs.Index:
     properties:
       description:
@@ -2584,21 +2544,6 @@ definitions:
       unit:
         type: string
       value:
-        type: object
-    type: object
-  structs.InstanceCheck:
-    properties:
-      address:
-        type: string
-      instanceID:
-        type: string
-      parameters:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckAny'
-        type: object
-      versions:
-        additionalProperties:
-          $ref: '#/definitions/structs.CheckString'
         type: object
     type: object
   structs.ParameterGroupParameterInfo:
@@ -2789,7 +2734,7 @@ definitions:
         items:
           $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
         type: array
-      productID:
+      productId:
         type: string
       productName:
         type: string
@@ -2930,7 +2875,7 @@ definitions:
     type: object
   structs.ProductWithVersions:
     properties:
-      productID:
+      productId:
         type: string
       productName:
         type: string
@@ -2974,11 +2919,15 @@ definitions:
         type: integer
       diskCapacity:
         type: integer
+      diskId:
+        type: string
       diskType:
         description: NVMeSSD/SSD/SATA
         type: string
       enough:
         type: boolean
+      hostIp:
+        type: string
       specCode:
         description: 4C8G/8C16G ?
         type: string
@@ -3009,7 +2958,7 @@ definitions:
     properties:
       arch:
         type: string
-      productID:
+      productId:
         type: string
       version:
         type: string
@@ -3031,9 +2980,9 @@ definitions:
     type: object
   structs.SystemInfo:
     properties:
-      currentVersionID:
+      currentVersionId:
         type: string
-      lastVersionID:
+      lastVersionId:
         type: string
       productComponentsInitialized:
         type: boolean
@@ -3064,23 +3013,8 @@ definitions:
         type: string
       releaseNote:
         type: string
-      versionID:
+      versionId:
         type: string
-    type: object
-  structs.TenantCheck:
-    properties:
-      clusterCount:
-        $ref: '#/definitions/structs.CheckRangeInt32'
-      clusters:
-        items:
-          $ref: '#/definitions/structs.ClusterCheck'
-        type: array
-      cpuRatio:
-        type: number
-      memoryRatio:
-        type: number
-      storageRatio:
-        type: number
     type: object
   structs.TenantInfo:
     properties:
@@ -3419,6 +3353,47 @@ paths:
       summary: delete backup record
       tags:
       - cluster backup
+  /backups/cancel:
+    post:
+      consumes:
+      - application/json
+      description: cancel backup
+      parameters:
+      - description: cancel backup request
+        in: body
+        name: backupReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.CancelBackupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.CancelBackupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: cancel backup
+      tags:
+      - cancel cluster backup
   /changefeeds/:
     get:
       consumes:
@@ -3813,137 +3788,6 @@ paths:
       summary: create a cluster
       tags:
       - cluster
-  /clusters/:clusterId/upgrade:
-    post:
-      consumes:
-      - application/json
-      description: request for upgrade TiDB cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: upgrade request
-        in: body
-        name: upgradeReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.UpgradeClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.UpgradeClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: request for upgrade TiDB cluster
-      tags:
-      - cluster upgrade
-  /clusters/:clusterId/upgrade/diff:
-    get:
-      consumes:
-      - application/json
-      description: query config diff between current cluster and target upgrade version
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - example: v5.0.0
-        in: query
-        name: targetVersion
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query config diff between current cluster and target upgrade version
-      tags:
-      - cluster upgrade
-  /clusters/:clusterId/upgrade/path:
-    get:
-      consumes:
-      - application/json
-      description: query upgrade path for given cluster id
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query upgrade path for given cluster id
-      tags:
-      - cluster upgrade
   /clusters/{clusterId}:
     delete:
       consumes:
@@ -4624,6 +4468,137 @@ paths:
       summary: save the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/{clusterId}/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: request for upgrade TiDB cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: upgrade request
+        in: body
+        name: upgradeReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.UpgradeClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.UpgradeClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: request for upgrade TiDB cluster
+      tags:
+      - cluster upgrade
+  /clusters/{clusterId}/upgrade/diff:
+    get:
+      consumes:
+      - application/json
+      description: query config diff between current cluster and target upgrade version
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: v5.0.0
+        in: query
+        name: targetVersion
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query config diff between current cluster and target upgrade version
+      tags:
+      - cluster upgrade
+  /clusters/{clusterId}/upgrade/path:
+    get:
+      consumes:
+      - application/json
+      description: query upgrade path for given cluster id
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query upgrade path for given cluster id
+      tags:
+      - cluster upgrade
   /clusters/clone:
     post:
       consumes:
@@ -5142,6 +5117,52 @@ paths:
       summary: unused, just display downstream config
       tags:
       - change feed
+  /metadata/{clusterId}/:
+    delete:
+      consumes:
+      - application/json
+      description: for handling exceptions only
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: delete request
+        in: body
+        name: deleteReq
+        schema:
+          $ref: '#/definitions/cluster.DeleteMetadataPhysicallyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.DeleteMetadataPhysicallyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete cluster metadata in this system physically, but keep the real
+        cluster alive
+      tags:
+      - cluster
   /param-groups/:
     get:
       consumes:
@@ -5487,9 +5508,11 @@ paths:
       - application/json
       description: platform check
       parameters:
-      - in: query
-        name: displayMode
-        type: string
+      - description: check platform
+        in: body
+        name: checkPlatformReq
+        schema:
+          $ref: '#/definitions/message.CheckPlatformReq'
       produces:
       - application/json
       responses:
@@ -5517,6 +5540,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: platform check
+      tags:
+      - platform
+  /platform/check/{clusterId}:
+    post:
+      consumes:
+      - application/json
+      description: platform check cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check cluster
       tags:
       - platform
   /platform/log:
@@ -5578,14 +5641,16 @@ paths:
       summary: query platform log
       tags:
       - platform log
-  /platform/report/:checkId:
+  /platform/report/{checkId}:
     get:
       consumes:
       - application/json
       description: get check report based on checkId
       parameters:
-      - in: query
-        name: id
+      - description: check id
+        in: path
+        name: checkId
+        required: true
         type: string
       produces:
       - application/json
@@ -6200,6 +6265,92 @@ paths:
       summary: unbind rbac role from user
       tags:
       - rbac UnbindRoleForUser
+  /resources/disk:
+    put:
+      consumes:
+      - application/json
+      description: update disk information
+      parameters:
+      - description: update disk information
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateDiskReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateDiskResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update disk info
+      tags:
+      - resource
+  /resources/disks:
+    delete:
+      consumes:
+      - application/json
+      description: remove disks by a list
+      parameters:
+      - description: list of disk IDs
+        in: body
+        name: diskIds
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteDisksReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteDisksResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a batch of disks
+      tags:
+      - resource
+    post:
+      consumes:
+      - application/json
+      description: add disks to the specified host
+      parameters:
+      - description: specify the hostId and disks
+        in: body
+        name: createDisksReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateDisksReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CreateDisksResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add disks to the specified host
+      tags:
+      - resource
   /resources/hierarchy:
     get:
       consumes:
@@ -6217,7 +6368,16 @@ paths:
         name: arch
         type: string
       - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -6243,6 +6403,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show the resources hierarchy
+      tags:
+      - resource
+  /resources/host:
+    put:
+      consumes:
+      - application/json
+      description: update host information
+      parameters:
+      - description: update host information
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateHostInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateHostInfoResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host info
       tags:
       - resource
   /resources/host-reserved:
@@ -6341,10 +6530,19 @@ paths:
         name: arch
         type: string
       - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
         type: string
       - in: query
         name: hostIp
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -6461,16 +6659,25 @@ paths:
         name: capacity
         type: integer
       - in: query
+        name: clusterType
+        type: string
+      - in: query
         name: diskStatus
         type: string
       - in: query
         name: diskType
         type: string
       - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
         type: string
       - in: query
         name: hostIp
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat

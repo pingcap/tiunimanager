@@ -18,6 +18,8 @@ package management
 import (
 	"context"
 	"fmt"
+	backuprestore2 "github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"strconv"
 
 	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
@@ -673,7 +675,7 @@ func TestBackupSourceCluster(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().BackupCluster(gomock.Any(),
-			gomock.Any(), true).Return(
+			gomock.Any(), false).Return(
 			cluster.BackupClusterDataResp{
 				AsyncTaskWorkFlowInfo: structs2.AsyncTaskWorkFlowInfo{
 					WorkFlowID: "111",
@@ -688,7 +690,7 @@ func TestBackupSourceCluster(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
 		backuprestore.MockBRService(brService)
 		brService.EXPECT().BackupCluster(gomock.Any(),
-			gomock.Any(), true).Return(
+			gomock.Any(), false).Return(
 			cluster.BackupClusterDataResp{}, fmt.Errorf("backup fail"))
 		err := backupSourceCluster(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -1502,13 +1504,60 @@ func TestDeleteCluster(t *testing.T) {
 
 }
 
+func TestClearCDCLinks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+
+	service := mockchangefeed.NewMockService(ctrl)
+	changefeed.MockChangeFeedService(service)
+
+	t.Run("query error", func(t *testing.T) {
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "111",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := clearCDCLinks(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+	t.Run("normal", func(t *testing.T) {
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "1111"},
+			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "2222"},
+		}, nil).Times(1)
+
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, nil).Times(1)
+
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
+			Cluster: &management.Cluster{
+				Entity: common.Entity{
+					ID: "111",
+				},
+				Version: "v5.0.0",
+			},
+		})
+		err := clearCDCLinks(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+}
+
 func TestDeleteClusterPhysically(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil)
 
 	flowContext := workflow.NewFlowContext(context.TODO())
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
@@ -1519,7 +1568,7 @@ func TestDeleteClusterPhysically(t *testing.T) {
 			Version: "v5.0.0",
 		},
 	})
-	err := clearClusterPhysically(&workflowModel.WorkFlowNode{}, flowContext)
+	err := takeoverRevertMeta(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
 
 }
@@ -1624,6 +1673,20 @@ func TestInitDatabaseAccount(t *testing.T) {
 		fmt.Println(err)
 	})
 
+	t.Run("duplicate", func(t *testing.T) {
+		clusterMeta := flowContext.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+		clusterMeta.DBUsers[string(constants.DBUserBackupRestore)] = &management.DBUser{
+			ClusterID: "2145635758",
+			Name:      constants.DBUserName[constants.DBUserBackupRestore],
+			Password:  common.PasswordInExpired{Val: "123455678"},
+			RoleType:  string(constants.DBUserBackupRestore),
+		}
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		//assert.NoError(t, err)
+		fmt.Println(err)
+	})
+
 	t.Run("init fail", func(t *testing.T) {
 		//	mockTiupManager := mock_deployment.NewMockInterface(ctrl)
 		//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
@@ -1631,6 +1694,81 @@ func TestInitDatabaseAccount(t *testing.T) {
 		//	deployment.M = mockTiupManager
 		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		fmt.Println(err)
+		assert.Error(t, err)
+	})
+}
+
+func TestInitGrafanaAccount(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterMeta := &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID:        "2145635758",
+				TenantId:  "324567",
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Name:              "koojdafij",
+			Type:              "TiDB",
+			Version:           "v5.2.2",
+			Tags:              []string{"111", "333"},
+			OwnerId:           "436534636u",
+			ParameterGroupID:  "352467890",
+			Copies:            4,
+			Region:            "Region1",
+			CpuArchitecture:   "x86_64",
+			MaintenanceStatus: constants.ClusterMaintenanceCreating,
+		},
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+		models.SetClusterReaderWriter(rw)
+
+		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(nil)
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		metadata := &spec.Specification{
+			Grafanas: []*spec.GrafanaSpec{
+				{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
+			},
+		}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		flowContext.SetData(ContextTopology, string(bytes))
+		err = initGrafanaAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found grafana", func(t *testing.T) {
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		metadata := &spec.Specification{}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		flowContext.SetData(ContextTopology, string(bytes))
+		err = initGrafanaAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		assert.Error(t, err)
+	})
+
+	t.Run("create DBUser error", func(t *testing.T) {
+		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+
+		rw.EXPECT().CreateDBUser(gomock.Any(), gomock.Any()).Return(fmt.Errorf("create DBUser error"))
+		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		metadata := &spec.Specification{
+			Grafanas: []*spec.GrafanaSpec{
+				{Host: "127.0.0.11", Port: 21, Username: "root", Password: "123"},
+			},
+		}
+		bytes, err := yaml.Marshal(metadata)
+		assert.NoError(t, err)
+		flowContext.SetData(ContextTopology, string(bytes))
+		models.SetClusterReaderWriter(rw)
+		err = initGrafanaAccount(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
 	})
 }
@@ -2267,13 +2405,18 @@ func Test_syncIncrData(t *testing.T) {
 		},
 	})
 	flowContext.SetData(ContextCloneStrategy, string(constants.CDCSyncClone))
+	flowContext.SetData(ContextBackupID, "123")
 
 	t.Run("normal", func(t *testing.T) {
 		service := mockchangefeed.NewMockService(ctrl)
 		changefeed.MockChangeFeedService(service)
 
 		service.EXPECT().CreateBetweenClusters(gomock.Any(), gomock.Any(),
-			gomock.Any(), gomock.Any()).Return("task01", nil)
+			gomock.Any(), gomock.Any(), gomock.Any()).Return("task01", nil)
+		backupRW := mockbr.NewMockReaderWriter(ctrl)
+		models.SetBRReaderWriter(backupRW)
+		backupRW.EXPECT().GetBackupRecord(gomock.Any(), gomock.Any()).Return(&backuprestore2.BackupRecord{BackupTso: 123}, nil)
+
 		rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(rw)
 

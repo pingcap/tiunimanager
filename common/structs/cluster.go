@@ -36,6 +36,8 @@ type ClusterResourceParameterComputeResource struct {
 	DiskCapacity int    `json:"diskCapacity"`
 	Spec         string `json:"specCode"` //4C8G/8C16G ?
 	Count        int    `json:"count"`
+	HostIP       string `json:"hostIp"`
+	DiskID       string `json:"diskId"`
 }
 
 func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType string, diskCapacity int) bool {
@@ -54,7 +56,8 @@ type ClusterResourceParameterCompute struct {
 
 //ClusterResourceInfo Resource information for creating database cluster input
 type ClusterResourceInfo struct {
-	InstanceResource []ClusterResourceParameterCompute `json:"instanceResource"`
+	RequestResourceMode string                            `json:"requestResourceMode" enums:"SpecificZone,SpecificHost" default:"SpecificZone"`
+	InstanceResource    []ClusterResourceParameterCompute `json:"instanceResource"`
 }
 
 func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductComponentIDType) int32 {
@@ -132,6 +135,7 @@ type ClusterInstanceInfo struct {
 	Version      string          `json:"version"`
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
+	DiskID       string          `json:"diskId"`
 	Addresses    []string        `json:"addresses"`
 	Ports        []int32         `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`

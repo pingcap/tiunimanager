@@ -17,6 +17,7 @@ package constants
 
 const (
 	FlowCheckPlatform = "CheckPlatform"
+	FlowCheckCluster  = "CheckCluster"
 )
 
 type CheckStatus string
@@ -25,4 +26,11 @@ const (
 	CheckRunning   CheckStatus = "Running"
 	CheckFailure   CheckStatus = "Failure"
 	CheckCompleted CheckStatus = "Completed"
+)
+
+type ReportType string
+
+const (
+	PlatformReport ReportType = "Platform"
+	ClusterReport  ReportType = "Cluster"
 )

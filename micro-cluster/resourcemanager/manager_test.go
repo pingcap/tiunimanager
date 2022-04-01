@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
@@ -41,21 +42,6 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 )
-
-var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
-	return nil
-}
-
-func getEmptyFlow(name string) *workflow.WorkFlowDefine {
-	return &workflow.WorkFlowDefine{
-		FlowName: name,
-		TaskNodes: map[string]*workflow.NodeDefine{
-			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"fail":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-		},
-	}
-}
 
 func genHostInfo(hostName string) *structs.HostInfo {
 	host := structs.HostInfo{
@@ -162,10 +148,10 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
@@ -176,6 +162,8 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 
 	assert.Equal(t, fake_hostId, hostIds[0])
 	assert.Equal(t, "flow01", flowIds[0])
+	// UnsetInEmTiup in case the background import routine is not finished
+	framework.UnsetInEmTiupProcess()
 }
 
 func Test_ImportHosts_Failed(t *testing.T) {
@@ -213,7 +201,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
@@ -303,10 +291,10 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
 		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{}, 0)},
+		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
 	}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)
@@ -460,7 +448,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 		} else {
 			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
-	})
+	}).Times(2)
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
@@ -475,6 +463,11 @@ func Test_GetStocks_Succeed(t *testing.T) {
 	assert.Equal(t, int32(5), stocks["TEST_Region1,TEST_Zone1"].FreeMemory)
 	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCount)
 	assert.Equal(t, int32(512), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCapacity)
+
+	// bad request test
+	location = structs.Location{Region: "UnknownRegion"}
+	_, err = resourceManager.GetStocks(context.TODO(), &location, &structs.HostFilter{}, &structs.DiskFilter{})
+	assert.NotNil(t, err)
 }
 
 func Test_AllocResources_Succeed(t *testing.T) {
@@ -594,7 +587,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 		return nil
-	})
+	}).Times(2)
 	allocRecycle := resourceManager.GetManagement().GetAllocatorRecycler()
 	localHostManage, ok := (allocRecycle).(*(allocrecycle.LocalHostManagement))
 	assert.True(t, ok)
@@ -607,5 +600,76 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 
 	req.RecycleReqs = append(req.RecycleReqs, require)
 	err := resourceManager.RecycleResources(context.TODO(), &req)
+	assert.Nil(t, err)
+
+	// bad request test
+	var req2 resource_structs.RecycleRequest
+	var require2 resource_structs.RecycleRequire
+	require2.HolderID = "Test-Bad-Cluster-ID"
+	require2.RecycleType = 1
+
+	req2.RecycleReqs = append(req2.RecycleReqs, require2)
+	err = resourceManager.RecycleResources(context.TODO(), &req2)
+	assert.NotNil(t, err)
+}
+
+func Test_UpdateHostInfo(t *testing.T) {
+	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	host1 := genHostInfo("TEST_HOST1")
+	mockClient.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, host resourcepool.Host) error {
+		if host.ID == fake_hostId1 {
+			return nil
+		} else {
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+		}
+	})
+	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
+	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
+	assert.True(t, ok)
+	file_hostprovider.SetResourceReaderWriter(mockClient)
+
+	err := resourceManager.UpdateHostInfo(context.TODO(), *host1)
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewError(errors.TIEM_PARAMETER_INVALID, "update host failed without host id").GetMsg(), err.(errors.EMError).GetMsg())
+
+	host1.ID = fake_hostId1
+	err = resourceManager.UpdateHostInfo(context.TODO(), *host1)
+	assert.Nil(t, err)
+}
+
+func Test_CUD_Disk(t *testing.T) {
+	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+
+	mockClient.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+	mockClient.EXPECT().DeleteDisks(gomock.Any(), gomock.Any()).Return(nil)
+	mockClient.EXPECT().UpdateDisk(gomock.Any(), gomock.Any()).Return(nil)
+	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
+	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
+	assert.True(t, ok)
+	file_hostprovider.SetResourceReaderWriter(mockClient)
+
+	var disk structs.DiskInfo
+	_, err := resourceManager.CreateDisks(context.TODO(), fake_hostId1, []structs.DiskInfo{disk})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+		fake_hostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
+
+	_, err = resourceManager.CreateDisks(context.TODO(), fake_hostId1, nil)
+	assert.Nil(t, err)
+
+	err = resourceManager.DeleteDisks(context.TODO(), nil)
+	assert.Nil(t, err)
+
+	err = resourceManager.UpdateDisk(context.TODO(), disk)
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewError(errors.TIEM_PARAMETER_INVALID, "update disk failed without disk id").GetMsg(), err.(errors.EMError).GetMsg())
+	disk.ID = "fake-disk-id"
+	err = resourceManager.UpdateDisk(context.TODO(), disk)
 	assert.Nil(t, err)
 }

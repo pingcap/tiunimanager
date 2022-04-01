@@ -1,3 +1,18 @@
+/******************************************************************************
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ ******************************************************************************/
+
 /*******************************************************************************
  * @File: report_read_writer_test
  * @Description:
@@ -10,6 +25,8 @@ package check
 
 import (
 	ctx "context"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -56,20 +73,43 @@ func TestReportReadWrite_DeleteReport(t *testing.T) {
 
 func TestReportReadWrite_GetReport(t *testing.T) {
 	t.Run("invalid parameter", func(t *testing.T) {
-		_, err := testRW.GetReport(ctx.TODO(), "")
+		_, _, err := testRW.GetReport(ctx.TODO(), "")
 		assert.Error(t, err)
 	})
 
-	t.Run("normal", func(t *testing.T) {
+	t.Run("platform normal", func(t *testing.T) {
 		report := &CheckReport{
 			Report:  `{"tenants": {}, "hosts": {}}`,
 			Creator: "admin",
+			Type:    string(constants.PlatformReport),
 			Status:  "Running",
 		}
 		got, err := testRW.CreateReport(ctx.TODO(), report)
 		assert.NoError(t, err)
-		_, err = testRW.GetReport(ctx.TODO(), got.ID)
+		reportInfo, reportType, err := testRW.GetReport(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
+		assert.Equal(t, reportType, string(constants.PlatformReport))
+		platformReportInfo := reportInfo.(*structs.CheckPlatformReportInfo)
+		assert.NotNil(t, platformReportInfo)
+		err = testRW.DeleteReport(ctx.TODO(), got.ID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("cluster normal", func(t *testing.T) {
+		report := &CheckReport{
+			Report:  `{"clusterID": "123"}`,
+			Creator: "admin",
+			Type:    string(constants.ClusterReport),
+			Status:  "Running",
+		}
+
+		got, err := testRW.CreateReport(ctx.TODO(), report)
+		assert.NoError(t, err)
+		reportInfo, reportType, err := testRW.GetReport(ctx.TODO(), got.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, reportType, string(constants.ClusterReport))
+		clusterReportInfo := reportInfo.(*structs.CheckClusterReportInfo)
+		assert.Equal(t, clusterReportInfo.ID, "123")
 		err = testRW.DeleteReport(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})

@@ -59,6 +59,9 @@ type ComputeStatistic struct {
 }
 
 func (rw *GormResourceReadWrite) recycleHolderResource(ctx context.Context, tx *gorm.DB, holderId string) (err error) {
+	if len(holderId) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "empty holderId")
+	}
 	var usedCompute []ComputeStatistic
 	err = tx.Model(&mm.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", holderId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {

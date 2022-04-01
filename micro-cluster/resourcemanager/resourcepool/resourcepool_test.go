@@ -21,6 +21,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/models"
@@ -141,7 +142,7 @@ func Test_ImportHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
 		return nil
 	}).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(12)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
 
 	host1 := genHostInfo("Test_Host1")
 	host2 := genHostInfo("Test_Host2")
@@ -179,11 +180,36 @@ func Test_DeleteHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flow *workflow.WorkFlowAggregation) error {
 		return nil
 	}).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(9)
+	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(6)
 
 	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"}, false)
 	assert.Equal(t, 3, len(flowIds))
 	assert.Nil(t, err)
+}
+
+func Test_DeleteHosts_InvalidHostId(t *testing.T) {
+	hostId := "test-fake-host-id"
+
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().QueryHosts(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+		nil,
+		int64(0),
+		nil,
+	)
+	resourcePool.SetHostProvider(mockProvider)
+
+	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{hostId}, false)
+	assert.Nil(t, flowIds)
+	assert.NotNil(t, err)
+	emError, ok := err.(errors.EMError)
+	assert.True(t, ok)
+	assert.Equal(t, errors.TIEM_RESOURCE_DELETE_HOST_ERROR, emError.GetCode())
 }
 
 func Test_QueryHosts(t *testing.T) {
@@ -275,4 +301,40 @@ func Test_getSSHConfigPort_NullString(t *testing.T) {
 
 	port := resourcePool.getSSHConfigPort(context.TODO())
 	assert.Equal(t, 22, port)
+}
+
+func Test_UpdateHostInfo(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	err := resourcePool.UpdateHostInfo(context.TODO(), structs.HostInfo{})
+	assert.Nil(t, err)
+}
+
+func Test_CUDDisk(t *testing.T) {
+	models.MockDB()
+	resourcePool := GetResourcePool()
+
+	// Mock host provider
+	ctrl1 := gomock.NewController(t)
+	defer ctrl1.Finish()
+	mockProvider := mock_provider.NewMockHostProvider(ctrl1)
+	mockProvider.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+	mockProvider.EXPECT().UpdateDisk(gomock.Any(), gomock.Any()).Return(nil)
+	mockProvider.EXPECT().DeleteDisks(gomock.Any(), gomock.Any()).Return(nil)
+	resourcePool.SetHostProvider(mockProvider)
+
+	_, err := resourcePool.CreateDisks(context.TODO(), "fake-host-id", nil)
+	assert.Nil(t, err)
+	err = resourcePool.UpdateDisk(context.TODO(), structs.DiskInfo{})
+	assert.Nil(t, err)
+	err = resourcePool.DeleteDisks(context.TODO(), []string{"fake-disk-id"})
+	assert.Nil(t, err)
 }

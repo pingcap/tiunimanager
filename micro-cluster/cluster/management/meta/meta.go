@@ -73,9 +73,10 @@ func (p *ClusterMeta) Delete(ctx context.Context) error {
 // @Description: delete cluster physically, If you don't know why you should use it, then don't use it
 // @Receiver p
 // @Parameter ctx
+// @Parameter reason
 // @return error
-func (p *ClusterMeta) ClearClusterPhysically(ctx context.Context) error {
-	return models.GetClusterReaderWriter().ClearClusterPhysically(ctx, p.Cluster.ID)
+func (p *ClusterMeta) ClearClusterPhysically(ctx context.Context, reason string) error {
+	return models.GetClusterReaderWriter().ClearClusterPhysically(ctx, p.Cluster.ID, reason)
 }
 
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {

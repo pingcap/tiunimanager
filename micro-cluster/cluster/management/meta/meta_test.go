@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/message/cluster"
+	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
@@ -84,7 +85,14 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 			},
 		},
 	}
-
+	meta2 := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "111",
+			},
+			Version: "v4.1.1",
+		},
+	}
 	t.Run("normal", func(t *testing.T) {
 		err := meta.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
 			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
@@ -93,7 +101,27 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 			}},
 			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
 				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1, HostIP: "127.0.0.1", DiskID: "aaaaaa"},
+			}},
+		})
+		assert.NoError(t, err)
+
+		assert.Equal(t, 2, len(meta.Instances["TiKV"]))
+		assert.Equal(t, 3, len(meta.Instances["TiDB"]))
+		assert.Equal(t, "111", meta.Instances["TiKV"][0].ClusterID)
+		assert.Equal(t, int32(3), meta.Instances["TiDB"][1].DiskCapacity)
+		assert.Equal(t, "SSD", meta.Instances["TiKV"][1].DiskType)
+		assert.Equal(t, "zone2", meta.Instances["TiDB"][2].Zone)
+	})
+	t.Run("normal", func(t *testing.T) {
+		err := meta2.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1, HostIP: "127.0.0.1", DiskID: "aaaaaa"},
 			}},
 		})
 		assert.NoError(t, err)
@@ -109,7 +137,20 @@ func TestClusterMeta_AddInstances(t *testing.T) {
 		err := meta.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{})
 		assert.Error(t, err)
 	})
-
+	t.Run("empty cluster", func(t *testing.T) {
+		meta3 := &ClusterMeta{}
+		err := meta3.AddInstances(context.TODO(), []structs.ClusterResourceParameterCompute{
+			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+			}},
+			{"TiKV", 2, []structs.ClusterResourceParameterComputeResource{
+				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
+				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1, HostIP: "127.0.0.1", DiskID: "aaaaaa"},
+			}},
+		})
+		assert.Error(t, err)
+	})
 }
 
 func TestClusterMeta_AddDefaultInstances(t *testing.T) {
@@ -176,7 +217,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Type:         "TiDB",
 					Version:      "v5.0.0",
 					Ports:        []int32{10001, 10002, 10003, 10004},
-					HostIP:       []string{"127.0.0.1"},
+					HostIP:       []string{"127.0.0.2"},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -192,7 +233,7 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Type:         "TiKV",
 					Version:      "v5.0.0",
 					Ports:        []int32{20001, 20002, 20003, 20004},
-					HostIP:       []string{"127.0.0.2"},
+					HostIP:       []string{},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -202,13 +243,13 @@ func TestClusterMeta_GenerateInstanceResourceRequirements(t *testing.T) {
 					Entity: common.Entity{
 						Status: string(constants.ClusterInstanceInitializing),
 					},
-					Zone:         "zone1",
+					Zone:         "",
 					CpuCores:     4,
 					Memory:       8,
 					Type:         "PD",
 					Version:      "v5.0.0",
 					Ports:        []int32{30001, 30002, 30003, 30004},
-					HostIP:       []string{"127.0.0.3"},
+					HostIP:       []string{},
 					DiskType:     "SSD",
 					DiskCapacity: 128,
 				},
@@ -282,6 +323,115 @@ func TestClusterMeta_ApplyGlobalPortResource(t *testing.T) {
 	})
 }
 
+func TestClusterMeta_ApplyInstanceResource(t *testing.T) {
+	pd := &management.ClusterInstance{
+		HostIP: []string{"127.0.0.1"},
+	}
+	tidb := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	tikv := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	prometheus := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	grafana := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	alertManager := &management.ClusterInstance{
+		HostIP: []string{},
+	}
+	meta := &ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				Status: string(constants.ClusterInitializing),
+			},
+		},
+		Instances: map[string][]*management.ClusterInstance{
+			string(constants.ComponentIDPD): {
+				pd,
+			},
+			string(constants.ComponentIDTiDB): {
+				tidb,
+			},
+			string(constants.ComponentIDTiKV): {
+				tikv,
+			},
+			string(constants.ComponentIDPrometheus): {
+				prometheus,
+			},
+			string(constants.ComponentIDAlertManger): {
+				alertManager,
+			},
+			string(constants.ComponentIDGrafana): {
+				grafana,
+			},
+		},
+	}
+
+	meta.ApplyInstanceResource(&resource.AllocRsp{
+		Results: []resource.Compute{
+			{
+				HostId: "1111",
+				HostIp: "127.0.0.1",
+				PortRes: []resource.PortResource{
+					{
+						Ports: []int32{1, 2, 3, 4, 5, 6, 7, 8},
+					},
+				},
+				DiskRes: resource.DiskResource{
+					DiskId: "1111",
+					Path:   "path1111",
+				},
+				Location: structs.Location{
+					Rack: "rack1",
+				},
+			},
+			{
+				HostId: "2222",
+				HostIp: "127.0.02",
+				PortRes: []resource.PortResource{
+					{
+						Ports: []int32{1, 2, 3, 4},
+					},
+				},
+				DiskRes: resource.DiskResource{
+					DiskId: "2222",
+					Path:   "path2222",
+				},
+				Location: structs.Location{
+					Rack: "rack2",
+				},
+			},
+			{
+				HostId: "3333",
+				HostIp: "127.0.0.3",
+				PortRes: []resource.PortResource{
+					{
+						Ports: []int32{1, 2, 3, 4, 5, 6, 7, 8},
+					},
+				},
+				DiskRes: resource.DiskResource{
+					DiskId: "3333",
+					Path:   "path3333",
+				},
+				Location: structs.Location{
+					Rack: "rack3",
+				},
+			},
+		},
+		Applicant: resource.Applicant{},
+	}, []*management.ClusterInstance{
+		pd, tidb, tikv,
+	})
+
+	assert.Equal(t, "path1111", meta.Instances["PD"][0].DiskPath)
+	assert.Equal(t, []string{"127.0.0.1"}, meta.Instances["PD"][0].HostIP)
+	assert.Equal(t, 1, len(meta.Instances["PD"][0].HostIP))
+	assert.Equal(t, "127.0.0.3", meta.Instances["TiKV"][0].HostIP[0])
+	assert.Equal(t, "rack1", meta.Instances["AlertManger"][0].Rack)
+}
 func TestClusterMeta_GetInstanceByStatus(t *testing.T) {
 	meta := &ClusterMeta{
 		Instances: map[string][]*management.ClusterInstance{
@@ -570,6 +720,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 		got, err := meta.CloneMeta(context.TODO(), structs.CreateClusterParameter{
 			Name:       "cluster01",
 			DBPassword: "1234",
+			Copies:     1,
 			Region:     "Region01",
 		}, []structs.ClusterResourceParameterCompute{
 			{"TiDB", 2, []structs.ClusterResourceParameterComputeResource{
@@ -580,7 +731,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 			}},
-		})
+		}, string(constants.SnapShotClone))
 		assert.NoError(t, err)
 		assert.Equal(t, 5, len(got.Instances))
 	})
@@ -590,6 +741,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 			Name:       "cluster01",
 			DBUser:     "user01",
 			DBPassword: "1234",
+			Copies:     1,
 			Region:     "Region01",
 			Version:    "v3.0.0",
 		}, []structs.ClusterResourceParameterCompute{
@@ -601,7 +753,7 @@ func TestClusterMeta_CloneMeta(t *testing.T) {
 				{Zone: "zone1", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 				{Zone: "zone2", Spec: "4C8G", DiskType: "SSD", DiskCapacity: 3, Count: 1},
 			}},
-		})
+		}, string(constants.SnapShotClone))
 		assert.Error(t, err)
 	})
 }
@@ -773,37 +925,6 @@ func TestClusterMeta_Delete(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		meta.Cluster.ID = ""
 		err := meta.Delete(context.TODO())
-		assert.Error(t, err)
-	})
-}
-
-func TestClusterMeta_ClearClusterPhysically(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
-	models.SetClusterReaderWriter(rw)
-
-	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "111").Return(nil)
-	rw.EXPECT().ClearClusterPhysically(gomock.Any(), "").Return(errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
-
-	meta := &ClusterMeta{
-		Cluster: &management.Cluster{
-			Entity: common.Entity{
-				ID: "111",
-			},
-			MaintenanceStatus: constants.ClusterMaintenanceNone,
-		},
-	}
-
-	t.Run("normal", func(t *testing.T) {
-		meta.Cluster.ID = "111"
-		err := meta.ClearClusterPhysically(context.TODO())
-		assert.NoError(t, err)
-	})
-
-	t.Run("error", func(t *testing.T) {
-		meta.Cluster.ID = ""
-		err := meta.ClearClusterPhysically(context.TODO())
 		assert.Error(t, err)
 	})
 }

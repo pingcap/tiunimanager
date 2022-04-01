@@ -27,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -46,5 +47,17 @@ func Test_allVersionInitializers(t *testing.T) {
 }
 
 func Test_initBySql(t *testing.T) {
+	err := Open(framework.Current.(*framework.BaseFramework))
+	file := framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + "test.sql"
 
+	defer func() {
+		defaultDb = nil
+		os.RemoveAll(framework.Current.(*framework.BaseFramework).GetDataDir() + constants.DBDirPrefix + constants.DatabaseFileName)
+		os.RemoveAll(file)
+	}()
+
+	assert.NoError(t, err)
+	ioutil.WriteFile(file, []byte("select * from system_infos;"), 0600)
+	err = initBySql(nil, file, "test")
+	assert.NoError(t, err)
 }

@@ -15,6 +15,8 @@ service ClusterService {
     rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
     rpc CloneCluster(RpcRequest) returns (RpcResponse);
 
+    rpc DeleteMetadataPhysically(RpcRequest) returns (RpcResponse);
+
     rpc PreviewCluster(RpcRequest) returns (RpcResponse);
     rpc PreviewScaleOutCluster(RpcRequest) returns (RpcResponse);
 
@@ -25,12 +27,14 @@ service ClusterService {
 
     rpc QueryClusterLog(RpcRequest) returns (RpcResponse);
 
+    // Backup && Restore
     rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
     rpc CreateBackup(RpcRequest) returns (RpcResponse);
     rpc RestoreNewCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc CancelBackup(RpcRequest) returns (RpcResponse);
 
     rpc GetDashboardInfo(RpcRequest) returns (RpcResponse);
     rpc GetMonitorInfo(RpcRequest) returns (RpcResponse);
@@ -59,6 +63,10 @@ service ClusterService {
     rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
     rpc GetHierarchy(RpcRequest) returns (RpcResponse);
     rpc GetStocks(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostInfo(RpcRequest) returns (RpcResponse);
+    rpc CreateDisks(RpcRequest) returns (RpcResponse);
+    rpc DeleteDisks(RpcRequest) returns (RpcResponse);
+    rpc UpdateDisk(RpcRequest) returns (RpcResponse);
 
     // workflow
     rpc ListFlows(RpcRequest) returns (RpcResponse);
@@ -85,10 +93,7 @@ service ClusterService {
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
     rpc DetailChangeFeedTask(RpcRequest) returns (RpcResponse);
 
-    // product upgrade path
-    rpc CreateProductUpgradePath(RpcRequest) returns(RpcResponse);
-    rpc DeleteProductUpgradePath(RpcRequest) returns (RpcResponse);
-    rpc UpdateProductUpgradePath(RpcRequest) returns (RpcResponse);
+    // upgrade
     rpc QueryProductUpgradePath(RpcRequest) returns (RpcResponse);
     rpc QueryUpgradeVersionDiffInfo(RpcRequest) returns (RpcResponse);
     rpc UpgradeCluster(RpcRequest) returns (RpcResponse);
@@ -127,6 +132,7 @@ service ClusterService {
 
     // platform
     rpc CheckPlatform(RpcRequest) returns(RpcResponse);
+    rpc CheckCluster(RpcRequest) returns(RpcResponse);
     rpc QueryCheckReports(RpcRequest) returns(RpcResponse);
     rpc GetCheckReport(RpcRequest) returns(RpcResponse);
     rpc QueryPlatformLog(RpcRequest) returns(RpcResponse);

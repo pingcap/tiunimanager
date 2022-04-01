@@ -75,8 +75,9 @@ func (p *Manager) clusterRestrictedReadOnlyOp(ctx context.Context, clusterID, op
 			"%s clusterGetCDCUserNameAndPwd clusterID:%s success", funcName, clusterID)
 	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/?charset=utf8mb4&parseTime=True&loc=Local", name, pwd, addr)
+	safeDSN := fmt.Sprintf("%s:%s@tcp(%s)/?charset=utf8mb4&parseTime=True&loc=Local", name, "?", addr)
 	mylog := framework.LogWithContext(ctx).WithField("clusterID", clusterID)
-	mylog.Info("checkClusterWritable gorm.Open with dsn:", dsn)
+	mylog.Info("checkClusterWritable gorm.Open with dsn:", safeDSN)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		mylog.Warnf("%s gorm.Open err:%s", funcName, err)
@@ -115,8 +116,9 @@ func (p *Manager) clusterRestrictedReadOnlyOp(ctx context.Context, clusterID, op
 
 func (p *Manager) checkClusterWritable(ctx context.Context, clusterID, userName, pwd, addr string) error {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", userName, pwd, addr, databaseName)
+	safeDSN := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", userName, "?", addr, databaseName)
 	mylog := framework.LogWithContext(ctx).WithField("clusterID", clusterID)
-	mylog.Info("checkClusterWritable gorm.Open with dsn:", dsn)
+	mylog.Info("checkClusterWritable gorm.Open with dsn:", safeDSN)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		mylog.Warn("checkClusterWritable gorm.Open err:", err)

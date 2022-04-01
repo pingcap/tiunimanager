@@ -142,6 +142,35 @@ func (g *ClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (clust
 	return
 }
 
+func (g *ClusterReadWrite) RelationsResetSyncChangeFeedTaskIDs(ctx context.Context, masterClusterID string, slavesClusterIDMapToSyncTaskID map[string]string) error {
+	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		slaves, err := g.GetSlaves(ctx, masterClusterID)
+		if err != nil {
+			return nil
+		}
+		if len(slaves) != len(slavesClusterIDMapToSyncTaskID) {
+			return fmt.Errorf("len(slaves) != len(slavesClusterIDMapToSyncTaskID): %d != %d", len(slaves), len(slavesClusterIDMapToSyncTaskID))
+		}
+		for _, rel := range slaves {
+			newTaskID, ok := slavesClusterIDMapToSyncTaskID[rel.ObjectClusterID]
+			if !ok {
+				return fmt.Errorf("slaveClusterID %s not match slavesClusterIDMapToSyncTaskID", rel.ObjectClusterID)
+			}
+			if len(newTaskID) <= 0 {
+				return fmt.Errorf("unexpected zero-length newTaskID, slaveID:%s", rel.ObjectClusterID)
+			}
+			if newTaskID != rel.SyncChangeFeedTaskID {
+				err := g.DB(ctx).Model(rel).Update("sync_change_feed_task_id", newTaskID).Error
+				if err != nil {
+					err = dbCommon.WrapDBError(err)
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
 	relations := make([]*ClusterRelation, 0)
 	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error

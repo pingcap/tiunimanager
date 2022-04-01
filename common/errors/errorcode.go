@@ -80,6 +80,7 @@ const (
 	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED                  EM_ERROR_CODE = 21001
 	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND EM_ERROR_CODE = 21002
 	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT  EM_ERROR_CODE = 21003
+	TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED         EM_ERROR_CODE = 21004
 
 	// workflow
 	TIEM_WORKFLOW_CREATE_FAILED         EM_ERROR_CODE = 40100
@@ -435,6 +436,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:                  {"master/slave switchover failed", 500},
 	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND: {"master/slave CDC sync task not found", 400},
 	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT:  {"slave has no CDC component", 400},
+	TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED:         {"switchover rollback failed", 400},
 
 	TIEM_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
 	TIEM_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},

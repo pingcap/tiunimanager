@@ -1121,7 +1121,8 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return err
 	}
 
-	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), metaYaml)
+	// todo metaYaml contains password
+	//node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), metaYaml)
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 

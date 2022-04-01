@@ -664,7 +664,7 @@ type openSftpClientFunc func(ctx context.Context, req cluster.TakeoverClusterReq
 
 var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
 	conf := ssh.ClientConfig{User: req.TiUPUserName,
-		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
+		Auth: []ssh.AuthMethod{ssh.Password(string(req.TiUPUserPassword))},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
@@ -706,7 +706,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		return
 	}
 	meta := &meta.ClusterMeta{}
-	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBPassword); err != nil {
+	if err = meta.BuildForTakeover(ctx, req.ClusterName, string(req.DBPassword)); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
 		return
 	}

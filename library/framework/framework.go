@@ -213,7 +213,6 @@ func (b *BaseFramework) initMicroService() {
 		server.WrapHandler(NewMicroHandlerWrapper()),
 		server.WrapHandler(prometheus.NewHandlerWrapper()),
 		server.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-		server.WrapHandler(logWrapper(b)),
 		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
 		server.Address(b.serviceMeta.GetServiceAddress()),
 		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...))),

@@ -117,6 +117,15 @@ var allVersionInitializers = []system.VersionInitializer{
 			}).Present()
 		})
 	}},
+	{"v1.0.0", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return tx.Create(&system.VersionInfo{
+				ID:          "v1.0.0",
+				Desc:        "",
+				ReleaseNote: "",
+			}).Error
+		})
+	}},
 
 	{inTestingVersion, func() error {
 		return defaultDb.base.Create(&system.VersionInfo{

@@ -70,7 +70,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			}
 			host.IP = addr.String()
 			host.UserName = row[USERNAME_FIELD]
-			host.Passwd = row[PASSWD_FIELD]
+			host.Passwd = structs.SensitiveText(row[PASSWD_FIELD])
 			host.Region = row[REGION_FIELD]
 			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]

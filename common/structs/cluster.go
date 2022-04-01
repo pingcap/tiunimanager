@@ -73,18 +73,18 @@ func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductCompone
 type CreateClusterParameter struct {
 	Name string `json:"clusterName" validate:"required,min=4,max=64"`
 	// todo delete?
-	DBUser           string   `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32"`
-	Type             string   `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
-	Version          string   `json:"clusterVersion" validate:"required,startswith=v"`
-	Tags             []string `json:"tags"`
-	TLS              bool     `json:"tls"`
-	Copies           int      `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive        bool     `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	Vendor           string   `json:"vendor" form:"vendor"`
-	Region           string   `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
-	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
-	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
+	DBUser           string        `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	DBPassword       SensitiveText `json:"dbPassword" validate:"required,min=8,max=32"`
+	Type             string        `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
+	Version          string        `json:"clusterVersion" validate:"required,startswith=v"`
+	Tags             []string      `json:"tags"`
+	TLS              bool          `json:"tls"`
+	Copies           int           `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive        bool          `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Vendor           string        `json:"vendor" form:"vendor"`
+	Region           string        `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
+	CpuArchitecture  string        `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
+	ParameterGroupID string        `json:"parameterGroupID" form:"parameterGroupID"`
 }
 
 // ClusterRelations Cluster relations info

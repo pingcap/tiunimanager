@@ -121,7 +121,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 	meta.DBUsers[string(constants.Root)] = &management.DBUser{
 		ClusterID: meta.Cluster.ID,
 		Name:      constants.DBUserName[constants.Root],
-		Password:  dbCommon.PasswordInExpired{Val: parameter.DBPassword, UpdateTime: time.Now()},
+		Password:  dbCommon.PasswordInExpired{Val: string(parameter.DBPassword), UpdateTime: time.Now()},
 		RoleType:  string(constants.Root),
 	}
 
@@ -174,7 +174,7 @@ func (p *ClusterMeta) BuildCluster(ctx context.Context, param structs.CreateClus
 		p.DBUsers[string(constants.Root)] = &management.DBUser{
 			ClusterID: got.ID,
 			Name:      constants.DBUserName[constants.Root],
-			Password:  dbCommon.PasswordInExpired{Val: param.DBPassword, UpdateTime: time.Now()},
+			Password:  dbCommon.PasswordInExpired{Val: string(param.DBPassword), UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		}
 		//fmt.Println("got: ",got.ID, "user: ", p.DBUsers[string(constants.Root)].ClusterID)

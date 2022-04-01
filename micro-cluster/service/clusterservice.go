@@ -126,7 +126,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
 			// deal with err uniformly later
-			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal response data failed"), getDataError)
+			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "marshal response data failed", getDataError)
 		} else {
 			if pc, _, _, ok := runtime.Caller(1); ok {
 				desensitizeLog(ctx, runtime.FuncForPC(pc).Name(), "end", responseData)

@@ -101,6 +101,11 @@ var allVersionInitializers = []system.VersionInitializer{
 	{"v1.0.0-beta.13", func() error {
 		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
 			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&config.SystemConfig{
+					ConfigKey:   constants.ConfigKeyExtraVMFacturer,
+					ConfigValue: "",
+				}).Error
+			}).BreakIf(func() error {
 				return tx.Create(&system.VersionInfo{
 					ID:          "v1.0.0-beta.13",
 					Desc:        "beta 13",

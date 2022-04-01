@@ -62,7 +62,7 @@ func TestClusterMeta_BuildCluster(t *testing.T) {
 	assert.Equal(t, meta.Cluster.Version, params.Version)
 	assert.Equal(t, meta.Cluster.TLS, params.TLS)
 	assert.Equal(t, meta.Cluster.Tags, params.Tags)
-	assert.Equal(t, meta.DBUsers[string(constants.Root)].Password.Val, params.DBPassword)
+	assert.Equal(t, meta.DBUsers[string(constants.Root)].Password.Val, string(params.DBPassword))
 	assert.NotEmpty(t, meta.DBUsers[string(constants.Root)].ClusterID)
 	assert.Equal(t, meta.DBUsers[string(constants.Root)].ClusterID, "1234")
 }

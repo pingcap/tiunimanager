@@ -111,7 +111,7 @@ func (config *UserModuleConfig) buildUserCommand() string {
 // get authenticate to target host either by import file or framework args
 func (p *FileHostInitiator) getUserSpecifiedAuthenticateToHost(ctx context.Context, h *structs.HostInfo) (authenticate *sshclient.HostAuthenticate, err error) {
 	if h.UserName != "" && h.Passwd != "" {
-		return &sshclient.HostAuthenticate{SshType: sshclient.Passwd, AuthenticatedUser: h.UserName, AuthenticateContent: h.Passwd}, nil
+		return &sshclient.HostAuthenticate{SshType: sshclient.Passwd, AuthenticatedUser: h.UserName, AuthenticateContent: string(h.Passwd)}, nil
 	}
 	specifyUser := framework.GetCurrentSpecifiedUser()
 	specifyPrivKey := framework.GetCurrentSpecifiedPrivateKeyPath()

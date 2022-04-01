@@ -5297,7 +5297,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -5517,12 +5532,27 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -5766,6 +5796,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "diskStatus",
                         "in": "query"
                     },
@@ -5776,12 +5811,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {

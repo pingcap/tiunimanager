@@ -25,7 +25,7 @@ const (
 const (
 	BizTypeCluster  string = "cluster"
 	BizTypeHost     string = "host"
-	BizTypePlatform string = "platform"
+	BizTypeCheckReport string = "checkReport"
 )
 
 const (

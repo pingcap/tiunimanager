@@ -116,7 +116,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		return err
 	}
 	// Store ignoreWarnings for Verify results
-	wrapCtx := context.WithValue(ctx, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextIgnoreWarnings, ignoreWarnings) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	for _, host := range hosts {
 		err = resourcePool.hostInitiator.Verify(wrapCtx, &host)
 		if err != nil {
@@ -174,7 +174,7 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	}
 
 	// Store nodeID for second party service
-	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	operationID, err := resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts)
 	if err != nil {
 		log.Errorf("join em cluster failed for host %s %s, %v", hosts[0].HostName, hosts[0].IP, err)
@@ -297,7 +297,7 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 	}
 
 	// Store nodeID for second party service
-	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 
 	for _, host := range hosts {
 		clusterNodeId := fmt.Sprintf("%s:%d", host.IP, rp_consts.HostFileBeatPort)

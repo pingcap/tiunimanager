@@ -25,6 +25,7 @@ package product
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -54,6 +55,9 @@ func NewManager() *Manager {
 func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInfoReq) (resp message.UpdateVendorInfoResp, err error) {
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		for _, vendor := range req.Vendors {
+			if innerError := validateVendorData(vendor); innerError != nil {
+				return innerError
+			}
 			vendorInfo, zones, specs := convertVendorRequest(vendor)
 			if innerError := models.GetProductReaderWriter().SaveVendor(transactionCtx, vendorInfo, zones, specs); innerError != nil {
 				return innerError
@@ -71,6 +75,19 @@ func (p *Manager) UpdateVendors(ctx context.Context, req message.UpdateVendorInf
 	}
 
 	return
+}
+
+func validateVendorData(vendor structs.VendorConfigInfo) error {
+	specInfos := make(map[string]int)
+	for _, s := range vendor.Specs {
+		code := fmt.Sprintf("%d %d %s %s", s.CPU, s.Memory, s.DiskType, s.PurposeType)
+		if _, ok := specInfos[code]; ok {
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "duplicated spec")
+		} else {
+			specInfos[code] = 1
+		}
+	}
+	return nil
 }
 
 func (p *Manager) QueryVendors(ctx context.Context, req message.QueryVendorInfoReq) (resp message.QueryVendorInfoResp, err error) {

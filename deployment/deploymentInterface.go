@@ -26,9 +26,6 @@ package deployment
 
 import (
 	"context"
-
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 // TiUPComponentType Type of TiUP component, e.g. cluster/dm/tiem
@@ -47,18 +44,18 @@ type TiUPMeta struct {
 	Servers   []*interface{}
 }
 
-var component = map[constants.EMProductComponentIDType]TiUPMeta{
-	constants.ComponentIDTiDB:             {spec.ComponentTiDB, nil},
-	constants.ComponentIDTiKV:             {spec.ComponentTiKV, nil},
-	constants.ComponentIDTiFlash:          {spec.ComponentTiFlash, nil},
-	constants.ComponentIDPD:               {spec.ComponentPD, nil},
-	constants.ComponentIDCDC:              {spec.ComponentCDC, nil},
-	constants.ComponentIDGrafana:          {spec.ComponentGrafana, nil},
-	constants.ComponentIDPrometheus:       {spec.ComponentPrometheus, nil},
-	constants.ComponentIDAlertManger:      {spec.ComponentAlertmanager, nil},
-	constants.ComponentIDNodeExporter:     {spec.ComponentNodeExporter, nil},
-	constants.ComponentIDBlackboxExporter: {spec.ComponentBlackboxExporter, nil},
-}
+//var component = map[constants.EMProductComponentIDType]TiUPMeta{
+//	constants.ComponentIDTiDB:             {spec.ComponentTiDB, nil},
+//	constants.ComponentIDTiKV:             {spec.ComponentTiKV, nil},
+//	constants.ComponentIDTiFlash:          {spec.ComponentTiFlash, nil},
+//	constants.ComponentIDPD:               {spec.ComponentPD, nil},
+//	constants.ComponentIDCDC:              {spec.ComponentCDC, nil},
+//	constants.ComponentIDGrafana:          {spec.ComponentGrafana, nil},
+//	constants.ComponentIDPrometheus:       {spec.ComponentPrometheus, nil},
+//	constants.ComponentIDAlertManger:      {spec.ComponentAlertmanager, nil},
+//	constants.ComponentIDNodeExporter:     {spec.ComponentNodeExporter, nil},
+//	constants.ComponentIDBlackboxExporter: {spec.ComponentBlackboxExporter, nil},
+//}
 
 const (
 	CMDDeploy       = "deploy"

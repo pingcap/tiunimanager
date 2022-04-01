@@ -100,8 +100,8 @@ func Contain(list interface{}, target interface{}) bool {
 // @Return      if v1 >= v2 return true
 // @Return      error
 func CompareTiDBVersion(v1, v2 string) (bool, error) {
-	v1Nums := strings.Split(v1[1:len(v1)], ".")
-	v2Nums := strings.Split(v2[1:len(v2)], ".")
+	v1Nums := strings.Split(v1[1:], ".")
+	v2Nums := strings.Split(v2[1:], ".")
 
 	if len(v1Nums) != 3 || len(v2Nums) != 3 {
 		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,

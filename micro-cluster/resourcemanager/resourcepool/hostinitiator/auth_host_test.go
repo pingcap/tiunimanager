@@ -179,7 +179,7 @@ func Test_getUserSpecifiedAuthenticateToHost(t *testing.T) {
 	assert.Equal(t, "/fake/private/key/path", authenticate.AuthenticateContent)
 
 	framework.Current.GetClientArgs().LoginHostUser = ""
-	authenticate, err = fileInitiator.getUserSpecifiedAuthenticateToHost(context.TODO(), &structs.HostInfo{UserName: "test"})
+	_, err = fileInitiator.getUserSpecifiedAuthenticateToHost(context.TODO(), &structs.HostInfo{UserName: "test"})
 	assert.NotNil(t, err)
 
 }

@@ -319,6 +319,7 @@ func validateParameterRange(ctx context.Context, reqParams []structs.ParameterGr
 				RangeType:   queryParam.RangeType,
 				Unit:        queryParam.Unit,
 				UnitOptions: unitOptions,
+				HasApply:    queryParam.HasApply,
 				RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
 			}, false) {
 				if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {

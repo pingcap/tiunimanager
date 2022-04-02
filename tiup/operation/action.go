@@ -127,10 +127,6 @@ func Start(
 		}
 	})
 
-	if len(cluster.BaseTopo().WebServers) <= 0 {
-		return fmt.Errorf("Component web_servers can not empty ")
-	}
-
 	for _, comp := range components {
 		insts := FilterInstance(comp.Instances(), nodeFilter)
 		err := StartComponent(ctx, insts, noAgentHosts, options, tlsCfg)
@@ -155,6 +151,9 @@ func Start(
 			}
 			// init grafana index patterns
 			if comp.Name() == spec.ComponentGrafana {
+				if len(cluster.BaseTopo().WebServers) <= 0 {
+					return fmt.Errorf("Component web_servers can not empty ")
+				}
 				if err = initGrafana(ctx, tlsCfg, inst, cluster.BaseTopo().WebServers[0]); err != nil {
 					return err
 				}

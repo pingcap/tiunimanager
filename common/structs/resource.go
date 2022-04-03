@@ -94,7 +94,7 @@ type HostInfo struct {
 	IP                 string              `json:"ip"`
 	SSHPort            int32               `json:"sshPort,omitempty"`
 	UserName           string              `json:"userName,omitempty"`
-	Passwd             string              `json:"passwd,omitempty"`
+	Passwd             SensitiveText       `json:"passwd,omitempty"`
 	HostName           string              `json:"hostName"`
 	Status             string              `json:"status"`   // Host status, Online, Offline, Failed, Deleted, etc
 	Stat               string              `json:"loadStat"` // Host load stat, Loadless, Inused, Exhaust, etc

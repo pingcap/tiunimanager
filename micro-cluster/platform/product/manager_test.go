@@ -78,6 +78,7 @@ func TestManager_QueryVendors(t *testing.T) {
 		_, err := NewManager().QueryVendors(context.TODO(), message.QueryVendorInfoReq{VendorIDs: []string{"Local"}})
 		assert.NoError(t, err)
 	})
+
 }
 
 func TestManager_UpdateVendors(t *testing.T) {
@@ -87,6 +88,15 @@ func TestManager_UpdateVendors(t *testing.T) {
 	models.SetProductReaderWriter(productRW)
 	systemRW := mocksystem.NewMockReaderWriter(ctrl)
 	models.SetSystemReaderWriter(systemRW)
+
+	t.Run("flag failed", func(t *testing.T) {
+		productRW.EXPECT().SaveVendor(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		systemRW.EXPECT().VendorInitialized(gomock.Any()).Return(nil).Times(1)
+		_, err := NewManager().UpdateVendors(context.TODO(), message.UpdateVendorInfoReq{
+			Vendors: vendors(),
+		})
+		assert.NoError(t, err)
+	})
 
 	t.Run("update failed", func(t *testing.T) {
 		productRW.EXPECT().SaveVendor(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
@@ -105,13 +115,51 @@ func TestManager_UpdateVendors(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("flag failed", func(t *testing.T) {
-		productRW.EXPECT().SaveVendor(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-		systemRW.EXPECT().VendorInitialized(gomock.Any()).Return(nil).Times(1)
+	t.Run("validate failed", func(t *testing.T) {
 		_, err := NewManager().UpdateVendors(context.TODO(), message.UpdateVendorInfoReq{
-			Vendors: vendors(),
+			Vendors: []structs.VendorConfigInfo{
+				{
+					VendorInfo: structs.VendorInfo{
+						ID:   "Local",
+						Name: "local",
+					},
+					Regions: []structs.RegionConfigInfo{
+						{
+							RegionInfo: structs.RegionInfo{ID: "Region1", Name: "region1"},
+							Zones: []structs.ZoneInfo{
+								{ZoneID: "Zone1_1", ZoneName: "zone1_1"},
+								{ZoneID: "Zone1_2", ZoneName: "zone1_2"},
+							},
+						},
+						{
+							RegionInfo: structs.RegionInfo{ID: "Region2", Name: "region2"},
+							Zones: []structs.ZoneInfo{
+								{ZoneID: "Zone2_1", ZoneName: "zone2_1"},
+							},
+						},
+					},
+					Specs: []structs.SpecInfo{
+						{
+							ID:          "c.large",
+							Name:        "c.large",
+							CPU:         4,
+							Memory:      8,
+							DiskType:    "SATA",
+							PurposeType: "Compute",
+						},
+						{
+							ID:          "s.large",
+							Name:        "s.large",
+							CPU:         4,
+							Memory:      8,
+							DiskType:    "SATA",
+							PurposeType: "Compute",
+						},
+					},
+				},
+			},
 		})
-		assert.NoError(t, err)
+		assert.Error(t, err)
 	})
 }
 

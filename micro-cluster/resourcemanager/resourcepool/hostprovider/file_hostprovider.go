@@ -282,6 +282,9 @@ func (p *FileHostProvider) UpdateHostInfo(ctx context.Context, host structs.Host
 	if host.UsedCpuCores != 0 || host.UsedMemory != 0 {
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "used cpu cores or used memory field should not be set while update host %s", host.ID)
 	}
+	if host.CpuCores < 0 || host.Memory < 0 {
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "input cpu cores(%d) or memory(%d) is invalid to update host %s", host.CpuCores, host.Memory, host.ID)
+	}
 	var dbHost resourcepool.Host
 	err = dbHost.ConstructFromHostInfo(&host)
 	if err != nil {

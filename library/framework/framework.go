@@ -39,6 +39,7 @@ import (
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	transport2 "go.etcd.io/etcd/client/pkg/v3/transport"
 )
 
 var Current Framework
@@ -151,16 +152,34 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 
 	f.acceptArgs()
 	f.parseArgs(serviceName)
-
+	f.setEtcdCertConfig()
 	f.initOpts = opts
 	f.Init()
-
 	f.initEtcdClient()
 	f.initElasticsearchClient()
 	f.initMetrics()
 	// listen prometheus metrics
 	go f.prometheusBoot()
 	return f
+}
+
+func (b *BaseFramework) setEtcdCertConfig() {
+	EtcdCert = EtcdCertTransport{
+		PeerTLSInfo:   b.genTlsInfo(constants.ETCDPeerCertFile),
+		ClientTLSInfo: b.genTlsInfo(constants.ETCDClientCertFile),
+		ServerTLSInfo: b.genTlsInfo(constants.ETCDServerCertFile),
+	}
+}
+
+func (b *BaseFramework) genTlsInfo(certFilePath constants.EtcdCertFileType) transport2.TLSInfo {
+	return transport2.TLSInfo{
+		CertFile:            b.GetClientArgs().DeployDir + constants.CertDirPrefix + certFilePath[0],
+		KeyFile:             b.GetClientArgs().DeployDir + constants.CertDirPrefix + certFilePath[1],
+		TrustedCAFile:       b.GetClientArgs().DeployDir + constants.CertDirPrefix + constants.ETCDCAFileName,
+		ClientCertAuth:      true,
+		InsecureSkipVerify:  true,
+		SkipClientSANVerify: true,
+	}
 }
 
 func (b *BaseFramework) acceptArgs() {
@@ -189,8 +208,9 @@ func (b *BaseFramework) initMicroClient() {
 			micro.Name(string(client)),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
-			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...))),
+			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert("grpc")))),
+			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...),
+				registry.Secure(true), registry.TLSConfig(b.loadCert("etcd")))),
 			micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 		)
 		srv.Init()
@@ -199,10 +219,19 @@ func (b *BaseFramework) initMicroClient() {
 	}
 }
 
-func (b *BaseFramework) loadCert() *tls.Config {
-	cert, err := tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
+func (b *BaseFramework) loadCert(crtType string) *tls.Config {
+	var cert tls.Certificate
+	var err error
+	switch crtType {
+	case "etcd":
+		cert, err = tls.LoadX509KeyPair(b.GetDeployDir()+constants.CertDirPrefix+constants.ETCDClientCertFile[0],
+			b.GetDeployDir()+constants.CertDirPrefix+constants.ETCDClientCertFile[1])
+	default:
+		cert, err = tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
+	}
+
 	if err != nil {
-		panic("load certificate file failed")
+		panic("load " + crtType + " certificate file failed")
 	}
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true} // #nosec G402
 }
@@ -214,11 +243,11 @@ func (b *BaseFramework) initMicroService() {
 		server.WrapHandler(prometheus.NewHandlerWrapper()),
 		server.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
 		server.WrapHandler(logWrapper(b)),
-		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
+		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert("grpc")))),
 		server.Address(b.serviceMeta.GetServiceAddress()),
-		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...))),
+		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...),
+			registry.Secure(true), registry.TLSConfig(b.loadCert("etcd")))),
 	)
-
 	srv := micro.NewService(
 		micro.Server(server),
 		micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),

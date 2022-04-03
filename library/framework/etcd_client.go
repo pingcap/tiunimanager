@@ -18,6 +18,7 @@ package framework
 
 import (
 	"context"
+	"go.etcd.io/etcd/client/pkg/v3/transport"
 	"strings"
 	"time"
 
@@ -30,7 +31,7 @@ import (
 // EtcdTimeOut etcd time out
 const (
 	etcdTimeOut  = time.Second * 3
-	httpProtocol = "http://"
+	httpProtocol = "https://"
 )
 
 type EtcdClientV3 struct {
@@ -42,14 +43,28 @@ type EtcdClientV2 struct {
 	keysAPI clientv2.KeysAPI
 }
 
+type EtcdCertTransport struct {
+	PeerTLSInfo   transport.TLSInfo
+	ServerTLSInfo transport.TLSInfo
+	ClientTLSInfo transport.TLSInfo
+}
+
 var etcdClientV3 *EtcdClientV3
 var etcdClientV2 *EtcdClientV2
+var EtcdCert EtcdCertTransport
 
 func InitEtcdClient(etcdAddress []string) *EtcdClientV3 {
+	tlsInfo := EtcdCert.ClientTLSInfo
+	tlsConfig, err := tlsInfo.ClientConfig()
+	if err != nil {
+		panic(err)
+	}
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdAddress,
 		DialTimeout: 5 * time.Second,
+		TLS:         tlsConfig,
 	})
+
 	if err != nil {
 		panic(err)
 	}
@@ -98,12 +113,18 @@ func InitEtcdClientV2(etcdAddress []string) *EtcdClientV2 {
 			etcdAddress[i] = httpProtocol + addr
 		}
 	}
+	tls := EtcdCert.ClientTLSInfo
+	ts, err := transport.NewTransport(tls, 10*time.Second)
+	if err != nil {
+		panic(err)
+	}
 	cli, err := clientv2.New(clientv2.Config{
 		Endpoints: etcdAddress,
-		Transport: clientv2.DefaultTransport,
+		Transport: ts,
 		// set timeout per request to fail fast when the target endpoint is unavailable
 		HeaderTimeoutPerRequest: time.Second,
 	})
+
 	if err != nil {
 		panic(err)
 	}

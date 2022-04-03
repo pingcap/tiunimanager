@@ -34,7 +34,7 @@ const (
 	namePrefix   string = "etcd"
 	dirPrefix    string = "data_"
 	localAddress string = "0.0.0.0"
-	httpProtocol        = "http://"
+	httpProtocol        = "https://"
 )
 
 type EmbedEtcdConfig struct {
@@ -67,16 +67,18 @@ func InitEmbedEtcd(b *framework.BaseFramework) error {
 // start embed etcd server
 func startEmbedEtcd(embedEtcdConfig *EmbedEtcdConfig) error {
 	cfg := etcd.NewConfig()
-
 	// enable v2 http api
 	cfg.EnableV2 = true
-
 	cfg.Dir = embedEtcdConfig.Dir
 	cfg.Name = embedEtcdConfig.Name
-	log.Debugf("start embed etcd name: %s, dir: %s", cfg.Dir, cfg.Name)
 
+	cfg.ClientTLSInfo = framework.EtcdCert.ServerTLSInfo
+	cfg.PeerTLSInfo = framework.EtcdCert.PeerTLSInfo
+	cfg.StrictReconfigCheck = false
+	log.Debugf("start embed etcd name: %s, dir: %s", cfg.Dir, cfg.Name)
 	// advertise peer urls, e.g.: 192.168.1.101:2380,192.168.1.102:2380,192.168.1.102:2380
 	cfg.APUrls = parsePeers([]string{embedEtcdConfig.PeerUrl})
+
 	// listen peer urls, e.g.: 0.0.0.0:2380
 	cfg.LPUrls = parsePeers([]string{localAddress + ":" + strings.Split(embedEtcdConfig.PeerUrl, ":")[1]})
 	// advertise client urls, e.g.: 192.168.1.101:2379,192.168.1.102:2379,192.168.1.102:2379
@@ -87,7 +89,6 @@ func startEmbedEtcd(embedEtcdConfig *EmbedEtcdConfig) error {
 	cfg.InitialCluster = parseInitialCluster(embedEtcdConfig.EtcdPeerUrls)
 	log.Debugf("initial LPUrls: %v, ACUrls: %v, LCUrls: %v, InitialCluster: %v:",
 		cfg.LPUrls, cfg.ACUrls, cfg.LCUrls, cfg.InitialCluster)
-
 	e, err := etcd.StartEtcd(cfg)
 	if err != nil {
 		return err

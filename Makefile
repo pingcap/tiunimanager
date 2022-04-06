@@ -247,9 +247,9 @@ failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)
 
-lint:
+lint: mock
 	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
-	-golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+	golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
 
 gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
@@ -284,7 +284,7 @@ mock:
 	mockgen -destination ./test/mockutil/mocksshclientexecutor/mock_ssh_client_interface.go -package mocksshclient -source ./util/ssh/ssh_client.go
 	mockgen -destination ./test/mockresource/mock_allocator_recycler.go -package mock_allocator_recycler -source ./micro-cluster/resourcemanager/management/structs/allocator_recycler.go
 	mockgen -destination ./test/mockcdcmanager/mock_cdc_manager.go -package mockcdcmanager -source ./micro-cluster/cluster/switchover/cdc_manager_api.go
-	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/product_read_writer.go
+	mockgen -destination ./test/mockmodels/mock_product.go -package mock_product -source ./models/platform/product/readerwriter.go
 	mockgen -destination ./test/mockaccount/mock_account.go -package mockaccount -source ./models/user/account/readerwriter.go
 	mockgen -destination ./test/mockidentification/mock_identification.go -package mockidentification -source ./models/user/identification/readerwriter.go
 	mockgen -destination ./test/mockchangefeed/mock_changefeed.go -package mockchangefeed -source ./micro-cluster/cluster/changefeed/service.go
@@ -294,6 +294,9 @@ mock:
 	mockgen -destination ./test/mockutiltidbhttp/mock_utiltidbhttp.go -package mockutiltidbhttp -source ./util/api/tidb/http/clusterconfig.go
 	mockgen -destination ./test/mockutiltidbsql_config/mock_utiltidbsql_config.go -package mockutiltidbsqlconfig -source ./util/api/tidb/sql/clusterconfig.go
 	mockgen -destination ./test/mockutilcdc/mock_utilcdc_change_feed.go -package mockutilcdc -source ./util/api/cdc/changefeed.go
+	mockgen -destination ./test/mockcheck/mock_check.go -package mock_check -source ./models/platform/check/report_read_writer.go
+	mockgen -destination ./test/mockreport/mock_report.go -package mock_report -source ./micro-cluster/platform/check/handler.go
+	mockgen -destination ./test/mockhostsinspect/mock_hosts_inspect.go -package mock_hosts_inspect -source ./micro-cluster/resourcemanager/inspect/hostinspector.go
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

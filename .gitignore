@@ -2,6 +2,7 @@
 .DS_Store
 golangci-lint-report.xml
 results.xml
+.github/ISSUE_TEMPLATE
 .idea/
 data.etcd1/
 *.db
@@ -19,7 +20,7 @@ test/
 /template
 /nohup.out
 .vscode/
-log/
+/log
 logs/
 out.txt
 run.sh

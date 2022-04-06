@@ -97,7 +97,7 @@ func (m Manager) BuildClusterLogConfig(ctx context.Context, clusterId string) (f
 	}
 
 	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, buildLogConfigDefine.FlowName); err != nil {
-		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, clusterMeta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Errorf("create flow failed, clusterID = %s, error = %s", clusterMeta.Cluster.ID, err.Error())
 		return "", err
 	} else {
 		flowID = flow.Flow.ID
@@ -127,7 +127,7 @@ func (m Manager) QueryClusterLog(ctx context.Context, req cluster.QueryClusterLo
 	esResp, err := framework.Current.GetElasticsearchClient().Search(logIndexPrefix, &buf, (req.Page-1)*req.PageSize, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
-		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), err)
 	}
 	return handleResult(ctx, req, esResp)
 }
@@ -156,12 +156,12 @@ func prepareSearchParams(ctx context.Context, req cluster.QueryClusterLogReq) (b
 func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *esapi.Response) (resp cluster.QueryClusterLogResp, page *clusterservices.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, search es err: %v", req.ClusterID, err)
-		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain(), esResp.String())
+		return resp, page, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), esResp.String())
 	}
 	var esResult ElasticSearchResult
 	if err = json.NewDecoder(esResp.Body).Decode(&esResult); err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s query log, decoder err: %v", req.ClusterID, err)
-		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_QUERY_FAILED, errors.TIEM_CLUSTER_LOG_QUERY_FAILED.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), err)
 	}
 
 	resp = cluster.QueryClusterLogResp{
@@ -186,7 +186,7 @@ func handleResult(ctx context.Context, req cluster.QueryClusterLogReq, esResp *e
 			ClusterId:  hitItem.ClusterId,
 			Module:     hitItem.Fileset.Name,
 			Ext:        hitItem.Tidb,
-			Timestamp:  time.Unix(hitItem.Timestamp.Unix(), 0).Format(dateFormat),
+			Timestamp:  time.Unix(hitItem.Timestamp.Unix(), 0).Format(DateFormat),
 		})
 	}
 
@@ -267,7 +267,7 @@ func buildSearchClusterReqParams(req cluster.QueryClusterLogReq) (map[string]int
 		})
 	}
 	// option parameters: startTime, endTime
-	tsFilter, err := filterTimestamp(req)
+	tsFilter, err := FilterTimestamp(req.StartTime, req.EndTime)
 	if err != nil {
 		return nil, err
 	}
@@ -287,22 +287,4 @@ func buildSearchClusterReqParams(req cluster.QueryClusterLogReq) (map[string]int
 		},
 	}
 	return query, nil
-}
-
-// filterTimestamp search tidb log by @timestamp
-func filterTimestamp(req cluster.QueryClusterLogReq) (map[string]interface{}, error) {
-	tsFilter := map[string]interface{}{}
-
-	if req.StartTime > 0 && req.EndTime > 0 {
-		if req.StartTime > req.EndTime {
-			return nil, errors.NewErrorf(errors.TIEM_CLUSTER_LOG_TIME_AFTER, errors.TIEM_CLUSTER_LOG_TIME_AFTER.Explain())
-		}
-		tsFilter["gte"] = req.StartTime * 1000
-		tsFilter["lte"] = req.EndTime * 1000
-	} else if req.StartTime > 0 && req.EndTime <= 0 {
-		tsFilter["gte"] = req.StartTime * 1000
-	} else if req.StartTime <= 0 && req.EndTime > 0 {
-		tsFilter["lte"] = req.EndTime * 1000
-	}
-	return tsFilter, nil
 }

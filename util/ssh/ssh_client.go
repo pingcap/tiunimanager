@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -31,14 +29,14 @@ import (
 )
 
 type SSHClientExecutor interface {
-	RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, sudo bool, timeoutS int, commands []string) (result string, err error)
+	RunCommandsInRemoteHost(host string, port int, authenticate HostAuthenticate, sudo bool, timeoutS int, commands []string) (result string, err error)
 }
 
 type SSHExecutor struct{}
 
-func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, sshType SSHType, user, passwd string, sudo bool, timeoutS int, commands []string) (result string, err error) {
+func (client SSHExecutor) RunCommandsInRemoteHost(host string, port int, authenticate HostAuthenticate, sudo bool, timeoutS int, commands []string) (result string, err error) {
 	c := new(SSHClient)
-	c.InitSSHClient(host, port, sshType, user, passwd, timeoutS)
+	c.InitSSHClient(host, port, authenticate.SshType, authenticate.AuthenticatedUser, authenticate.AuthenticateContent, timeoutS)
 	if err = c.Connect(); err != nil {
 		return "", err
 	}
@@ -54,6 +52,12 @@ const (
 	Key    SSHType = "Key"      // Auth by ssh key
 )
 
+type HostAuthenticate struct {
+	SshType             SSHType // Password or Key
+	AuthenticatedUser   string  // login user name
+	AuthenticateContent string  // should be password or private key to access the target host, depending on the SSHType
+}
+
 type SSHClient struct {
 	sshHost     string
 	sshPort     int
@@ -66,15 +70,19 @@ type SSHClient struct {
 	client *ssh.Client
 }
 
-func (c *SSHClient) InitSSHClient(host string, port int, sshType SSHType, user, passwd string, timeoutS int) {
+func (c *SSHClient) InitSSHClient(host string, port int, sshType SSHType, user, authenticateContent string, timeoutS int) {
 	c.sshHost = host
 	c.sshPort = port
 	c.sshType = sshType
 	c.sshUser = user
-	c.sshPassword = passwd
-
 	c.sshTimeout = time.Duration(timeoutS) * time.Second
-	c.sshKeyPath = filepath.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
+
+	// set passwd or private key path based on sshType
+	if sshType == Passwd {
+		c.sshPassword = authenticateContent
+	} else {
+		c.sshKeyPath = authenticateContent
+	}
 }
 
 func (c *SSHClient) SetConnTimeOut(t time.Duration) {
@@ -103,7 +111,7 @@ func (c *SSHClient) Connect() (err error) {
 	addr := fmt.Sprintf("%s:%d", c.sshHost, c.sshPort)
 	c.client, err = ssh.Dial("tcp", addr, config)
 	if err != nil {
-		err = errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "ssh client dial to addr %s@%s failed, %v", c.sshUser, addr, err)
+		err = errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "ssh client dial to addr %s@%s by %s failed, %v", c.sshUser, addr, c.sshType, err)
 		return
 	}
 
@@ -139,13 +147,13 @@ func (c *SSHClient) publicKeyAuthFunc() ssh.AuthMethod {
 	log := framework.Log()
 	key, err := ioutil.ReadFile(c.sshKeyPath)
 	if err != nil {
-		log.Fatalf("read ssh key file %s failed, %v", c.sshKeyPath, err)
+		log.Errorf("read ssh key file %s failed, %v", c.sshKeyPath, err)
 		return nil
 	}
 	// Create the Signer for this private key.
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		log.Fatalf("ssh key signer failed, %v", err)
+		log.Errorf("ssh key signer failed, %v", err)
 		return nil
 	}
 	return ssh.PublicKeys(signer)

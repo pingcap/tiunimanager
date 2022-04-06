@@ -36,6 +36,8 @@ type ClusterResourceParameterComputeResource struct {
 	DiskCapacity int    `json:"diskCapacity"`
 	Spec         string `json:"specCode"` //4C8G/8C16G ?
 	Count        int    `json:"count"`
+	HostIP       string `json:"hostIp"`
+	DiskID       string `json:"diskId"`
 }
 
 func (p *ClusterResourceParameterComputeResource) Equal(zone, spec, diskType string, diskCapacity int) bool {
@@ -54,7 +56,8 @@ type ClusterResourceParameterCompute struct {
 
 //ClusterResourceInfo Resource information for creating database cluster input
 type ClusterResourceInfo struct {
-	InstanceResource []ClusterResourceParameterCompute `json:"instanceResource"`
+	RequestResourceMode string                            `json:"requestResourceMode" enums:"SpecificZone,SpecificHost" default:"SpecificZone"`
+	InstanceResource    []ClusterResourceParameterCompute `json:"instanceResource"`
 }
 
 func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductComponentIDType) int32 {
@@ -70,18 +73,24 @@ func (p ClusterResourceInfo) GetComponentCount(idType constants.EMProductCompone
 type CreateClusterParameter struct {
 	Name string `json:"clusterName" validate:"required,min=4,max=64"`
 	// todo delete?
-	DBUser           string   `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	DBPassword       string   `json:"dbPassword" validate:"required,min=8,max=32"`
-	Type             string   `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
-	Version          string   `json:"clusterVersion" validate:"required,startswith=v"`
-	Tags             []string `json:"tags"`
-	TLS              bool     `json:"tls"`
-	Copies           int      `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive        bool     `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	Vendor           string   `json:"vendor" form:"vendor"`
-	Region           string   `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
-	CpuArchitecture  string   `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
-	ParameterGroupID string   `json:"parameterGroupID" form:"parameterGroupID"`
+	DBUser           string        `json:"dbUser" validate:"max=32"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+	DBPassword       SensitiveText `json:"dbPassword" validate:"required,min=8,max=32"`
+	Type             string        `json:"clusterType" validate:"required,oneof=TiDB DM TiKV"`
+	Version          string        `json:"clusterVersion" validate:"required,startswith=v"`
+	Tags             []string      `json:"tags"`
+	TLS              bool          `json:"tls"`
+	Copies           int           `json:"copies"`                     //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive        bool          `json:"exclusive" form:"exclusive"` //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	Vendor           string        `json:"vendor" form:"vendor"`
+	Region           string        `json:"region" form:"region" validate:"required,max=32"`                                       //The Region where the cluster is located
+	CpuArchitecture  string        `json:"cpuArchitecture" form:"cpuArchitecture" validate:"required,oneof=X86 X86_64 ARM ARM64"` //X86/X86_64/ARM
+	ParameterGroupID string        `json:"parameterGroupID" form:"parameterGroupID"`
+}
+
+// ClusterRelations Cluster relations info
+type ClusterRelations struct {
+	Masters []string `json:"masters"`
+	Slaves  []string `json:"slaves"`
 }
 
 // ClusterInfo Cluster details information
@@ -92,29 +101,30 @@ type ClusterInfo struct {
 	Type    string `json:"clusterType"`
 	Version string `json:"clusterVersion"`
 	//DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
-	Vendor                   string    `json:"vendor" form:"vendor"`
-	Tags                     []string  `json:"tags"`
-	TLS                      bool      `json:"tls"`
-	Region                   string    `json:"region"`
-	Status                   string    `json:"status"`
-	Role                     string    `json:"role"`
-	Copies                   int       `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
-	Exclusive                bool      `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
-	CpuArchitecture          string    `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
-	AlertUrl                 string    `json:"alertUrl" example:"http://127.0.0.1:9093"`
-	GrafanaUrl               string    `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
-	MaintainStatus           string    `json:"maintainStatus"`
-	MaintainWindow           string    `json:"maintainWindow"`
-	IntranetConnectAddresses []string  `json:"intranetConnectAddresses"`
-	ExtranetConnectAddresses []string  `json:"extranetConnectAddresses"`
-	Whitelist                []string  `json:"whitelist"`
-	CpuUsage                 Usage     `json:"cpuUsage"`
-	MemoryUsage              Usage     `json:"memoryUsage"`
-	StorageUsage             Usage     `json:"storageUsage"`
-	BackupSpaceUsage         Usage     `json:"backupFileUsage"`
-	CreateTime               time.Time `json:"createTime"`
-	UpdateTime               time.Time `json:"updateTime"`
-	DeleteTime               time.Time `json:"deleteTime"`
+	Vendor                   string           `json:"vendor" form:"vendor"`
+	Tags                     []string         `json:"tags"`
+	TLS                      bool             `json:"tls"`
+	Region                   string           `json:"region"`
+	Status                   string           `json:"status"`
+	Role                     string           `json:"role"`
+	Copies                   int              `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+	Exclusive                bool             `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+	CpuArchitecture          string           `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
+	AlertUrl                 string           `json:"alertUrl" example:"http://127.0.0.1:9093"`
+	GrafanaUrl               string           `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
+	MaintainStatus           string           `json:"maintainStatus"`
+	MaintainWindow           string           `json:"maintainWindow"`
+	IntranetConnectAddresses []string         `json:"intranetConnectAddresses"`
+	ExtranetConnectAddresses []string         `json:"extranetConnectAddresses"`
+	Whitelist                []string         `json:"whitelist"`
+	Relations                ClusterRelations `json:"relations"`
+	CpuUsage                 Usage            `json:"cpuUsage"`
+	MemoryUsage              Usage            `json:"memoryUsage"`
+	StorageUsage             Usage            `json:"storageUsage"`
+	BackupSpaceUsage         Usage            `json:"backupFileUsage"`
+	CreateTime               time.Time        `json:"createTime"`
+	UpdateTime               time.Time        `json:"updateTime"`
+	DeleteTime               time.Time        `json:"deleteTime"`
 }
 
 // ClusterInstanceInfo Details of the instances in the cluster
@@ -125,6 +135,7 @@ type ClusterInstanceInfo struct {
 	Version      string          `json:"version"`
 	Status       string          `json:"status"`
 	HostID       string          `json:"hostID"`
+	DiskID       string          `json:"diskId"`
 	Addresses    []string        `json:"addresses"`
 	Ports        []int32         `json:"ports"`
 	CpuUsage     Usage           `json:"cpuUsage"`
@@ -133,7 +144,7 @@ type ClusterInstanceInfo struct {
 	IOUtil       float32         `json:"ioUtil"`
 	IOPS         []float32       `json:"iops"`
 	Spec         ProductSpecInfo `json:"spec"` //??
-	Zone         ZoneInfo        `json:"zone"` //??
+	Zone         ZoneFullInfo    `json:"zone"` //??
 }
 
 // ClusterTopologyInfo Topology of the cluster
@@ -167,7 +178,7 @@ type BackupRecord struct {
 }
 
 type ClusterLogItem struct {
-	Index      string                 `json:"index" example:"tiem-tidb-cluster-2021.09.23"`
+	Index      string                 `json:"index" example:"em-tidb-cluster-2021.09.23"`
 	Id         string                 `json:"id" example:"zvadfwf"`
 	Level      string                 `json:"level" example:"warn"`
 	SourceLine string                 `json:"sourceLine" example:"main.go:210"`

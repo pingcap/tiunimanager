@@ -18,6 +18,7 @@ package resourcepool
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -27,6 +28,7 @@ import (
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
@@ -36,17 +38,17 @@ type ResourcePool struct {
 	// cloudHostProvider hostprovider.HostProvider
 }
 
-var resourcePool *ResourcePool
+var globalResourcePool *ResourcePool
 var once sync.Once
 
 func GetResourcePool() *ResourcePool {
 	once.Do(func() {
-		if resourcePool == nil {
-			resourcePool = new(ResourcePool)
-			resourcePool.InitResourcePool()
+		if globalResourcePool == nil {
+			globalResourcePool = new(ResourcePool)
+			globalResourcePool.InitResourcePool()
 		}
 	})
-	return resourcePool
+	return globalResourcePool
 }
 
 func (p *ResourcePool) InitResourcePool() {
@@ -135,6 +137,26 @@ func (p *ResourcePool) SetHostInitiator(initiator hostinitiator.HostInitiator) {
 	p.hostInitiator = initiator
 }
 
+func (p *ResourcePool) getSSHConfigPort(ctx context.Context) int {
+	sshConfigPort, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyDefaultSSHPort)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort failed, %v", err)
+		// return a default ssh port. If can not connect host using the default port, will fail in host initiator
+		return rp_consts.HostSSHPort
+	}
+	portStr := sshConfigPort.ConfigValue
+	if portStr == "" {
+		framework.LogWithContext(ctx).Warnln("get config ConfigKeyDefaultSSHPort is null")
+		return rp_consts.HostSSHPort
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort invalid string %s to atoi, %v", portStr, err)
+		return rp_consts.HostSSHPort
+	}
+	return port
+}
+
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo, condition *structs.ImportCondition) (flowIds []string, hostIds []string, err error) {
 	hostIds, err = p.hostProvider.ImportHosts(ctx, hosts)
 	if err != nil {
@@ -143,7 +165,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	flowName := p.selectImportFlowName(condition)
-	framework.LogWithContext(ctx).Infof("import hosts select %s", flowName)
+	hostSSHPort := p.getSSHConfigPort(ctx)
+	framework.LogWithContext(ctx).Infof("import hosts select %s, with ssh port %d", flowName, hostSSHPort)
 	for i, host := range hosts {
 		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
 		if err != nil {
@@ -152,7 +175,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
-		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
+		host.SSHPort = int32(hostSSHPort)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 		// Whether ignore warnings when verify host
@@ -169,6 +192,8 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		framework.GetMicroEndpointNameFromContext(ctx),
 	)
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
+		// Unset EmTiup Using flag after all flows in this task done
+		defer framework.UnsetInEmTiupProcess()
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
@@ -188,11 +213,16 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
-		hosts, _, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
+		hosts, count, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
 		if err != nil {
 			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
 			framework.LogWithContext(ctx).Errorln(errMsg)
 			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+		}
+		if count == 0 {
+			errMsg := fmt.Sprintf("deleting host %s is not found", hostId)
+			framework.LogWithContext(ctx).Errorln(errMsg)
+			return nil, errors.NewError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg)
 		}
 		flowName := p.selectDeleteFlowName(&hosts[0], force)
 		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
@@ -204,7 +234,6 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
-		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, hosts)
 
@@ -222,6 +251,8 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		framework.GetMicroEndpointNameFromContext(ctx),
 	)
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
+		// Unset EmTiup Using flag after all flows in this task done
+		defer framework.UnsetInEmTiupProcess()
 		for i, flow := range flows {
 			if err = flowManager.Start(ctx, flow); err != nil {
 				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())
@@ -258,6 +289,22 @@ func (p *ResourcePool) GetHierarchy(ctx context.Context, filter *structs.HostFil
 
 func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks map[string]*structs.Stocks, err error) {
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
+}
+
+func (p *ResourcePool) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
+	return p.hostProvider.UpdateHostInfo(ctx, host)
+}
+
+func (p *ResourcePool) CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error) {
+	return p.hostProvider.CreateDisks(ctx, hostId, disks)
+}
+
+func (p *ResourcePool) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	return p.hostProvider.DeleteDisks(ctx, diskIds)
+}
+
+func (p *ResourcePool) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
+	return p.hostProvider.UpdateDisk(ctx, disk)
 }
 
 func (p *ResourcePool) selectImportFlowName(condition *structs.ImportCondition) (flowName string) {

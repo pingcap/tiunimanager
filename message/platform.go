@@ -27,6 +27,80 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
+//UpdateVendorInfoReq update vendor info request
+type UpdateVendorInfoReq struct {
+	Vendors []structs.VendorConfigInfo `json:"vendors" form:"vendors"`
+}
+
+//UpdateVendorInfoResp update vendor info response
+type UpdateVendorInfoResp struct {
+}
+
+//QueryVendorInfoReq query vendor info request
+type QueryVendorInfoReq struct {
+	VendorIDs []string `json:"vendorIDs" form:"vendorIDs"`
+}
+
+//QueryVendorInfoResp query vendor info response
+type QueryVendorInfoResp struct {
+	Vendors []structs.VendorConfigInfo `json:"vendors" `
+}
+
+//UpdateProductsInfoReq update product info request
+type UpdateProductsInfoReq struct {
+	Products []structs.ProductConfigInfo `json:"products" form:"products" validate:"required"`
+}
+
+//UpdateProductsInfoResp update product info response
+type UpdateProductsInfoResp struct {
+}
+
+//QueryProductsInfoReq query product info request
+type QueryProductsInfoReq struct {
+	ProductIDs []string `json:"productIDs" form:"productIDs"`
+}
+
+//QueryProductsInfoResp query product info response
+type QueryProductsInfoResp struct {
+	Products []structs.ProductConfigInfo `json:"products"`
+}
+
+//QueryAvailableVendorsReq query all available vendors request
+type QueryAvailableVendorsReq struct {
+}
+
+//QueryAvailableVendorsResp query all available vendors response
+type QueryAvailableVendorsResp struct {
+	Vendors map[string]structs.VendorWithRegion `json:"vendors"`
+}
+
+//QueryAvailableProductsReq query all products message request
+type QueryAvailableProductsReq struct {
+	VendorID        string `json:"vendorId" form:"vendorId"`
+	Status          string `json:"status" form:"status"`
+	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
+}
+
+//QueryAvailableProductsResp query all products message response
+type QueryAvailableProductsResp struct {
+	// arch version
+	Products map[string]map[string]map[string]map[string]structs.Product `json:"products"`
+}
+
+//QueryProductDetailReq query product detail info request
+type QueryProductDetailReq struct {
+	VendorID        string `json:"vendorId" form:"vendorId"`
+	RegionID        string `json:"regionId" form:"regionId"`
+	ProductID       string `json:"productId" form:"productId"`
+	Status          string `json:"status" form:"status"`
+	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
+}
+
+//QueryProductDetailResp query product detail info response
+type QueryProductDetailResp struct {
+	Products map[string]structs.ProductDetail `json:"products"`
+}
+
 type GetSystemConfigReq struct {
 	ConfigKey string `json:"configKey" form:"configKey"`
 }
@@ -35,89 +109,12 @@ type GetSystemConfigResp struct {
 	structs.SystemConfig
 }
 
-//CreateZonesReq create zone message, include vendor、region、zone
-type CreateZonesReq struct {
-	Zones []structs.ZoneInfo `json:"zones"`
-}
-type CreateZonesResp struct {
+type UpdateSystemConfigReq struct {
+	ConfigKey   string `json:"configKey" form:"configKey"`
+	ConfigValue string `json:"configValue" form:"configValue"`
 }
 
-//QueryZonesTreeReq query all zone information message, include vendor、region、zone
-type QueryZonesTreeReq struct {
-}
-
-type QueryZonesTreeResp struct {
-	Vendors map[string]structs.VendorWithRegion `json:"vendors" form:"vendors"`
-}
-
-//DeleteZoneReq delete a zone message
-type DeleteZoneReq struct {
-	Zones []structs.ZoneInfo `json:"zone"`
-}
-type DeleteZoneResp struct {
-}
-
-//CreateProductReq create a product message
-type CreateProductReq struct {
-	ProductInfo structs.Product                    `json:"productInfo"`
-	Components  []structs.ProductComponentProperty `json:"components"`
-}
-type CreateProductResp struct {
-}
-
-//DeleteProductReq delete a product message
-type DeleteProductReq struct {
-	ProductInfo structs.Product `json:"productInfo"`
-}
-type DeleteProductResp struct {
-}
-
-//QueryProductsReq query all products message
-type QueryProductsReq struct {
-	VendorID        string `json:"vendorId" form:"vendorId"`
-	Status          string `json:"status" form:"status"`
-	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
-}
-
-type QueryProductsResp struct {
-	// arch version
-	Products map[string]map[string]map[string]map[string]structs.Product `json:"products"`
-}
-
-//QueryProductDetailReq query product detail message
-type QueryProductDetailReq struct {
-	VendorID        string `json:"vendorId" form:"vendorId"`
-	RegionID        string `json:"regionId" form:"regionId"`
-	ProductID       string `json:"productId" form:"productId"`
-	Status          string `json:"status" form:"status"`
-	InternalProduct int    `json:"internalProduct" form:"internalProduct"`
-}
-type QueryProductDetailResp struct {
-	Products map[string]structs.ProductDetail `json:"products"`
-}
-
-// CreateSpecsReq component instance resource spec message
-//CreateSpecsReq create spec message
-type CreateSpecsReq struct {
-	Specs []structs.SpecInfo `json:"specs"`
-}
-
-type CreateSpecsResp struct {
-}
-
-//DeleteSpecsReq delete spec message
-type DeleteSpecsReq struct {
-	SpecIDs []string `json:"specIds"`
-}
-type DeleteSpecsResp struct {
-}
-
-//QuerySpecsReq query spec message
-type QuerySpecsReq struct {
-}
-
-type QuerySpecsResp struct {
-	Specs []structs.SpecInfo `json:"specs"`
+type UpdateSystemConfigResp struct {
 }
 
 type GetSystemInfoReq struct {

@@ -192,8 +192,11 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
 			"update user %s password, salt: %s, finalHash: %s, parameter invalid", userID, salt, finalHash)
 	}
+
+	//value := dbCommon.Password{Val: finalHash, UpdateTime: time.Now()}
+	value := dbCommon.PasswordInExpired{Val: finalHash}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?",
-		userID).Update("salt", salt).Update("final_hash", finalHash).Error
+		userID).Update("salt", salt).Update("final_hash", value).Error
 }
 
 func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*User, error) {
@@ -255,10 +258,10 @@ func (arw *AccountReadWrite) QueryTenants(ctx context.Context) (map[string]struc
 	tenants := make(map[string]structs.TenantInfo)
 	SQL := "SELECT id,name,creator,status,on_boarding_status,max_cluster,created_at,updated_at,creator,max_cpu,max_memory,max_storage FROM tenants;"
 	rows, err := arw.DB(ctx).Raw(SQL).Rows()
-	defer rows.Close()
 	if err != nil {
 		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all user error: %v, SQL: %s", err, SQL)
 	}
+	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&info.ID, &info.Name, &info.Creator, &info.Status, &info.OnBoardingStatus, &info.MaxCluster, &info.CreateAt,
 			&info.UpdateAt, &info.Creator, &info.MaxCPU, &info.MaxMemory, &info.MaxStorage)

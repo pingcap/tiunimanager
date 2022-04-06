@@ -74,3 +74,8 @@ const (
 	DownstreamTypeKafka DownstreamType = "kafka"
 	DownstreamTypeMysql DownstreamType = "mysql"
 )
+
+var DefaultFilterRules = []string{
+	"*.*",
+	"!__TiDB_BR_Temporary*.*",
+}

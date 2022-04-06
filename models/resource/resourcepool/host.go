@@ -93,11 +93,11 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
-	for _, disk := range h.Disks {
-		disk.HostID = h.ID
-		err = tx.Create(&disk).Error
+	for i := range h.Disks {
+		h.Disks[i].HostID = h.ID
+		err = tx.Create(&(h.Disks[i])).Error
 		if err != nil {
-			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
+			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", h.Disks[i].Name, h.HostName, h.IP, err)
 		}
 	}
 	return nil
@@ -119,9 +119,16 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 }
 
 func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
-	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
+	var disks []Disk
+	err = tx.Find(&disks, "host_id = ?", h.ID).Error
 	if err != nil {
 		return
+	}
+	for i := range disks {
+		err = tx.Delete(&disks[i]).Error
+		if err != nil {
+			return
+		}
 	}
 	h.Status = string(constants.HostDeleted)
 	err = tx.Model(&h).Update("Status", h.Status).Error
@@ -133,6 +140,38 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	return
 }
 
+func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("IP") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", h.ID)
+	}
+	if tx.Statement.Changed("DiskType", "Arch", "ClusterType", "Stat") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", h.ID)
+	}
+	if tx.Statement.Changed("Vendor", "Region", "AZ", "Rack") {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", h.ID)
+	}
+	return
+}
+
+func (h *Host) PrepareForUpdate(newHost *Host) (updates map[string]interface{}, err error) {
+	updates = make(map[string]interface{})
+	h.prepareForUpdateName(newHost.HostName, newHost.IP, updates)
+	h.prepareForUpdateLoginInfo(newHost.UserName, newHost.Passwd, updates)
+	h.prepareForUpdateLocation(newHost.Vendor, newHost.Region, newHost.AZ, newHost.Rack, updates)
+	h.prepareForUpdateKernel(newHost.OS, newHost.Kernel, updates)
+	h.prepareForUpdateNic(newHost.Nic, updates)
+	h.prepareForUpdateSpec(newHost.CpuCores, newHost.Memory, updates)
+	err = h.prepareForUpdateType(newHost.Arch, newHost.DiskType, newHost.ClusterType, updates)
+	if err != nil {
+		return nil, err
+	}
+	err = h.prepareForUpdatePurpose(newHost.Purpose, updates)
+	if err != nil {
+		return nil, err
+	}
+	return updates, nil
+}
+
 func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.HostName = src.HostName
 	h.IP = src.IP
@@ -141,8 +180,8 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Arch = src.Arch
 	h.OS = src.OS
 	h.Kernel = src.Kernel
-	h.FreeCpuCores = (src.CpuCores - src.UsedCpuCores)
-	h.FreeMemory = (src.Memory - src.UsedMemory)
+	h.FreeCpuCores = src.CpuCores - src.UsedCpuCores
+	h.FreeMemory = src.Memory - src.UsedMemory
 	h.Spec = src.GetSpecString()
 	h.CpuCores = src.CpuCores
 	h.Memory = src.Memory
@@ -154,18 +193,16 @@ func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
 	h.Status = src.Status
 	h.Stat = src.Stat
 	h.ClusterType = src.ClusterType
+	// make sure purpose store in db is a normal string
+	src.FormatPurpose()
 	h.Purpose = src.Purpose
 	h.DiskType = src.DiskType
 	h.Reserved = src.Reserved
 	h.Traits = src.Traits
 	for _, disk := range src.Disks {
-		h.Disks = append(h.Disks, Disk{
-			Name:     disk.Name,
-			Path:     disk.Path,
-			Capacity: disk.Capacity,
-			Status:   disk.Status,
-			Type:     disk.Type,
-		})
+		var dbDisk Disk
+		dbDisk.ConstructFromDiskInfo(&disk)
+		h.Disks = append(h.Disks, dbDisk)
 	}
 	return nil
 }
@@ -196,15 +233,15 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 	dst.Reserved = h.Reserved
 	dst.Traits = h.Traits
 	dst.SysLabels = structs.GetLabelNamesByTraits(dst.Traits)
+
+	dst.AvailableDiskCount = 0
 	for _, disk := range h.Disks {
-		dst.Disks = append(dst.Disks, structs.DiskInfo{
-			ID:       disk.ID,
-			Name:     disk.Name,
-			Path:     disk.Path,
-			Capacity: disk.Capacity,
-			Status:   disk.Status,
-			Type:     disk.Type,
-		})
+		var diskInfo structs.DiskInfo
+		disk.ToDiskInfo(&diskInfo)
+		dst.Disks = append(dst.Disks, diskInfo)
+		if disk.Status == string(constants.DiskAvailable) {
+			dst.AvailableDiskCount++
+		}
 	}
 	// Update Host's load stat after diskInfo is updated
 	dst.Stat = h.Stat
@@ -217,19 +254,26 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 }
 
 func (h *Host) getPurposes() []string {
+	if h.Purpose == "" {
+		return nil
+	}
 	return strings.Split(h.Purpose, ",")
 }
 
 func (h *Host) addTraits(p string) (err error) {
-	if trait, err := structs.GetTraitByName(p); err == nil {
-		h.Traits = h.Traits | trait
-	} else {
+	if p == "" {
+		return nil
+	}
+	trait, err := structs.GetTraitByName(p)
+	if err != nil {
 		return err
 	}
+	h.Traits = h.Traits | trait
 	return nil
 }
 
 func (h *Host) BuildDefaultTraits() (err error) {
+	h.Traits = 0
 	if err := h.addTraits(h.ClusterType); err != nil {
 		return err
 	}
@@ -241,6 +285,124 @@ func (h *Host) BuildDefaultTraits() (err error) {
 	}
 	if err := h.addTraits(h.DiskType); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (h *Host) prepareForUpdateName(hostName, ip string, updates map[string]interface{}) {
+	if hostName != "" && hostName != h.HostName {
+		updates["host_name"] = hostName
+	}
+	if ip != "" && ip != h.IP {
+		updates["ip"] = ip
+	}
+}
+
+func (h *Host) prepareForUpdateLoginInfo(userName string, password common.Password, updates map[string]interface{}) {
+	if userName != "" && userName != h.UserName {
+		updates["user_name"] = userName
+	}
+	if password != "" && password != h.Passwd {
+		updates["passwd"] = password
+	}
+}
+
+func (h *Host) prepareForUpdateSpec(cpuCores, memory int32, updates map[string]interface{}) {
+	if (cpuCores == 0 && memory == 0) || (cpuCores == h.CpuCores && memory == h.Memory) {
+		// no need to update
+		return
+	}
+	updateCpu := false
+	updateMem := false
+	if cpuCores != 0 && cpuCores != h.CpuCores {
+		alreadyUsedCpuCores := h.CpuCores - h.FreeCpuCores
+		// update free cpu cores after set to the new cpucores
+		freeCpuCores := cpuCores - alreadyUsedCpuCores
+		updates["free_cpu_cores"] = freeCpuCores
+		updates["cpu_cores"] = cpuCores
+		updateCpu = true
+	}
+	if memory != 0 && memory != h.Memory {
+		alreadyUsedMemory := h.Memory - h.FreeMemory
+		// update free memory after set to the new memory
+		freeMemory := memory - alreadyUsedMemory
+		updates["free_memory"] = freeMemory
+		updates["memory"] = memory
+		updateMem = true
+	}
+
+	if updateCpu || updateMem {
+		// either cpu cores or memory is updated, need to reset spec
+		updatedCpuCores := h.CpuCores
+		updatedMemory := h.Memory
+		if updateCpu {
+			updatedCpuCores = cpuCores
+		}
+		if updateMem {
+			updatedMemory = memory
+		}
+		updates["spec"] = (&structs.HostInfo{CpuCores: updatedCpuCores, Memory: updatedMemory}).GetSpecString()
+	}
+}
+
+func (h *Host) prepareForUpdateKernel(os, kernel string, updates map[string]interface{}) {
+	if os != "" && os != h.OS {
+		updates["os"] = os
+	}
+	if kernel != "" && kernel != h.Kernel {
+		updates["kernel"] = kernel
+	}
+}
+
+func (h *Host) prepareForUpdateNic(nic string, updates map[string]interface{}) {
+	if nic != "" && nic != h.Nic {
+		updates["nic"] = nic
+	}
+}
+
+func (h *Host) prepareForUpdatePurpose(purpose string, updates map[string]interface{}) error {
+	if purpose == "" || purpose == h.Purpose {
+		// no need to update
+		return nil
+	}
+	updates["purpose"] = purpose
+	// Not change h in prepareForUpdateXXX function, so we copy to a patch to build traits for update
+	patch := *h
+	patch.Purpose = purpose
+	// rebuild traits
+	err := patch.BuildDefaultTraits()
+	if err != nil {
+		return err
+	}
+	updates["traits"] = patch.Traits
+	return nil
+}
+
+// update region/zone/rack is not allowed by now, and it will be terminated in update hook
+func (h *Host) prepareForUpdateLocation(vendor, region, zone, rack string, updates map[string]interface{}) {
+	if vendor != "" && vendor != h.Vendor {
+		updates["vendor"] = vendor
+	}
+	if region != "" && region != h.Region {
+		updates["region"] = region
+	}
+	if zone != "" && zone != h.AZ {
+		updates["az"] = zone
+	}
+	if rack != "" && rack != h.Rack {
+		updates["rack"] = rack
+	}
+}
+
+func (h *Host) prepareForUpdateType(arch, diskType, clusterType string, updates map[string]interface{}) (err error) {
+	if arch != "" && arch != h.Arch {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update arch on host %s is not allowed", h.ID)
+	}
+	if diskType != "" && diskType != h.DiskType {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type on host %s is not allowed", h.ID)
+	}
+	if clusterType != "" && clusterType != h.ClusterType {
+		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update cluster type on host %s is not allowed", h.ID)
 	}
 	return nil
 }

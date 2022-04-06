@@ -17,8 +17,11 @@ package account
 
 import (
 	ctx "context"
+	"fmt"
+	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestAccountReadWrite_CreateUser(t *testing.T) {
@@ -33,13 +36,17 @@ func TestAccountReadWrite_CreateUser(t *testing.T) {
 			DefaultTenantID: "tenant",
 			Creator:         "admin",
 			Name:            "nick01",
-			Salt:            "salt",
-			FinalHash:       "hash",
-			Email:           "email",
-			Phone:           "123",
-			Status:          "Normal",
+			//Salt:            "salt",
+			//FinalHash:       common.Password{Val: "hash", UpdateTime: time.Now()},
+			Email:  "email",
+			Phone:  "123",
+			Status: "Normal",
 		}
+		user.GenSaltAndHash("1234")
 		got1, got2, got3, err := testRW.CreateUser(ctx.TODO(), user, "user")
+		got, err := testRW.GetUserByName(ctx.TODO(), "user")
+		fmt.Println(got1.FinalHash.UpdateTime)
+		fmt.Println(got.FinalHash.UpdateTime)
 		assert.NoError(t, err)
 		assert.Equal(t, got1.Name, user.Name)
 		assert.Equal(t, got1.ID, got2.UserID)
@@ -63,7 +70,7 @@ func TestAccountReadWrite_DeleteUser(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick02",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash", UpdateTime: time.Now()},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
@@ -92,7 +99,7 @@ func TestAccountReadWrite_GetUser(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick03",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash", UpdateTime: time.Now().AddDate(0, 0, -10)},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
@@ -123,7 +130,7 @@ func TestAccountReadWrite_GetUserByName(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick13",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash", UpdateTime: time.Now().AddDate(0, 0, -2)},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
@@ -131,6 +138,7 @@ func TestAccountReadWrite_GetUserByName(t *testing.T) {
 		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
 		info, err := testRW.GetUserByName(ctx.TODO(), "user")
+		fmt.Println(info.FinalHash.UpdateTime)
 		assert.NoError(t, err)
 		assert.Equal(t, info.ID, got.ID)
 		err = testRW.DeleteUser(ctx.TODO(), got.ID)
@@ -145,7 +153,7 @@ func TestAccountReadWrite_QueryUsers(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick04",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash"},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
@@ -171,7 +179,7 @@ func TestAccountReadWrite_UpdateUserStatus(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick05",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash"},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
@@ -200,7 +208,7 @@ func TestAccountReadWrite_UpdateUserProfile(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick06",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash"},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
@@ -226,15 +234,24 @@ func TestAccountReadWrite_UpdateUserPassword(t *testing.T) {
 			Creator:         "admin",
 			Name:            "nick07",
 			Salt:            "salt",
-			FinalHash:       "hash",
+			FinalHash:       common.PasswordInExpired{Val: "hash"},
 			Email:           "email",
 			Phone:           "123",
 			Status:          "Normal",
 		}
-		got, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
+		_, _, _, err := testRW.CreateUser(ctx.TODO(), user, "user")
 		assert.NoError(t, err)
-		err = testRW.UpdateUserPassword(ctx.TODO(), got.ID, "salt01", "hash01")
+		got, err := testRW.GetUserByName(ctx.TODO(), "user")
+		fmt.Println("create time:", got.FinalHash.UpdateTime)
+
+		user.GenSaltAndHash("abcd")
+		err = testRW.UpdateUserPassword(ctx.TODO(), got.ID, user.Salt, user.FinalHash.Val)
 		assert.NoError(t, err)
+		got, err = testRW.GetUserByName(ctx.TODO(), "user")
+		fmt.Println("update time:", got.FinalHash.UpdateTime)
+
+		right, err := got.CheckPassword("abcd")
+		assert.Equal(t, right, true)
 		err = testRW.DeleteUser(ctx.TODO(), got.ID)
 		assert.NoError(t, err)
 	})

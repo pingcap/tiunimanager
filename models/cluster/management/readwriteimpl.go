@@ -51,12 +51,26 @@ func (g *ClusterReadWrite) Delete(ctx context.Context, clusterID string) (err er
 	if err != nil {
 		return
 	}
-	err = g.DB(ctx).Delete(got).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
-	}
+	err = g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			return tx.Delete(got).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
+		}).BreakIf(func() error {
+			return tx.Where("cluster_id = ?", clusterID).Delete(&ClusterTopologySnapshot{}).Error
+		}).If(func(e error) {
+			framework.LogWithContext(ctx).Errorf("delete cluster %s failed, err = %s", clusterID, e.Error())
+		}).Else(func() {
+			framework.LogWithContext(ctx).Infof("delete cluster %s succeed", clusterID)
+		}).Present()
+	})
 
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
 	return dbCommon.WrapDBError(err)
 }
 
@@ -136,6 +150,60 @@ func (g *ClusterReadWrite) GetRelations(ctx context.Context, clusterID string) (
 	}
 
 	return relations, err
+}
+
+func (g *ClusterReadWrite) GetMasters(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("object_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) GetSlaves(ctx context.Context, clusterID string) ([]*ClusterRelation, error) {
+	if "" == clusterID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster id is invalid")
+	}
+	relations := make([]*ClusterRelation, 0)
+	err := g.DB(ctx).Model(&ClusterRelation{}).Where("subject_cluster_id  = ? ", clusterID).Find(&relations).Error
+	return relations, err
+}
+
+func (g *ClusterReadWrite) QueryClusters(ctx context.Context, tenantID string) ([]*Result, error) {
+	if "" == tenantID {
+		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "tenant id is invalid")
+	}
+
+	clusters := make([]*Cluster, 0)
+	err := g.DB(ctx).Table("clusters").Where("tenant_id = ?",
+		tenantID).Where("deleted_at is null").Find(&clusters).Error
+	if err != nil {
+		return nil, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, "", err)
+	}
+
+	results := make([]*Result, 0)
+	for _, c := range clusters {
+		instances := make([]*ClusterInstance, 0)
+
+		err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", c.ID).Find(&instances).Error
+
+		if err != nil {
+			return nil, errors.WrapError(errors.TIEM_INSTANCE_NOT_FOUND, "", err)
+		}
+
+		users, err := g.GetDBUser(ctx, c.ID)
+		if err != nil {
+			return nil, dbCommon.WrapDBError(err)
+		}
+		results = append(results, &Result{
+			Cluster:   c,
+			Instances: instances,
+			DBUsers:   users,
+		})
+	}
+
+	return results, nil
 }
 
 // todo
@@ -240,6 +308,19 @@ func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId stri
 	err := query.Find(&instances).Error
 
 	return instances, dbCommon.WrapDBError(err)
+}
+
+func (g *ClusterReadWrite) QueryHostInstances(ctx context.Context, hostIds []string) ([]HostInstanceItem, error) {
+	db := g.DB(ctx).Model(&ClusterInstance{}).Select("host_id, cluster_id, type as component")
+	if hostIds != nil {
+		db.Where("host_id in ?", hostIds)
+	}
+	db.Group("host_id").Group("cluster_id").Group("type")
+
+	items := make([]HostInstanceItem, 0)
+	err := db.Scan(&items).Error
+
+	return items, dbCommon.WrapDBError(err)
 }
 
 func (g *ClusterReadWrite) UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error {
@@ -350,16 +431,14 @@ func (g *ClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) 
 	return dbCommon.WrapDBError(err)
 }
 
-func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMasterClusterId, oldSlaveClusterId, newSyncChangeFeedTaskId string) error {
+func (g *ClusterReadWrite) SwapMasterSlaveRelations(ctx context.Context, oldMasterClusterId, slaveToBeMasterClusterId string, newSlaveClusterIdMapToSyncCDCTaskId map[string]string) error {
 	tx := g.DB(ctx).Begin()
-
 	if err := tx.Error; err != nil {
 		return err
 	}
 	relations := make([]*ClusterRelation, 0)
 	err := tx.Model(&ClusterRelation{}).
 		Where("subject_cluster_id  = ? ", oldMasterClusterId).
-		Where("object_cluster_id  = ? ", oldSlaveClusterId).
 		Where("relation_type  = ? ", string(constants.ClusterRelationStandBy)).
 		Find(&relations).Error
 	if err != nil {
@@ -367,28 +446,63 @@ func (g *ClusterReadWrite) SwapMasterSlaveRelation(ctx context.Context, oldMaste
 		tx.Rollback()
 		return err
 	}
-	framework.Assert(len(relations) > 0)
+	if len(relations) <= 0 {
+		err = dbCommon.WrapDBError(fmt.Errorf("gorm SwapMasterSlaveRelations no relation found"))
+		tx.Rollback()
+		return err
+	}
+	if len(relations) != len(newSlaveClusterIdMapToSyncCDCTaskId) {
+		err = dbCommon.WrapDBError(fmt.Errorf("gorm SwapMasterSlaveRelations relations amount does not match: %d != %d",
+			len(relations), len(newSlaveClusterIdMapToSyncCDCTaskId)))
+		tx.Rollback()
+		return err
+	}
+	dupNewSlaveClusterIdMapToSyncCDCTaskId := make(map[string]string)
+	for k, v := range newSlaveClusterIdMapToSyncCDCTaskId {
+		dupNewSlaveClusterIdMapToSyncCDCTaskId[k] = v
+	}
+	_, ok := dupNewSlaveClusterIdMapToSyncCDCTaskId[oldMasterClusterId]
+	if ok {
+		delete(dupNewSlaveClusterIdMapToSyncCDCTaskId, oldMasterClusterId)
+	} else {
+		err = dbCommon.WrapDBError(fmt.Errorf("gorm SwapMasterSlaveRelations dupNewSlaveClusterIdMapToSyncCDCTaskId has no oldMasterClusterId"))
+		tx.Rollback()
+	}
+	equalSlaveToBeMasterClusterIdCt := 0
 	for _, relation := range relations {
 		framework.Assert(relation.SubjectClusterID == oldMasterClusterId)
-		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelation get relation %v %s %s %s",
+		framework.LogWithContext(ctx).Debugf("gorm SwapMasterSlaveRelations get relation %v %s %s %s",
 			relation.ID, relation.SubjectClusterID, relation.ObjectClusterID, relation.SyncChangeFeedTaskID)
+		if relation.ObjectClusterID == slaveToBeMasterClusterId {
+			equalSlaveToBeMasterClusterIdCt++
+		} else {
+			delete(dupNewSlaveClusterIdMapToSyncCDCTaskId, relation.ObjectClusterID)
+		}
 		err = tx.Debug().Delete(relation).Error
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("1st gorm SwapMasterSlaveRelation %s", err)
+			framework.LogWithContext(ctx).Errorf("gorm SwapMasterSlaveRelations %s", err)
 			tx.Rollback()
 			return err
 		}
 	}
-	err = tx.Debug().Create(&ClusterRelation{
-		RelationType:         constants.ClusterRelationStandBy,
-		ObjectClusterID:      oldMasterClusterId,
-		SubjectClusterID:     oldSlaveClusterId,
-		SyncChangeFeedTaskID: newSyncChangeFeedTaskId,
-	}).Error
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("2st gorm SwapMasterSlaveRelation %s", err)
+	if equalSlaveToBeMasterClusterIdCt != 1 || len(dupNewSlaveClusterIdMapToSyncCDCTaskId) != 0 {
+		framework.LogWithContext(ctx).Errorf("gorm SwapMasterSlaveRelations check failed, %v,%v",
+			equalSlaveToBeMasterClusterIdCt == 1, len(dupNewSlaveClusterIdMapToSyncCDCTaskId) == 0)
 		tx.Rollback()
 		return err
+	}
+	for newSlaveId, newSyncCDCId := range newSlaveClusterIdMapToSyncCDCTaskId {
+		err = tx.Debug().Create(&ClusterRelation{
+			RelationType:         constants.ClusterRelationStandBy,
+			ObjectClusterID:      newSlaveId,
+			SubjectClusterID:     slaveToBeMasterClusterId,
+			SyncChangeFeedTaskID: newSyncCDCId,
+		}).Error
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("gorm SwapMasterSlaveRelations create relation failed, %s", err)
+			tx.Rollback()
+			return err
+		}
 	}
 
 	return dbCommon.WrapDBError(tx.Commit().Error)
@@ -437,20 +551,32 @@ func (g *ClusterReadWrite) UpdateTopologySnapshotConfig(ctx context.Context, clu
 	return dbCommon.WrapDBError(g.DB(ctx).Save(snapshot).Error)
 }
 
-func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string) error {
-	got, err := g.Get(ctx, clusterID)
-	if err != nil {
-		return err
+func (g *ClusterReadWrite) ClearClusterPhysically(ctx context.Context, clusterID string, reason string) error {
+	if len(clusterID) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "clusterId is empty")
 	}
-	err = g.DB(ctx).Unscoped().Delete(got).Error
-	if err != nil {
-		return dbCommon.WrapDBError(err)
+	if len(reason) == 0 {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "reason is empty")
 	}
-
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterInstance{}).Error
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&ClusterTopologySnapshot{}).Error
-	err = g.DB(ctx).Where("cluster_id = ?", clusterID).Unscoped().Delete(&DBUser{}).Error
-
+	err := g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		return errors.OfNullable(nil).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Delete(&Cluster{Entity: dbCommon.Entity{ID: clusterID}}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterInstance{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&ClusterTopologySnapshot{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("cluster_id = ?", clusterID).Delete(&DBUser{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("subject_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).BreakIf(func() error {
+			return g.DB(ctx).Unscoped().Where("object_cluster_id = ?", clusterID).Delete(&ClusterRelation{}).Error
+		}).If(func(err error) {
+			framework.LogWithContext(ctx).Errorf("clear cluster data physically failed, clusterId = %s, err = %s", clusterID, err.Error())
+		}).Else(func() {
+			framework.LogWithContext(ctx).Warnf("clear data of cluster %s physically, operatorId = %s, reason = %s", clusterID, framework.GetUserIDFromContext(ctx), reason)
+		}).Present()
+	})
 	return dbCommon.WrapDBError(err)
 }
 

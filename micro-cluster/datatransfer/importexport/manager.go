@@ -138,7 +138,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 	info := &exportInfo{
 		ClusterId:   request.ClusterID,
 		UserName:    request.UserName,
-		Password:    request.Password,
+		Password:    string(request.Password),
 		FileType:    request.FileType,
 		RecordId:    recordCreate.ID,
 		FilePath:    mgr.getDataExportFilePath(&request, exportDir, false),
@@ -235,7 +235,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		info = &importInfo{
 			ClusterId:   request.ClusterID,
 			UserName:    request.UserName,
-			Password:    request.Password,
+			Password:    string(request.Password),
 			FilePath:    mgr.getDataImportFilePath(&request, importDir, false),
 			RecordId:    recordCreate.ID,
 			StorageType: request.StorageType,
@@ -277,7 +277,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		info = &importInfo{
 			ClusterId:   request.ClusterID,
 			UserName:    request.UserName,
-			Password:    request.Password,
+			Password: string(request.Password),
 			FilePath:    recordGet.FilePath,
 			RecordId:    recordCreate.ID,
 			StorageType: request.StorageType,

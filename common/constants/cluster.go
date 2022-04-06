@@ -40,6 +40,7 @@ type ClusterMaintenanceStatus string
 const (
 	ClusterMaintenanceCreating                     ClusterMaintenanceStatus = "Creating"
 	ClusterMaintenanceCloning                      ClusterMaintenanceStatus = "Cloning"
+	ClusterMaintenanceBeingCloned                  ClusterMaintenanceStatus = "BeingCloned"
 	ClusterMaintenanceDeleting                     ClusterMaintenanceStatus = "Deleting"
 	ClusterMaintenanceStopping                     ClusterMaintenanceStatus = "Stopping"
 	ClusterMaintenanceRestarting                   ClusterMaintenanceStatus = "Restarting"
@@ -173,6 +174,7 @@ const (
 	DBUserBackupRestore       DBUserRoleType = "EM_Backup_Restore"       // user for backup and restore
 	DBUserParameterManagement DBUserRoleType = "EM_Parameter_Management" // user for managing parameters
 	DBUserCDCDataSync         DBUserRoleType = "CDC_Data_Sync"           // user for CDC data synchronization
+	DBUserGrafana             DBUserRoleType = "Grafana"                 // user for Grafana
 )
 
 var DBUserName = map[DBUserRoleType]string{
@@ -191,3 +193,15 @@ var DBUserPermission = map[DBUserRoleType][]string{
 
 // DefaultRetainedPortRange default retained port range for tiem
 var DefaultRetainedPortRange = "[11000,12000]"
+
+// RequestResourceMode specifying resource mode, enums : SpecificZone,SpecificHost
+type RequestResourceMode string
+
+const (
+	ResourceModeSpecificZone = "SpecificZone"
+	ResourceModeSpecificHost = "SpecificHost"
+)
+
+func DefaultResourceMode() string {
+	return ResourceModeSpecificZone
+}

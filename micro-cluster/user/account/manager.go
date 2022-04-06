@@ -52,7 +52,7 @@ func (p *Manager) CreateUser(ctx context.Context, request message.CreateUserReq)
 		Phone:           request.Phone,
 		Creator:         framework.GetUserIDFromContext(ctx),
 	}
-	err := user.GenSaltAndHash(request.Password)
+	err := user.GenSaltAndHash(string(request.Password))
 	if err != nil {
 		log.Errorf("user %s generate salt and hash error: %v", request.Name, err)
 		return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
@@ -130,13 +130,13 @@ func (p *Manager) UpdateUserPassword(ctx context.Context, request message.Update
 	rw := models.GetAccountReaderWriter()
 
 	user := &account.User{}
-	err = user.GenSaltAndHash(request.Password)
+	err = user.GenSaltAndHash(string(request.Password))
 	if err != nil {
 		log.Errorf("user %s generate salt and hash error: %v", request.ID, err)
 		return resp, errors.NewErrorf(errors.UserGenSaltAndHashValueFailed,
 			"user %s generate salt and hash error: %v", request.ID, err)
 	}
-	err = rw.UpdateUserPassword(ctx, request.ID, user.Salt, user.FinalHash)
+	err = rw.UpdateUserPassword(ctx, request.ID, user.Salt, user.FinalHash.Val)
 	if err != nil {
 		errMsg := fmt.Sprintf("update user %s password error: %v", request.ID, err)
 		log.Errorf(errMsg)

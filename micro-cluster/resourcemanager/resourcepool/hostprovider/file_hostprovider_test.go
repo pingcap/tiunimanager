@@ -18,16 +18,21 @@ package hostprovider
 
 import (
 	"context"
+	"fmt"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/models/platform/product"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models"
+	cluster_rw "github.com/pingcap-inc/tiem/models/cluster/management"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	"github.com/stretchr/testify/assert"
 )
@@ -166,6 +171,24 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 	})
+
+	models.MockDB()
+	rw := mock_cluster.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+	rw.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostIds []string) ([]cluster_rw.HostInstanceItem, error) {
+		items := []cluster_rw.HostInstanceItem{
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "AlertManger"},
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Grafana"},
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "PD"},
+			{HostID: fake_hostId, ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Prometheus"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "AlertManger"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Grafana"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "PD"},
+			{HostID: fake_hostId, ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Prometheus"},
+		}
+		return items, nil
+	})
+
 	hostprovider := mockFileHostProvider(mockClient)
 
 	filter := &structs.HostFilter{
@@ -184,6 +207,9 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 	assert.Equal(t, "TEST_REGION", hosts[0].Region)
 	assert.Equal(t, "TEST_AZ", hosts[0].AZ)
 	assert.Equal(t, "TEST_RACK", hosts[0].Rack)
+	assert.Equal(t, 2, len(hosts[0].Instances))
+	assert.Equal(t, 4, len(hosts[0].Instances["Jt_r1RnfT3i0O7YWtMhBzw"]))
+	assert.Equal(t, 4, len(hosts[0].Instances["THwF-s3hTL-SZbZsytBMTw"]))
 }
 
 func Test_DeleteHosts_Succeed(t *testing.T) {
@@ -362,28 +388,214 @@ func Test_ValidateZoneInfo_Succeed(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	prw := mock_product.NewMockProductReadWriterInterface(ctrl)
+	prw := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(prw)
-	prw.EXPECT().GetZone(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, vendorID, regionID, zoneID string) (*structs.ZoneInfo, int64, error) {
-		if vendorID == "Fake_Vendor0" {
-			return &structs.ZoneInfo{VendorID: vendorID, RegionID: regionID, ZoneID: zoneID}, 1, nil
-		} else if vendorID == "Fake_Vendor1" {
-			return nil, 0, nil
-		} else {
-			return nil, 0, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get zone without vendorID %s, regionID %s, zoneID %s, parameter invalid", vendorID, regionID, zoneID)
-		}
-	}).Times(3)
 
 	hostProvider := mockFileHostProvider(nil)
 
-	err := hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor0", Region: "Fake_Region", AZ: "Fake_Zone"})
+	mockQueryLocalFromDB(prw.EXPECT())
+	err := hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Local", Region: "Region1", AZ: "Zone1_1"})
 	assert.Nil(t, err)
 
-	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor1", Region: "Fake_Region", AZ: "Fake_Zone"})
+	mockQueryLocalFromDB(prw.EXPECT())
+	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Local", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.TIEM_RESOURCE_INVALID_ZONE_INFO, err.(errors.EMError).GetCode())
 
-	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Fake_Vendor3", Region: "Fake_Region", AZ: "Fake_Zone"})
+	prw.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
 	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+}
+
+func Test_buildInstancesOnHost(t *testing.T) {
+	items := []cluster_rw.HostInstanceItem{
+		{HostID: "F6ejwHdcQNeHQxQDF0HzMQ", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "TiDB"},
+		{HostID: "F6ejwHdcQNeHQxQDF0HzMQ", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "TiDB"},
+		{HostID: "HWlv9r2ORayaZlUs6HUgTg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "TiKV"},
+		{HostID: "HWlv9r2ORayaZlUs6HUgTg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "TiKV"},
+		{HostID: "KU8QP0-uQfyqP7TvPp0deQ", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "CDC"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "AlertManger"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Grafana"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "PD"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "Jt_r1RnfT3i0O7YWtMhBzw", Component: "Prometheus"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "AlertManger"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Grafana"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "PD"},
+		{HostID: "ZIqy0JAuTxuglIPHNL83hg", ClusterID: "THwF-s3hTL-SZbZsytBMTw", Component: "Prometheus"},
+	}
+	hostProvider := mockFileHostProvider(nil)
+
+	results := hostProvider.buildInstancesOnHost(context.TODO(), items)
+	assert.Equal(t, 4, len(results))
+	assert.Equal(t, 2, len(results["F6ejwHdcQNeHQxQDF0HzMQ"]))
+	assert.Equal(t, 2, len(results["ZIqy0JAuTxuglIPHNL83hg"]))
+	assert.Equal(t, 4, len(results["ZIqy0JAuTxuglIPHNL83hg"]["Jt_r1RnfT3i0O7YWtMhBzw"]))
+	assert.Equal(t, 4, len(results["ZIqy0JAuTxuglIPHNL83hg"]["THwF-s3hTL-SZbZsytBMTw"]))
+}
+
+func mockQueryLocalFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
+	expect.GetVendor(gomock.Any(), gomock.Any()).Return(&product.Vendor{
+		VendorID:   "Local",
+		VendorName: "local",
+	}, []*product.VendorZone{
+		{
+			VendorID:   "Local",
+			RegionID:   "Region1",
+			RegionName: "region1",
+			ZoneID:     "Zone1_1",
+			ZoneName:   "zone1_1",
+			Comment:    "aa",
+		},
+		{
+			VendorID:   "Local",
+			RegionID:   "Region1",
+			RegionName: "region1",
+			ZoneID:     "Zone1_2",
+			ZoneName:   "zone1_2",
+			Comment:    "aa",
+		},
+		{
+			VendorID:   "Local",
+			RegionID:   "Region2",
+			RegionName: "region2",
+			ZoneID:     "Zone2_1",
+			ZoneName:   "zone2_1",
+			Comment:    "aa",
+		},
+	}, []*product.VendorSpec{
+		{
+			VendorID:    "Local",
+			SpecID:      "c.large",
+			SpecName:    "c.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
+			PurposeType: "Compute",
+		},
+		{
+			VendorID:    "Local",
+			SpecID:      "s.large",
+			SpecName:    "s.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
+			PurposeType: "Storage",
+		},
+		{
+			VendorID:    "Local",
+			SpecID:      "s.xlarge",
+			SpecName:    "s.xlarge",
+			CPU:         8,
+			Memory:      16,
+			DiskType:    "SATA",
+			PurposeType: "Storage",
+		},
+		{
+			VendorID:    "Local",
+			SpecID:      "sc.large",
+			SpecName:    "sc.large",
+			CPU:         4,
+			Memory:      8,
+			DiskType:    "SATA",
+			PurposeType: "Schedule",
+		},
+	}, nil).Times(1)
+}
+
+func Test_UpdateHost(t *testing.T) {
+	fakeHostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	host := genHostInfo("TEST_HOST1")
+
+	mockClient.EXPECT().UpdateHostInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, host resourcepool.Host) error {
+		if host.ID == fakeHostId1 {
+			return nil
+		} else {
+			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+		}
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	err := hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.NotNil(t, err)
+	assert.Equal(t, "update host failed without host id", err.(errors.EMError).GetMsg())
+
+	host.ID = fakeHostId1
+	host.UsedCpuCores = 20
+	host.UsedMemory = 20
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.NotNil(t, err)
+	assert.Equal(t, fmt.Sprintf("used cpu cores or used memory field should not be set while update host %s", host.ID), err.(errors.EMError).GetMsg())
+
+	host.UsedCpuCores = 0
+	host.UsedMemory = 0
+
+	host.CpuCores = -128
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.Equal(t, fmt.Sprintf("input cpu cores(%d) or memory(%d) is invalid to update host %s", -128, 0, host.ID), err.(errors.EMError).GetMsg())
+	assert.NotNil(t, err)
+
+	host.CpuCores = 128
+	err = hostprovider.UpdateHostInfo(context.TODO(), *host)
+	assert.Nil(t, err)
+}
+
+func Test_CreateDisks(t *testing.T) {
+	fakeHostId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+	host := genHostInfo("TEST_HOST1")
+	host.ID = fakeHostId1
+	mockClient.EXPECT().CreateDisks(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, hostId string, disks []resourcepool.Disk) ([]string, error) {
+		return nil, nil
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	var disk structs.DiskInfo
+	_, err := hostprovider.CreateDisks(context.TODO(), fakeHostId1, []structs.DiskInfo{disk})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+		fakeHostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
+
+	_, err = hostprovider.CreateDisks(context.TODO(), fakeHostId1, nil)
+	assert.Nil(t, err)
+}
+
+func Test_UpdateDisks(t *testing.T) {
+	fakeDiskId1 := "xxxx-xxxx-yyyy-yyyy"
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+
+	mockClient.EXPECT().UpdateDisk(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, disk resourcepool.Disk) error {
+		return nil
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	var disk structs.DiskInfo
+	err := hostprovider.UpdateDisk(context.TODO(), disk)
+	assert.NotNil(t, err)
+	assert.Equal(t, "update disk failed without disk id", err.(errors.EMError).GetMsg())
+
+	disk.ID = fakeDiskId1
+	err = hostprovider.UpdateDisk(context.TODO(), disk)
+	assert.Nil(t, err)
+}
+
+func Test_DeleteDisks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock_resource.NewMockReaderWriter(ctrl)
+
+	mockClient.EXPECT().DeleteDisks(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, diskIds []string) error {
+		return nil
+	})
+	hostprovider := mockFileHostProvider(mockClient)
+
+	err := hostprovider.DeleteDisks(context.TODO(), nil)
+	assert.Nil(t, err)
 }

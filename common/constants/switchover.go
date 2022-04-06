@@ -27,12 +27,13 @@ const SwitchoverCheckMasterSlaveMaxLagTimeRetriesCount = 3
 const SwitchoverCheckMasterSlaveMaxLagTimeRetryWait = 3000 * time.Millisecond
 
 const SwitchoverCheckSyncChangeFeedTaskHealthTimeInterval = 5000 * time.Millisecond
-const SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount = 3
+const SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount = 11
 const SwitchoverCheckSyncChangeFeedTaskHealthRetryWait = 500 * time.Millisecond
 
-const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetriesCount = 3
-const SwitchoverCheckSyncChangeFeedTaskCaughtUpRetryWait = 1000 * time.Millisecond
-const SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime = 2000 * time.Millisecond
+const SwitchoverCheckChangeFeedTaskCaughtUpRetriesCount = 60
+const SwitchoverCheckChangeFeedTaskCaughtUpRetryWait = 1000 * time.Millisecond
+const SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime = 3000 * time.Millisecond
+const SwitchoverCheckChangeFeedTaskCaughtUpMakeSureRetriesCount = 0
 
 const SwitchoverReadWriteHealthTestDBName = "test"
 const SwitchoverReadWriteHealthTestTableNamePrefix = "em_rwtest"

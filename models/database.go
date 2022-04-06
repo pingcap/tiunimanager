@@ -18,36 +18,33 @@ package models
 import (
 	"context"
 	"github.com/asim/go-micro/v3/util/file"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/models/common"
-
-	"github.com/pingcap-inc/tiem/models/platform/product"
-	"github.com/pingcap-inc/tiem/models/platform/system"
-	"github.com/pingcap-inc/tiem/models/user/rbac"
-	gormopentracing "gorm.io/plugin/opentracing"
-
-	"github.com/pingcap-inc/tiem/models/tiup"
-
 	"github.com/pingcap-inc/tiem/common/constants"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/models/user/account"
-	"github.com/pingcap-inc/tiem/models/user/identification"
-
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap-inc/tiem/models/platform/check"
 	"github.com/pingcap-inc/tiem/models/platform/config"
+	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap-inc/tiem/models/platform/system"
 	"github.com/pingcap-inc/tiem/models/resource"
 	resource_rw "github.com/pingcap-inc/tiem/models/resource/gormreadwrite"
+	mm "github.com/pingcap-inc/tiem/models/resource/management"
+	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiem/models/tiup"
+	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiem/models/user/identification"
+	"github.com/pingcap-inc/tiem/models/user/rbac"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
+	gormopentracing "gorm.io/plugin/opentracing"
 
 	"gorm.io/gorm"
 )
@@ -70,8 +67,9 @@ type database struct {
 	rbacReaderWriter                 rbac.ReaderWriter
 	accountReaderWriter              account.ReaderWriter
 	tokenReaderWriter                identification.ReaderWriter
-	productReaderWriter              product.ProductReadWriterInterface
+	productReaderWriter              product.ReaderWriter
 	tiUPConfigReaderWriter           tiup.ReaderWriter
+	reportReaderWriter               check.ReaderWriter
 	systemReaderWriter               system.ReaderWriter
 }
 
@@ -215,14 +213,17 @@ func (p *database) migrateTables() (err error) {
 		new(mm.UsedCompute),
 		new(mm.UsedPort),
 		new(mm.UsedDisk),
-		new(product.Zone),
-		new(product.Spec),
-		new(product.Product),
-		new(product.ProductComponent),
+		new(product.Vendor),
+		new(product.VendorZone),
+		new(product.VendorSpec),
+		new(product.ProductInfo),
+		new(product.ProductVersion),
+		new(product.ProductComponentInfo),
 		new(account.User),
 		new(account.Tenant),
 		new(account.UserLogin),
 		new(account.UserTenantRelation),
+		new(check.CheckReport),
 	)
 }
 
@@ -241,10 +242,124 @@ func (p *database) initReaderWriters() {
 	defaultDb.rbacReaderWriter = rbac.NewRBACReadWrite(defaultDb.base)
 	defaultDb.accountReaderWriter = account.NewAccountReadWrite(defaultDb.base)
 	defaultDb.tokenReaderWriter = identification.NewTokenReadWrite(defaultDb.base)
-	defaultDb.productReaderWriter = product.NewProductReadWriter(defaultDb.base)
+	defaultDb.productReaderWriter = product.NewProductReadWrite(defaultDb.base)
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
+	defaultDb.reportReaderWriter = check.NewReportReadWrite(defaultDb.base)
 	defaultDb.systemReaderWriter = system.NewSystemReadWrite(defaultDb.base)
 }
+
+//func (p *database) initSystemConfig() {
+//	// system config
+//	framework.LogWithContext(context.TODO()).Info("begin init system configs to database...")
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupRateLimit, ConfigValue: constants.DefaultBackupRateLimit})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRestoreRateLimit, ConfigValue: constants.DefaultRestoreRateLimit})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupConcurrency, ConfigValue: constants.DefaultBackupConcurrency})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRestoreConcurrency, ConfigValue: constants.DefaultRestoreConcurrency})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDumplingThreadNum, ConfigValue: constants.DefaultDumplingThreadNum})
+//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRetainedPortRange, ConfigValue: constants.DefaultRetainedPortRange})
+//}
+
+//func (p *database) initSystemData() {
+//	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(),
+//		&account.Tenant{
+//			ID:               "admin",
+//			Name:             "EM system administration",
+//			Creator:          "System",
+//			Status:           string(constants.TenantStatusNormal),
+//			OnBoardingStatus: string(constants.TenantOnBoarding)})
+//	if err != nil {
+//		framework.LogWithContext(context.TODO()).Errorf("create 'admin' tenant error: %v", err)
+//		return
+//	}
+//
+//	// todo determine if default data needed
+//	// system admin account
+//	user := &account.User{
+//		DefaultTenantID: tenant.ID,
+//		Name:            "admin",
+//		Creator:         "System",
+//	}
+//	user.GenSaltAndHash("admin")
+//	_, _, _, err = defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin")
+//	if err != nil {
+//		framework.LogWithContext(context.TODO()).Errorf("create 'admin' user error: %v", err)
+//		return
+//	}
+//
+//	// label
+//	for _, v := range structs.DefaultLabelTypes {
+//		labelRecord := new(resourcePool.Label)
+//		labelRecord.ConstructLabelRecord(&v)
+//		if err = defaultDb.base.Create(labelRecord).Error; err != nil {
+//			framework.LogForkFile(constants.LogFileSystem).Errorf("create label error: %s", err.Error())
+//			return
+//		}
+//	}
+//
+//	// batch import parameters & default parameter group sql
+//	parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
+//	err = syscall.Access(parameterSqlFile, syscall.F_OK)
+//	if !os.IsNotExist(err) {
+//		sqls, err := ioutil.ReadFile(parameterSqlFile)
+//		if err != nil {
+//			framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
+//			return
+//		}
+//		sqlArr := strings.Split(string(sqls), ";")
+//		for _, sql := range sqlArr {
+//			if strings.TrimSpace(sql) == "" {
+//				continue
+//			}
+//			// exec import sql
+//			defaultDb.base.Exec(sql)
+//		}
+//	}
+//
+//	// import TiUP configs
+//	tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
+//	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+//	if !os.IsNotExist(err) {
+//		sqls, err := ioutil.ReadFile(tiUPSqlFile)
+//		if err != nil {
+//			framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
+//			return
+//		}
+//		sqlArr := strings.Split(string(sqls), ";")
+//		for _, sql := range sqlArr {
+//			if strings.TrimSpace(sql) == "" {
+//				continue
+//			}
+//			// exec import sql
+//			defaultDb.base.Exec(sql)
+//		}
+//	}
+//
+//	// import upgrade paths
+//	upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
+//	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
+//	if !os.IsNotExist(err) {
+//		sqls, err := ioutil.ReadFile(upgradeSqlFile)
+//		if err != nil {
+//			framework.LogForkFile(constants.LogFileSystem).Errorf("import upgrades failed, err = %s", err.Error())
+//			return
+//		}
+//		sqlArr := strings.Split(string(sqls), ";")
+//		for _, sql := range sqlArr {
+//			if strings.TrimSpace(sql) == "" {
+//				continue
+//			}
+//			// exec import sql
+//			defaultDb.base.Exec(sql)
+//		}
+//	}
+//}
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
 	return defaultDb.changeFeedReaderWriter
@@ -358,11 +473,11 @@ func SetTokenReaderWriter(rw identification.ReaderWriter) {
 	defaultDb.tokenReaderWriter = rw
 }
 
-func GetProductReaderWriter() product.ProductReadWriterInterface {
+func GetProductReaderWriter() product.ReaderWriter {
 	return defaultDb.productReaderWriter
 }
 
-func SetProductReaderWriter(rw product.ProductReadWriterInterface) {
+func SetProductReaderWriter(rw product.ReaderWriter) {
 	defaultDb.productReaderWriter = rw
 }
 
@@ -372,6 +487,14 @@ func GetTiUPConfigReaderWriter() tiup.ReaderWriter {
 
 func SetTiUPConfigReaderWriter(rw tiup.ReaderWriter) {
 	defaultDb.tiUPConfigReaderWriter = rw
+}
+
+func SetReportReaderWriter(rw check.ReaderWriter) {
+	defaultDb.reportReaderWriter = rw
+}
+
+func GetReportReaderWriter() check.ReaderWriter {
+	return defaultDb.reportReaderWriter
 }
 
 func GetSystemReaderWriter() system.ReaderWriter {

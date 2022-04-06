@@ -20,7 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/metrics"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
@@ -28,10 +27,13 @@ import (
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
+	configApi "github.com/pingcap-inc/tiem/micro-api/controller/platform/config"
+	platformdignose "github.com/pingcap-inc/tiem/micro-api/controller/platform/dignose"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/system"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
+	platformApi "github.com/pingcap-inc/tiem/micro-api/controller/platform"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
@@ -44,12 +46,6 @@ import (
 )
 
 func Route(g *gin.Engine) {
-	// system check
-	check := g.Group("/system")
-	{
-		check.GET("/check", controller.Hello)
-	}
-
 	// support swagger
 	swagger := g.Group("/swagger")
 	{
@@ -60,7 +56,7 @@ func Route(g *gin.Engine) {
 	web := g.Group("/web")
 	{
 		web.Use(interceptor.AccessLog(), gin.Recovery())
-		web.GET("/*any", controller.HelloPage)
+		web.GET("/*any", system.GetSystemInfo)
 	}
 
 	// api
@@ -74,6 +70,25 @@ func Route(g *gin.Engine) {
 		{
 			auth.POST("/login", metrics.HandleMetrics(constants.MetricsUserLogin), userApi.Login)
 			auth.POST("/logout", metrics.HandleMetrics(constants.MetricsUserLogout), userApi.Logout)
+		}
+
+		platform := apiV1.Group("/platform")
+		{
+			platform.Use(interceptor.VerifyIdentity)
+			platform.Use(interceptor.AuditLog)
+			platform.POST("/check", metrics.HandleMetrics(constants.MetricsPlatformCheck), platformApi.Check)
+			platform.POST("/check/:clusterId", metrics.HandleMetrics(constants.MetricsClusterCheck), platformApi.CheckCluster)
+			platform.GET("/report/:checkId", metrics.HandleMetrics(constants.MetricsGetCheckReport), platformApi.GetCheckReport)
+			platform.GET("/reports", metrics.HandleMetrics(constants.MetricsQueryCheckReports), platformApi.QueryCheckReports)
+			platform.GET("/log", metrics.HandleMetrics(constants.MetricsQueryPlatformLog), platformdignose.QueryPlatformLog)
+		}
+
+		config := apiV1.Group("/config")
+		{
+			config.Use(interceptor.VerifyIdentity)
+			config.Use(interceptor.AuditLog)
+			config.POST("/update", metrics.HandleMetrics(constants.MetricsSystemConfigUpdate), configApi.UpdateSystemConfig)
+			config.GET("/", metrics.HandleMetrics(constants.MetricsSystemConfigGet), configApi.GetSystemConfig)
 		}
 
 		user := apiV1.Group("/users")
@@ -167,6 +182,14 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/upgrade", metrics.HandleMetrics(constants.MetricsClusterUpgrade), upgrade.Upgrade)
 		}
 
+		metadata := apiV1.Group("/metadata")
+		{
+			cluster.Use(interceptor.SystemRunning)
+			cluster.Use(interceptor.VerifyIdentity)
+			cluster.Use(interceptor.AuditLog)
+			metadata.DELETE("/:clusterId", metrics.HandleMetrics(constants.MetricsMetadataDeletePhysically), clusterApi.DeleteMetaDataPhysically)
+		}
+
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.SystemRunning)
@@ -174,6 +197,7 @@ func Route(g *gin.Engine) {
 			backup.Use(interceptor.AuditLog)
 
 			backup.POST("/", metrics.HandleMetrics(constants.MetricsBackupCreate), backuprestore.Backup)
+			backup.POST("/cancel", metrics.HandleMetrics(constants.MetricsBackupCancel), backuprestore.CancelBackup)
 			backup.GET("/", metrics.HandleMetrics(constants.MetricsBackupQuery), backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", metrics.HandleMetrics(constants.MetricsBackupDelete), backuprestore.DeleteBackup)
 		}
@@ -211,12 +235,16 @@ func Route(g *gin.Engine) {
 			host.Use(interceptor.AuditLog)
 			host.POST("hosts", metrics.HandleMetrics(constants.MetricsResourceImportHosts), resourceApi.ImportHosts)
 			host.GET("hosts", metrics.HandleMetrics(constants.MetricsResourceQueryHosts), resourceApi.QueryHosts)
-			host.DELETE("hosts", metrics.HandleMetrics(constants.MetricsResourceDeleteHost), resourceApi.RemoveHosts)
+			host.DELETE("hosts", metrics.HandleMetrics(constants.MetricsResourceDeleteHosts), resourceApi.RemoveHosts)
 			host.GET("hosts-template", metrics.HandleMetrics(constants.MetricsResourceDownloadHostTemplateFile), resourceApi.DownloadHostTemplateFile)
 			host.GET("hierarchy", metrics.HandleMetrics(constants.MetricsResourceQueryHierarchy), warehouseApi.GetHierarchy)
 			host.GET("stocks", metrics.HandleMetrics(constants.MetricsResourceQueryStocks), warehouseApi.GetStocks)
 			host.PUT("host-reserved", metrics.HandleMetrics(constants.MetricsResourceReservedHost), resourceApi.UpdateHostReserved)
 			host.PUT("host-status", metrics.HandleMetrics(constants.MetricsResourceModifyHostStatus), resourceApi.UpdateHostStatus)
+			host.PUT("host", metrics.HandleMetrics(constants.MetricsResourceUpdateHost), resourceApi.UpdateHost)
+			host.POST("disks", metrics.HandleMetrics(constants.MetricsResourceCreateDisks), resourceApi.CreateDisks)
+			host.DELETE("disks", metrics.HandleMetrics(constants.MetricsResourceDeleteDisks), resourceApi.RemoveDisks)
+			host.PUT("disk", metrics.HandleMetrics(constants.MetricsResourceUpdateDisk), resourceApi.UpdateDisk)
 		}
 
 		paramGroups := apiV1.Group("/param-groups")
@@ -238,20 +266,20 @@ func Route(g *gin.Engine) {
 			productGroup.Use(interceptor.SystemRunning)
 			productGroup.Use(interceptor.VerifyIdentity)
 			productGroup.Use(interceptor.AuditLog)
-			productGroup.POST("/", product.CreateProduct)
-			productGroup.DELETE("/", product.DeleteProduct)
-			productGroup.GET("/", product.QueryProducts)
-			productGroup.GET("/detail", product.QueryProductDetail)
+			productGroup.POST("/", metrics.HandleMetrics(constants.MetricsProductUpdate), product.UpdateProducts)
+			productGroup.GET("/", metrics.HandleMetrics(constants.MetricsProductQuery), product.QueryProducts)
+			productGroup.GET("/available", metrics.HandleMetrics(constants.MetricsProductQueryAvailable), product.QueryAvailableProducts)
+			productGroup.GET("/detail", metrics.HandleMetrics(constants.MetricsProductQueryDetail), product.QueryProductDetail)
 		}
 
-		zoneGroup := apiV1.Group("/zones")
+		vendorGroup := apiV1.Group("/vendors")
 		{
-			zoneGroup.Use(interceptor.SystemRunning)
-			zoneGroup.Use(interceptor.VerifyIdentity)
-			zoneGroup.Use(interceptor.AuditLog)
-			zoneGroup.POST("/", product.CreateZones)
-			zoneGroup.DELETE("/", product.DeleteZones)
-			zoneGroup.GET("/tree", product.QueryZonesTree)
+			vendorGroup.Use(interceptor.SystemRunning)
+			vendorGroup.Use(interceptor.VerifyIdentity)
+			vendorGroup.Use(interceptor.AuditLog)
+			vendorGroup.POST("/", metrics.HandleMetrics(constants.MetricsVendorUpdate), product.UpdateVendors)
+			vendorGroup.GET("/", metrics.HandleMetrics(constants.MetricsVendorQuery), product.QueryVendors)
+			vendorGroup.GET("/available", metrics.HandleMetrics(constants.MetricsVendorQueryAvailable), product.QueryAvailableVendors)
 		}
 
 		specGroup := apiV1.Group("/specs")
@@ -259,9 +287,6 @@ func Route(g *gin.Engine) {
 			specGroup.Use(interceptor.SystemRunning)
 			specGroup.Use(interceptor.VerifyIdentity)
 			specGroup.Use(interceptor.AuditLog)
-			specGroup.POST("/", product.CreateSpecs)
-			specGroup.DELETE("/", product.DeleteSpecs)
-			specGroup.GET("/", product.QuerySpecs)
 		}
 
 		systemGroup := apiV1.Group("/system")

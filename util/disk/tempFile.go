@@ -58,3 +58,11 @@ func CreateWithContent(dir, prefix, suffix string, content []byte) (fileName str
 	}
 	return fileName, nil
 }
+
+func ReadFileContent(path string) (content string, err error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return
+	}
+	return string(data), nil
+}

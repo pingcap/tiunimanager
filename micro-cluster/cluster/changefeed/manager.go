@@ -323,7 +323,7 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 }
 
 func (p *Manager) createExecutor(ctx context.Context, clusterMeta *meta.ClusterMeta, task *changefeed.ChangeFeedTask) (err error) {
-	ctx = framework.NewBackgroundMicroCtx(ctx, true)
+	ctx = framework.NewBackgroundMicroCtx(ctx, false)
 	libResp, libError := cdc.CDCService.CreateChangeFeedTask(ctx, cdc.ChangeFeedCreateReq{
 		CDCAddress:   clusterMeta.GetCDCClientAddresses()[0].ToString(),
 		ChangeFeedID: task.ID,

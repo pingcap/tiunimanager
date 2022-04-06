@@ -41,6 +41,14 @@ type ReaderWriter interface {
 
 	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)
+	UpdateHostInfo(ctx context.Context, host rp.Host) (err error)
+
+	// Add disks for a host
+	CreateDisks(ctx context.Context, hostId string, disks []rp.Disk) (diskIds []string, err error)
+	// Delete a batch of disks
+	DeleteDisks(ctx context.Context, diskIds []string) (err error)
+	// Update disk name/capacity or set disk failed
+	UpdateDisk(ctx context.Context, disk rp.Disk) (err error)
 
 	// Get all filtered hosts to build hierarchy tree
 	GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error)
@@ -50,4 +58,11 @@ type ReaderWriter interface {
 	// Alloc/Recycle resources, used by cluster module internal
 	AllocResources(ctx context.Context, batchReq *resource_structs.BatchAllocRequest) (results *resource_structs.BatchAllocResponse, err error)
 	RecycleResources(ctx context.Context, request *resource_structs.RecycleRequest) (err error)
+
+	// Get used CpuCore count from used_cpucores
+	GetUsedCpuCores(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error)
+	// Get used Memory
+	GetUsedMemory(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]int, err error)
+	// Get used Disk
+	GetUsedDisks(ctx context.Context, hostIds []string) (resultFromHostTable, resultFromUsedTable, resultFromInstTable map[string]*[]string, err error)
 }

@@ -108,9 +108,35 @@ func (config *UserModuleConfig) buildUserCommand() string {
 	return cmd
 }
 
-func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo) error {
+// get authenticate to target host either by import file or framework args
+func (p *FileHostInitiator) getUserSpecifiedAuthenticateToHost(ctx context.Context, h *structs.HostInfo) (authenticate *sshclient.HostAuthenticate, err error) {
+	if h.UserName != "" && h.Passwd != "" {
+		return &sshclient.HostAuthenticate{SshType: sshclient.Passwd, AuthenticatedUser: h.UserName, AuthenticateContent: string(h.Passwd)}, nil
+	}
+	specifyUser := framework.GetCurrentSpecifiedUser()
+	specifyPrivKey := framework.GetCurrentSpecifiedPrivateKeyPath()
+	if specifyUser != "" && specifyPrivKey != "" {
+		return &sshclient.HostAuthenticate{SshType: sshclient.Key, AuthenticatedUser: specifyUser, AuthenticateContent: specifyPrivKey}, nil
+	}
+
+	errMsg := fmt.Sprintf("get authenticate to host %s %s failed, neither user-passwd or user-privatekey is available", h.HostName, h.IP)
+	return nil, errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
+}
+
+// get authenticate to target host after AuthHost, and we could use private key of deploy user to login
+func (p *FileHostInitiator) getEMAuthenticateToHost(ctx context.Context) (authenticate *sshclient.HostAuthenticate) {
+	deployUser := framework.GetCurrentDeployUser()
+	privateKey := framework.GetPrivateKeyFilePath(deployUser)
+	return &sshclient.HostAuthenticate{SshType: sshclient.Key, AuthenticatedUser: deployUser, AuthenticateContent: privateKey}
+}
+
+func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo, authenticate *sshclient.HostAuthenticate) error {
 	if deployUser == "" || userGroup == "" {
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "deployUser and group should not be null")
+	}
+
+	if authenticate == nil {
+		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "authenticate info should not be nil while creating deploy user")
 	}
 
 	um := UserModuleConfig{
@@ -120,7 +146,7 @@ func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, us
 		Sudoer: true,
 	}
 	createUserCmd := um.buildUserCommand()
-	_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{createUserCmd})
+	_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{createUserCmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("create user %s on remote host %s failed by cmd %s, err: %v", deployUser, h.IP, createUserCmd, err)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
@@ -138,19 +164,19 @@ func (p *FileHostInitiator) getLocalPublicKey(keyPath string) (pubKey []byte, er
 	return
 }
 
-func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, pubKey []byte, deployUser string, h *structs.HostInfo) (err error) {
+func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, pubKey []byte, deployUser string, h *structs.HostInfo, authenticate *sshclient.HostAuthenticate) (err error) {
 	cmd := `su - ` + deployUser + ` -c 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'`
-	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
+	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("create '~/.ssh' directory for user '%s' on host %s failed, %v", deployUser, h.IP, err)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
 	}
 
 	pk := strings.TrimSpace(string(pubKey))
-	sshAuthorizedKeys := p.findSSHAuthorizedKeysFile(ctx, h)
+	sshAuthorizedKeys := p.findSSHAuthorizedKeysFile(ctx, h, authenticate)
 	cmd = fmt.Sprintf(`su - %[1]s -c 'grep \"%[2]s\" %[3]s || echo %[2]s >> %[3]s && chmod 600 %[3]s'`,
 		deployUser, pk, sshAuthorizedKeys)
-	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
+	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("write public keys '%s' to host '%s' for user '%s'", sshAuthorizedKeys, h.IP, deployUser)
 		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
@@ -159,7 +185,11 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 	return nil
 }
 
-func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h *structs.HostInfo) error {
+func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h *structs.HostInfo, authenticate *sshclient.HostAuthenticate) error {
+	if authenticate == nil {
+		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "authenticate info should not be nil while building auth for deploy user")
+	}
+
 	publicKeyPath := framework.GetPublicKeyFilePath(deployUser)
 
 	pubKey, err := p.getLocalPublicKey(publicKeyPath)
@@ -168,11 +198,11 @@ func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h 
 	}
 
 	// Authorize
-	return p.appendRemoteAuthorizedKeysFile(ctx, pubKey, deployUser, h)
+	return p.appendRemoteAuthorizedKeysFile(ctx, pubKey, deployUser, h, authenticate)
 }
 
 // FindSSHAuthorizedKeysFile finds the correct path of SSH authorized keys file
-func (p *FileHostInitiator) findSSHAuthorizedKeysFile(ctx context.Context, h *structs.HostInfo) string {
+func (p *FileHostInitiator) findSSHAuthorizedKeysFile(ctx context.Context, h *structs.HostInfo, authenticate *sshclient.HostAuthenticate) string {
 	// detect if custom path of authorized keys file is set
 	// NOTE: we do not yet support:
 	//   - custom config for user (~/.ssh/config)
@@ -181,7 +211,7 @@ func (p *FileHostInitiator) findSSHAuthorizedKeysFile(ctx context.Context, h *st
 	sshAuthorizedKeys := defaultSSHAuthorizedKeys
 	cmd := "grep -Ev '^\\s*#|^\\s*$' /etc/ssh/sshd_config"
 	// error ignored as we have default value
-	stdout, _ := p.sshClient.RunCommandsInRemoteHost(h.IP, rp_consts.HostSSHPort, sshclient.Passwd, h.UserName, h.Passwd, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
+	stdout, _ := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 
 	for _, line := range strings.Split(string(stdout), "\n") {
 		if !strings.Contains(line, "AuthorizedKeysFile") {

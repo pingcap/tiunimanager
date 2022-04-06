@@ -54,8 +54,20 @@ const (
 	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
+	MetricsMetadataDeletePhysically     MetricsType = "metadata/delete"
+
+	MetricsPlatformCheck     MetricsType = "platform/check"
+	MetricsClusterCheck      MetricsType = "platform/check/cluster"
+	MetricsQueryCheckReports MetricsType = "platform/reports"
+	MetricsGetCheckReport    MetricsType = "platform/report"
+	MetricsQueryPlatformLog  MetricsType = "platform/log"
+
+	MetricsSystemConfigUpdate MetricsType = "config/update"
+	MetricsSystemConfigGet    MetricsType = "config/get"
+
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate         MetricsType = "backup/create"
+	MetricsBackupCancel         MetricsType = "backup/cancel"
 	MetricsBackupDelete         MetricsType = "backup/delete"
 	MetricsBackupQuery          MetricsType = "backup/query"
 	MetricsBackupQueryStrategy  MetricsType = "backup/query_strategy"
@@ -66,9 +78,6 @@ const (
 	MetricsDataImport             MetricsType = "data/import"
 	MetricsDataExportImportQuery  MetricsType = "data/query_export_import_record"
 	MetricsDataExportImportDelete MetricsType = "data/delete_export_import_record"
-
-	// MetricsPlatformQueryKnowledge define knowledge metrics
-	MetricsPlatformQueryKnowledge MetricsType = "platform/query_knowledge"
 
 	// MetricsCDCTaskCreate define cdc metrics
 	MetricsCDCTaskCreate MetricsType = "cdc/create"
@@ -129,9 +138,23 @@ const (
 	MetricsResourceDownloadHostTemplateFile MetricsType = "resource/download_host_template_file"
 	MetricsResourceReservedHost             MetricsType = "resource/reserved_host"
 	MetricsResourceModifyHostStatus         MetricsType = "resource/modify_host_status"
-	MetricsResourceImportHosts              MetricsType = "resource/import_host"
-	MetricsResourceDeleteHost               MetricsType = "resource/delete_host"
-	MetricsResourceQueryHosts               MetricsType = "resource/query"
+	MetricsResourceImportHosts              MetricsType = "resource/import_hosts"
+	MetricsResourceDeleteHosts              MetricsType = "resource/delete_hosts"
+	MetricsResourceQueryHosts               MetricsType = "resource/query_hosts"
+	MetricsResourceUpdateHost               MetricsType = "resource/update_host"
+	MetricsResourceCreateDisks              MetricsType = "resource/create_disks"
+	MetricsResourceDeleteDisks              MetricsType = "resource/delete_disks"
+	MetricsResourceUpdateDisk               MetricsType = "resource/update_disk"
+
+	// MetricsProductUpdate define product metrics
+	MetricsProductUpdate         MetricsType = "product/update_products"
+	MetricsProductQuery          MetricsType = "product/query_products"
+	MetricsProductQueryAvailable MetricsType = "product/query_available_products"
+	MetricsProductQueryDetail    MetricsType = "product/query_product_detail"
+
+	MetricsVendorUpdate         MetricsType = "vendor/update_vendors"
+	MetricsVendorQuery          MetricsType = "vendor/query_vendors"
+	MetricsVendorQueryAvailable MetricsType = "vendor/query_available_vendors"
 )
 
 var EMMetrics = []MetricsType{
@@ -154,7 +177,7 @@ var EMMetrics = []MetricsType{
 	MetricsClusterModifyParameter,
 	MetricsClusterInspectParameter,
 	MetricsClusterQueryLogParameter,
-
+	MetricsMetadataDeletePhysically,
 	// MetricsBackupCreate define backup metrics
 	MetricsBackupCreate,
 	MetricsBackupDelete,
@@ -167,9 +190,6 @@ var EMMetrics = []MetricsType{
 	MetricsDataImport,
 	MetricsDataExportImportQuery,
 	MetricsDataExportImportDelete,
-
-	// MetricsPlatformQueryKnowledge define knowledge metrics
-	MetricsPlatformQueryKnowledge,
 
 	// MetricsCDCTaskCreate define cdc metrics
 	MetricsCDCTaskCreate,
@@ -205,7 +225,22 @@ var EMMetrics = []MetricsType{
 	MetricsResourceDownloadHostTemplateFile,
 	MetricsResourceModifyHostStatus,
 	MetricsResourceImportHosts,
-	MetricsResourceDeleteHost,
+	MetricsResourceDeleteHosts,
 	MetricsResourceQueryHosts,
 	MetricsResourceReservedHost,
+	MetricsResourceUpdateHost,
+	MetricsResourceCreateDisks,
+	MetricsResourceDeleteDisks,
+	MetricsResourceUpdateDisk,
+
+	// define product metrics
+	MetricsProductUpdate,
+	MetricsProductQuery,
+	MetricsProductQueryAvailable,
+	MetricsProductQueryDetail,
+
+	// define vendor metrics
+	MetricsVendorUpdate,
+	MetricsVendorQuery,
+	MetricsVendorQueryAvailable,
 }

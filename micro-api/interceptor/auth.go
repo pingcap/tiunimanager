@@ -18,6 +18,7 @@ package interceptor
 
 import (
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/common/client"
@@ -49,7 +50,7 @@ func VerifyIdentity(c *gin.Context) {
 	}
 
 	req := message.AccessibleReq{
-		TokenString: tokenString,
+		TokenString: structs.SensitiveText(tokenString),
 	}
 
 	body, err := json.Marshal(req)

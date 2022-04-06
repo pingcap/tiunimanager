@@ -47,7 +47,7 @@ type DeleteClusterReq struct {
 	Force                    bool   `json:"force" form:"force"`
 }
 
-// DeleteClusterResp Reply message for delete a new cluster
+// DeleteClusterResp Reply message for delete a cluster
 type DeleteClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID string `json:"clusterID"`
@@ -96,7 +96,6 @@ type PreviewScaleOutClusterReq struct {
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
-
 	structs.ClusterResourceInfo
 }
 
@@ -151,6 +150,13 @@ type MasterSlaveClusterSwitchoverReq struct {
 	// new master/old slave
 	TargetClusterID string `json:"targetClusterID" validate:"required,min=4,max=64"`
 	Force           bool   `json:"force"`
+	// only check if this flag is true
+	OnlyCheck               bool `json:"onlyCheck"`
+	CheckSlaveReadOnlyFlag  bool `json:"checkSlaveReadOnlyFlag"`
+	CheckMasterWritableFlag bool `json:"checkMasterWritableFlag"`
+	// check if cluster specified in `SourceClusterID` is standalone, i.e. no cluster relation and no cdc
+	// if this flag is true, always only check
+	CheckStandaloneClusterFlag bool `json:"checkStandaloneClusterFlag"`
 }
 
 // MasterSlaveClusterSwitchoverResp Master and slave cluster switchover reply message
@@ -160,19 +166,29 @@ type MasterSlaveClusterSwitchoverResp struct {
 
 // TakeoverClusterReq Requests to take over an existing TiDB cluster, requiring TiDB version >= 4.0 when taking over
 type TakeoverClusterReq struct {
-	TiUPIp           string `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp" validate:"required,ip"`
-	TiUPPort         int    `json:"TiUPPort" example:"22" form:"TiUPPort" validate:"required"`
-	TiUPUserName     string `json:"TiUPUserName" example:"root" form:"TiUPUserName" validate:"required"`
-	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
-	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
-	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required,min=4,max=64"`
-	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
+	TiUPIp           string                `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp" validate:"required,ip"`
+	TiUPPort         int                   `json:"TiUPPort" example:"22" form:"TiUPPort" validate:"required"`
+	TiUPUserName     string                `json:"TiUPUserName" example:"root" form:"TiUPUserName" validate:"required"`
+	TiUPUserPassword structs.SensitiveText `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
+	TiUPPath         string                `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
+	ClusterName      string                `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required,min=4,max=64"`
+	DBPassword       structs.SensitiveText `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
 }
 
 // TakeoverClusterResp Reply message for takeover a cluster
 type TakeoverClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo
 	ClusterID string `json:"clusterId"`
+}
+
+// DeleteMetadataPhysicallyReq Message for delete a cluster metadata
+type DeleteMetadataPhysicallyReq struct {
+	ClusterID string `json:"clusterId" swaggerignore:"true" validate:"required,min=4,max=64"`
+	Reason    string `json:"reason" form:"reason" validate:"required,min=8"`
+}
+
+// DeleteMetadataPhysicallyResp Reply message for delete a new cluster
+type DeleteMetadataPhysicallyResp struct {
 }
 
 // QueryClustersReq Query cluster list messages
@@ -221,9 +237,9 @@ type GetDashboardInfoReq struct {
 
 // GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
 type GetDashboardInfoResp struct {
-	ClusterID string `json:"clusterId" example:"abc"`
-	Url       string `json:"url" example:"http://127.0.0.1:9093"`
-	Token     string `json:"token"`
+	ClusterID string                `json:"clusterId" example:"abc"`
+	Url       string                `json:"url" example:"http://127.0.0.1:9093"`
+	Token     structs.SensitiveText `json:"token"`
 }
 
 //QueryClusterLogReq Messages that query cluster log information can be filtered based on query criteria

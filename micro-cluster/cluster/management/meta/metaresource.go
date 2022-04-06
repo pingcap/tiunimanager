@@ -30,52 +30,64 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 )
 
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
 	instances := p.GetInstanceByStatus(ctx, constants.ClusterInstanceInitializing)
 	requirements := make([]resource.AllocRequirement, 0)
 
-	properties, err := p.GetClusterComponentProperties(ctx)
+	_, _, components, err := models.GetProductReaderWriter().GetProduct(ctx, p.Cluster.Type)
 	if err != nil {
+		err = errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "get product failed", err)
 		return nil, nil, err
 	}
 
-	propertyMap := make(map[string]structs.ProductComponentProperty)
-	for _, property := range properties {
-		propertyMap[property.ID] = property
+	componentsMap := make(map[string]*product.ProductComponentInfo)
+	for _, c := range components {
+		componentsMap[c.ComponentID] = c
 	}
 
 	allocInstances := make([]*management.ClusterInstance, 0)
+
 	for _, instance := range instances {
-		var instanceProperty structs.ProductComponentProperty
+		var componentInfo product.ProductComponentInfo
 		if Contain(constants.ParasiteComponentIDs, constants.EMProductComponentIDType(instance.Type)) {
 			continue
 		}
-		if property, ok := propertyMap[instance.Type]; !ok {
+		if c, ok := componentsMap[instance.Type]; !ok {
 			return nil, nil, errors.NewError(errors.TIEM_UNSUPPORT_PRODUCT, "")
 		} else {
-			instanceProperty = property
+			componentInfo = *c
+		}
+
+		ip := ""
+		if len(instance.HostIP) > 0 {
+			ip = instance.HostIP[0]
 		}
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: structs.Location{
 				Region: p.Cluster.Region,
 				Zone:   instance.Zone,
+				HostIp: ip,
 			},
+
 			Require: resource.Requirement{
 				Exclusive: p.Cluster.Exclusive,
 				PortReq: []resource.PortRequirement{
 					{
-						Start:   instanceProperty.StartPort,
-						End:     instanceProperty.EndPort,
-						PortCnt: instanceProperty.MaxPort,
+						Start:   componentInfo.StartPort,
+						End:     componentInfo.EndPort,
+						PortCnt: componentInfo.MaxPort,
 					},
 				},
 				DiskReq: resource.DiskRequirement{
 					NeedDisk: true,
 					Capacity: instance.DiskCapacity,
 					DiskType: instance.DiskType,
+					DiskSpecify: instance.DiskID,
 				},
 				ComputeReq: resource.ComputeRequirement{
 					ComputeResource: resource.ComputeResource{
@@ -88,11 +100,22 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			HostFilter: resource.Filter{
 				Arch: string(p.Cluster.CpuArchitecture),
 			},
-			Strategy: resource.RandomRack,
+			Strategy: chooseStrategy(instance),
 		})
 		allocInstances = append(allocInstances, instance)
 	}
 	return requirements, allocInstances, nil
+}
+
+func chooseStrategy(instance *management.ClusterInstance) resource.AllocStrategy {
+	if len(instance.HostIP) > 0 {
+		return resource.UserSpecifyHost
+	} else if len(instance.Zone) > 0 {
+		return resource.RandomRack
+	} else {
+		// default strategy or panic ?
+		return resource.RandomRack
+	}
 }
 
 func (p *ClusterMeta) GenerateTakeoverResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance) {
@@ -172,8 +195,11 @@ func (p *ClusterMeta) ApplyGlobalPortResource(nodeExporterPort, blackboxExporter
 func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instances []*management.ClusterInstance) {
 	for i, instance := range instances {
 		instance.HostID = resource.Results[i].HostId
-		instance.HostIP = append(instance.HostIP, resource.Results[i].HostIp)
+		if !Contain(instance.HostIP, resource.Results[i].HostIp) {
+			instance.HostIP = append(instance.HostIP, resource.Results[i].HostIp)
+		}
 		instance.Ports = resource.Results[i].PortRes[0].Ports
+		instance.DiskType = resource.Results[i].DiskRes.Type
 		instance.DiskID = resource.Results[i].DiskRes.DiskId
 		instance.DiskPath = resource.Results[i].DiskRes.Path
 		instance.Rack = resource.Results[i].Location.Rack
@@ -186,6 +212,8 @@ func (p *ClusterMeta) ApplyInstanceResource(resource *resource.AllocRsp, instanc
 			instance.HostIP = pd.HostIP
 			instance.DiskID = pd.DiskID
 			instance.DiskPath = pd.DiskPath
+			instance.Zone = pd.Zone
+			instance.Rack = pd.Rack
 			switch t {
 			case constants.ComponentIDGrafana:
 				instance.Ports = pd.Ports[3:4]

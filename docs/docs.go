@@ -189,6 +189,75 @@ var doc = `{
                 }
             }
         },
+        "/backups/cancel": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "cancel backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cancel cluster backup"
+                ],
+                "summary": "cancel backup",
+                "parameters": [
+                    {
+                        "description": "cancel backup request",
+                        "name": "backupReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.CancelBackupReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.CancelBackupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/backups/{backupId}": {
             "delete": {
                 "security": [
@@ -895,223 +964,6 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/cluster.CreateClusterResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/:clusterId/upgrade": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "request for upgrade TiDB cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster upgrade"
-                ],
-                "summary": "request for upgrade TiDB cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "upgrade request",
-                        "name": "upgradeReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cluster.UpgradeClusterReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.UpgradeClusterResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/:clusterId/upgrade/diff": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "query config diff between current cluster and target upgrade version",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster upgrade"
-                ],
-                "summary": "query config diff between current cluster and target upgrade version",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "example": "v5.0.0",
-                        "name": "targetVersion",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.QueryUpgradeVersionDiffInfoResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/:clusterId/upgrade/path": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "query upgrade path for given cluster id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster upgrade"
-                ],
-                "summary": "query upgrade path for given cluster id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.QueryUpgradePathRsp"
                                         }
                                     }
                                 }
@@ -2920,6 +2772,357 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "request for upgrade TiDB cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "request for upgrade TiDB cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "upgrade request",
+                        "name": "upgradeReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.UpgradeClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.UpgradeClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/upgrade/diff": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query config diff between current cluster and target upgrade version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "query config diff between current cluster and target upgrade version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "v5.0.0",
+                        "name": "targetVersion",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryUpgradeVersionDiffInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/upgrade/path": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query upgrade path for given cluster id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "query upgrade path for given cluster id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryUpgradePathRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/config/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get system config",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "get system config"
+                ],
+                "summary": "get system config",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "configKey",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetSystemConfigResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/config/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "UpdateSystemConfig",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "UpdateSystemConfig"
+                ],
+                "summary": "update system config",
+                "parameters": [
+                    {
+                        "description": "system config for update",
+                        "name": "systemConfig",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateSystemConfigReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateSystemConfigResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/downstream/": {
             "delete": {
                 "security": [
@@ -2972,6 +3175,81 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/metadata/{clusterId}/": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "for handling exceptions only",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "delete cluster metadata in this system physically, but keep the real cluster alive",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "delete request",
+                        "name": "deleteReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/cluster.DeleteMetadataPhysicallyReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.DeleteMetadataPhysicallyResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -3551,14 +3829,14 @@ var doc = `{
                 }
             }
         },
-        "/products/": {
-            "get": {
+        "/platform/check": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "queries all products' information",
+                "description": "platform check",
                 "consumes": [
                     "application/json"
                 ],
@@ -3568,21 +3846,386 @@ var doc = `{
                 "tags": [
                     "platform"
                 ],
-                "summary": "queries all products' information",
+                "summary": "platform check",
+                "parameters": [
+                    {
+                        "description": "check platform",
+                        "name": "checkPlatformReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/message.CheckPlatformReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckPlatformRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/check/{clusterId}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "platform check cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "platform check cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CheckClusterRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/log": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query platform log",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform log"
+                ],
+                "summary": "query platform log",
                 "parameters": [
                     {
                         "type": "integer",
-                        "name": "internalProduct",
+                        "example": 1638331200,
+                        "name": "endTime",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "name": "status",
+                        "example": "warn",
+                        "name": "level",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "name": "vendorId",
+                        "example": "some do something",
+                        "name": "message",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1630468800,
+                        "name": "startTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "UNe7K1uERa-2fwSxGJ6CFQ",
+                        "name": "traceId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryPlatformLogResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/report/{checkId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get check report based on checkId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "get check report based on checkId",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "check id",
+                        "name": "checkId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.GetCheckReportRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/reports": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get query check reports",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "query check reports",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryCheckReportsRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query products",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "query products",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "product id collection",
+                        "name": "productIDs",
                         "in": "query"
                     }
                 ],
@@ -3598,7 +4241,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.QueryProductsResp"
+                                            "$ref": "#/definitions/message.QueryProductsInfoResp"
                                         }
                                     }
                                 }
@@ -3631,7 +4274,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "created product",
+                "description": "update products",
                 "consumes": [
                     "application/json"
                 ],
@@ -3639,17 +4282,17 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
-                "summary": "created product",
+                "summary": "update products",
                 "parameters": [
                     {
-                        "description": "create product request parameter",
-                        "name": "CreateProductReq",
+                        "description": "update products info request parameter",
+                        "name": "UpdateProductsInfoReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/message.CreateProductReq"
+                            "$ref": "#/definitions/message.UpdateProductsInfoReq"
                         }
                     }
                 ],
@@ -3665,7 +4308,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.CreateProductResp"
+                                            "$ref": "#/definitions/message.UpdateProductsInfoResp"
                                         }
                                     }
                                 }
@@ -3691,14 +4334,16 @@ var doc = `{
                         }
                     }
                 }
-            },
-            "delete": {
+            }
+        },
+        "/products/available": {
+            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "delete product",
+                "description": "queries all products' information",
                 "consumes": [
                     "application/json"
                 ],
@@ -3706,18 +4351,24 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
-                "summary": "delete product",
+                "summary": "queries all products' information",
                 "parameters": [
                     {
-                        "description": "create product request parameter",
-                        "name": "CreateProductReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.DeleteProductReq"
-                        }
+                        "type": "integer",
+                        "name": "internalProduct",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "vendorId",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3732,7 +4383,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/message.DeleteProductResp"
+                                            "$ref": "#/definitions/message.QueryAvailableProductsResp"
                                         }
                                     }
                                 }
@@ -3775,7 +4426,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "platform"
+                    "product"
                 ],
                 "summary": "query all product detail",
                 "parameters": [
@@ -4458,6 +5109,157 @@ var doc = `{
                 }
             }
         },
+        "/resources/disk": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update disk information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update disk info",
+                "parameters": [
+                    {
+                        "description": "update disk information",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateDiskReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateDiskResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/disks": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "add disks to the specified host",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Add disks to the specified host",
+                "parameters": [
+                    {
+                        "description": "specify the hostId and disks",
+                        "name": "createDisksReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.CreateDisksReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.CreateDisksResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove disks by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Remove a batch of disks",
+                "parameters": [
+                    {
+                        "description": "list of disk IDs",
+                        "name": "diskIds",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.DeleteDisksReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.DeleteDisksResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/resources/hierarchy": {
             "get": {
                 "security": [
@@ -4495,7 +5297,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -4527,6 +5344,57 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/message.GetHierarchyResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/host": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update host info",
+                "parameters": [
+                    {
+                        "description": "update host information",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateHostInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateHostInfoResp"
                                         }
                                     }
                                 }
@@ -4664,12 +5532,27 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -4913,6 +5796,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "diskStatus",
                         "in": "query"
                     },
@@ -4923,12 +5811,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -4979,198 +5877,6 @@ var doc = `{
                                     }
                                 }
                             ]
-                        }
-                    }
-                }
-            }
-        },
-        "/specs/": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "queries all specs information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "queries all specs information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.QuerySpecsResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "created specs",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "created  specs",
-                "parameters": [
-                    {
-                        "description": "create specs request parameter",
-                        "name": "CreateSpecsReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.CreateSpecsReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.CreateSpecsResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "deleted specs",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "deleted  specs",
-                "parameters": [
-                    {
-                        "description": "delete specs request parameter",
-                        "name": "DeleteSpecsReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.DeleteSpecsReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.DeleteSpecsResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
                         }
                     }
                 }
@@ -6203,6 +6909,201 @@ var doc = `{
                 }
             }
         },
+        "/vendors/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query vendors",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor"
+                ],
+                "summary": "query vendors",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "vendor id collection",
+                        "name": "vendorIDs",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryVendorInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update vendors",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor"
+                ],
+                "summary": "update vendors",
+                "parameters": [
+                    {
+                        "description": "update vendor info request parameter",
+                        "name": "UpdateVendorInfoReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.UpdateVendorInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.UpdateVendorInfoReq"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/vendors/available": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query available vendors and regions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vendor"
+                ],
+                "summary": "query available vendors and regions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.QueryAvailableVendorsResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/workflow/": {
             "get": {
                 "security": [
@@ -6361,200 +7262,6 @@ var doc = `{
                     }
                 }
             }
-        },
-        "/zones/": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "created  zones",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "created  zones",
-                "parameters": [
-                    {
-                        "description": "create zones request parameter",
-                        "name": "CreateZoneReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.CreateZonesReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.CreateZonesResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "deleted zones",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "deleted zones",
-                "parameters": [
-                    {
-                        "description": "delete zone request parameter",
-                        "name": "CreateZoneReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/message.DeleteZoneReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.DeleteZoneResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/zones/tree": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "queries all regions information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "platform"
-                ],
-                "summary": "queries all regions information",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/message.QueryZonesTreeResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -6585,6 +7292,20 @@ var doc = `{
                     "type": "string"
                 }
             }
+        },
+        "cluster.CancelBackupReq": {
+            "type": "object",
+            "properties": {
+                "backupId": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.CancelBackupResp": {
+            "type": "object"
         },
         "cluster.CloneClusterReq": {
             "type": "object",
@@ -6858,6 +7579,20 @@ var doc = `{
                     "type": "string"
                 }
             }
+        },
+        "cluster.DeleteMetadataPhysicallyReq": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.DeleteMetadataPhysicallyResp": {
+            "type": "object"
         },
         "cluster.DetailChangeFeedTaskResp": {
             "type": "object",
@@ -7188,7 +7923,21 @@ var doc = `{
                 "targetClusterID"
             ],
             "properties": {
+                "checkMasterWritableFlag": {
+                    "type": "boolean"
+                },
+                "checkSlaveReadOnlyFlag": {
+                    "type": "boolean"
+                },
+                "checkStandaloneClusterFlag": {
+                    "description": "check if cluster specified in ` + "`" + `SourceClusterID` + "`" + ` is standalone, i.e. no cluster relation and no cdc\nif this flag is true, always only check",
+                    "type": "boolean"
+                },
                 "force": {
+                    "type": "boolean"
+                },
+                "onlyCheck": {
+                    "description": "only check if this flag is true",
                     "type": "boolean"
                 },
                 "sourceClusterID": {
@@ -7410,6 +8159,14 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string",
+                    "default": "SpecificZone",
+                    "enum": [
+                        "SpecificZone",
+                        "SpecificHost"
+                    ]
                 },
                 "topology": {
                     "type": "array",
@@ -7645,6 +8402,14 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string",
+                    "default": "SpecificZone",
+                    "enum": [
+                        "SpecificZone",
+                        "SpecificHost"
+                    ]
                 }
             }
         },
@@ -8003,6 +8768,18 @@ var doc = `{
         "message.BindRolesForUserResp": {
             "type": "object"
         },
+        "message.CheckClusterRsp": {
+            "type": "object",
+            "properties": {
+                "checkId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "message.CheckPermissionForUserReq": {
             "type": "object",
             "properties": {
@@ -8022,6 +8799,26 @@ var doc = `{
             "properties": {
                 "result": {
                     "type": "boolean"
+                }
+            }
+        },
+        "message.CheckPlatformReq": {
+            "type": "object",
+            "properties": {
+                "displayMode": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CheckPlatformRsp": {
+            "type": "object",
+            "properties": {
+                "checkId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },
@@ -8050,9 +8847,39 @@ var doc = `{
                 }
             }
         },
+        "message.CreateDisksReq": {
+            "type": "object",
+            "properties": {
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.DiskInfo"
+                    }
+                },
+                "hostId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.CreateDisksResp": {
+            "type": "object",
+            "properties": {
+                "diskIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "message.CreateParameterGroupReq": {
             "type": "object",
             "required": [
+                "clusterSpec",
+                "clusterVersion",
+                "dbType",
+                "groupType",
+                "name",
                 "params"
             ],
             "properties": {
@@ -8111,23 +8938,6 @@ var doc = `{
                 }
             }
         },
-        "message.CreateProductReq": {
-            "type": "object",
-            "properties": {
-                "components": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ProductComponentProperty"
-                    }
-                },
-                "productInfo": {
-                    "$ref": "#/definitions/structs.Product"
-                }
-            }
-        },
-        "message.CreateProductResp": {
-            "type": "object"
-        },
         "message.CreateRoleReq": {
             "type": "object",
             "properties": {
@@ -8137,20 +8947,6 @@ var doc = `{
             }
         },
         "message.CreateRoleResp": {
-            "type": "object"
-        },
-        "message.CreateSpecsReq": {
-            "type": "object",
-            "properties": {
-                "specs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.SpecInfo"
-                    }
-                }
-            }
-        },
-        "message.CreateSpecsResp": {
             "type": "object"
         },
         "message.CreateTenantReq": {
@@ -8217,20 +9013,6 @@ var doc = `{
             }
         },
         "message.CreateUserResp": {
-            "type": "object"
-        },
-        "message.CreateZonesReq": {
-            "type": "object",
-            "properties": {
-                "zones": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ZoneInfo"
-                    }
-                }
-            }
-        },
-        "message.CreateZonesResp": {
             "type": "object"
         },
         "message.DataExportReq": {
@@ -8336,6 +9118,20 @@ var doc = `{
                 }
             }
         },
+        "message.DeleteDisksReq": {
+            "type": "object",
+            "properties": {
+                "diskIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "message.DeleteDisksResp": {
+            "type": "object"
+        },
         "message.DeleteHostsReq": {
             "type": "object",
             "properties": {
@@ -8398,32 +9194,7 @@ var doc = `{
         "message.DeletePermissionsForRoleResp": {
             "type": "object"
         },
-        "message.DeleteProductReq": {
-            "type": "object",
-            "properties": {
-                "productInfo": {
-                    "$ref": "#/definitions/structs.Product"
-                }
-            }
-        },
-        "message.DeleteProductResp": {
-            "type": "object"
-        },
         "message.DeleteRoleResp": {
-            "type": "object"
-        },
-        "message.DeleteSpecsReq": {
-            "type": "object",
-            "properties": {
-                "specIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "message.DeleteSpecsResp": {
             "type": "object"
         },
         "message.DeleteTenantReq": {
@@ -8441,20 +9212,6 @@ var doc = `{
             "type": "object"
         },
         "message.DeleteUserResp": {
-            "type": "object"
-        },
-        "message.DeleteZoneReq": {
-            "type": "object",
-            "properties": {
-                "zone": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ZoneInfo"
-                    }
-                }
-            }
-        },
-        "message.DeleteZoneResp": {
             "type": "object"
         },
         "message.DetailParameterGroupResp": {
@@ -8520,6 +9277,14 @@ var doc = `{
                 }
             }
         },
+        "message.GetCheckReportRsp": {
+            "type": "object",
+            "properties": {
+                "reportInfo": {
+                    "type": "object"
+                }
+            }
+        },
         "message.GetHierarchyResp": {
             "type": "object",
             "properties": {
@@ -8537,6 +9302,17 @@ var doc = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/structs.Stocks"
                     }
+                }
+            }
+        },
+        "message.GetSystemConfigResp": {
+            "type": "object",
+            "properties": {
+                "configKey": {
+                    "type": "string"
+                },
+                "configValue": {
+                    "type": "string"
                 }
             }
         },
@@ -8613,6 +9389,9 @@ var doc = `{
         "message.LoginResp": {
             "type": "object",
             "properties": {
+                "passwordExpired": {
+                    "type": "boolean"
+                },
                 "tenantId": {
                     "type": "string"
                 },
@@ -8740,6 +9519,82 @@ var doc = `{
                 }
             }
         },
+        "message.PlatformLogItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "zvadfwf"
+                },
+                "index": {
+                    "type": "string",
+                    "example": "em-system-logs-2021.12.30"
+                },
+                "level": {
+                    "type": "string",
+                    "example": "warn"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "some do something"
+                },
+                "microMethod": {
+                    "type": "string",
+                    "example": "em.cluster.ClusterService.GetSystemInfo"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2021-09-23 14:23:10"
+                },
+                "traceId": {
+                    "type": "string",
+                    "example": "UNe7K1uERa-2fwSxGJ6CFQ"
+                }
+            }
+        },
+        "message.QueryAvailableProductsResp": {
+            "type": "object",
+            "properties": {
+                "products": {
+                    "description": "arch version",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "$ref": "#/definitions/structs.Product"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "message.QueryAvailableVendorsResp": {
+            "type": "object",
+            "properties": {
+                "vendors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.VendorWithRegion"
+                    }
+                }
+            }
+        },
+        "message.QueryCheckReportsRsp": {
+            "type": "object",
+            "properties": {
+                "reportMetas": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/structs.CheckReportMeta"
+                    }
+                }
+            }
+        },
         "message.QueryDataImportExportRecordsResp": {
             "type": "object",
             "properties": {
@@ -8839,6 +9694,21 @@ var doc = `{
                 }
             }
         },
+        "message.QueryPlatformLogResp": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/message.PlatformLogItem"
+                    }
+                },
+                "took": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
         "message.QueryProductDetailResp": {
             "type": "object",
             "properties": {
@@ -8850,23 +9720,13 @@ var doc = `{
                 }
             }
         },
-        "message.QueryProductsResp": {
+        "message.QueryProductsInfoResp": {
             "type": "object",
             "properties": {
                 "products": {
-                    "description": "arch version",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "object",
-                                "additionalProperties": {
-                                    "$ref": "#/definitions/structs.Product"
-                                }
-                            }
-                        }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductConfigInfo"
                     }
                 }
             }
@@ -8878,17 +9738,6 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
-                }
-            }
-        },
-        "message.QuerySpecsResp": {
-            "type": "object",
-            "properties": {
-                "specs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.SpecInfo"
                     }
                 }
             }
@@ -8941,6 +9790,17 @@ var doc = `{
                 }
             }
         },
+        "message.QueryVendorInfoResp": {
+            "type": "object",
+            "properties": {
+                "vendors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.VendorConfigInfo"
+                    }
+                }
+            }
+        },
         "message.QueryWorkFlowDetailResp": {
             "type": "object",
             "properties": {
@@ -8972,17 +9832,6 @@ var doc = `{
                 }
             }
         },
-        "message.QueryZonesTreeResp": {
-            "type": "object",
-            "properties": {
-                "vendors": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/structs.VendorWithRegion"
-                    }
-                }
-            }
-        },
         "message.UnbindRoleForUserReq": {
             "type": "object",
             "properties": {
@@ -8995,6 +9844,28 @@ var doc = `{
             }
         },
         "message.UnbindRoleForUserResp": {
+            "type": "object"
+        },
+        "message.UpdateDiskReq": {
+            "type": "object",
+            "properties": {
+                "newDiskInfo": {
+                    "$ref": "#/definitions/structs.DiskInfo"
+                }
+            }
+        },
+        "message.UpdateDiskResp": {
+            "type": "object"
+        },
+        "message.UpdateHostInfoReq": {
+            "type": "object",
+            "properties": {
+                "newHostInfo": {
+                    "$ref": "#/definitions/structs.HostInfo"
+                }
+            }
+        },
+        "message.UpdateHostInfoResp": {
             "type": "object"
         },
         "message.UpdateHostReservedReq": {
@@ -9062,11 +9933,11 @@ var doc = `{
                 },
                 "name": {
                     "type": "string",
-                    "example": "8C16GV4_default"
+                    "example": "8C16GV4_new"
                 },
                 "note": {
                     "type": "string",
-                    "example": "default param group"
+                    "example": "update param group"
                 },
                 "params": {
                     "type": "array",
@@ -9084,6 +9955,37 @@ var doc = `{
                     "example": "1"
                 }
             }
+        },
+        "message.UpdateProductsInfoReq": {
+            "type": "object",
+            "required": [
+                "products"
+            ],
+            "properties": {
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductConfigInfo"
+                    }
+                }
+            }
+        },
+        "message.UpdateProductsInfoResp": {
+            "type": "object"
+        },
+        "message.UpdateSystemConfigReq": {
+            "type": "object",
+            "properties": {
+                "configKey": {
+                    "type": "string"
+                },
+                "configValue": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.UpdateSystemConfigResp": {
+            "type": "object"
         },
         "message.UpdateTenantOnBoardingStatusReq": {
             "type": "object",
@@ -9159,6 +10061,17 @@ var doc = `{
         "message.UpdateUserProfileResp": {
             "type": "object"
         },
+        "message.UpdateVendorInfoReq": {
+            "type": "object",
+            "properties": {
+                "vendors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.VendorConfigInfo"
+                    }
+                }
+            }
+        },
         "structs.AsyncTaskWorkFlowInfo": {
             "type": "object",
             "properties": {
@@ -9225,6 +10138,26 @@ var doc = `{
                     "type": "string"
                 },
                 "period": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.CheckReportMeta": {
+            "type": "object",
+            "properties": {
+                "checkID": {
+                    "type": "string"
+                },
+                "createAt": {
+                    "type": "string"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -9300,6 +10233,9 @@ var doc = `{
                 "region": {
                     "type": "string"
                 },
+                "relations": {
+                    "$ref": "#/definitions/structs.ClusterRelations"
+                },
                 "role": {
                     "type": "string"
                 },
@@ -9348,6 +10284,9 @@ var doc = `{
                 "cpuUsage": {
                     "$ref": "#/definitions/structs.Usage"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "hostID": {
                     "type": "string"
                 },
@@ -9393,7 +10332,7 @@ var doc = `{
                 },
                 "zone": {
                     "description": "??",
-                    "$ref": "#/definitions/structs.ZoneInfo"
+                    "$ref": "#/definitions/structs.ZoneFullInfo"
                 }
             }
         },
@@ -9425,7 +10364,7 @@ var doc = `{
                 },
                 "index": {
                     "type": "string",
-                    "example": "tiem-tidb-cluster-2021.09.23"
+                    "example": "em-tidb-cluster-2021.09.23"
                 },
                 "ip": {
                     "type": "string",
@@ -9597,6 +10536,23 @@ var doc = `{
                 }
             }
         },
+        "structs.ClusterRelations": {
+            "type": "object",
+            "properties": {
+                "masters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "slaves": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
@@ -9605,6 +10561,14 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
+                },
+                "requestResourceMode": {
+                    "type": "string",
+                    "default": "SpecificZone",
+                    "enum": [
+                        "SpecificZone",
+                        "SpecificHost"
+                    ]
                 }
             }
         },
@@ -9635,8 +10599,14 @@ var doc = `{
                 "diskCapacity": {
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "diskType": {
                     "description": "NVMeSSD/SSD/SATA",
+                    "type": "string"
+                },
+                "hostIp": {
                     "type": "string"
                 },
                 "specCode": {
@@ -9824,6 +10794,10 @@ var doc = `{
                     "description": "x86 or arm64",
                     "type": "string"
                 },
+                "availableDiskCount": {
+                    "description": "available disk count which could be used for allocation",
+                    "type": "integer"
+                },
                 "az": {
                     "type": "string"
                 },
@@ -9854,6 +10828,15 @@ var doc = `{
                 "hostName": {
                     "type": "string"
                 },
+                "instances": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "ip": {
                     "type": "string"
                 },
@@ -9861,7 +10844,7 @@ var doc = `{
                     "type": "string"
                 },
                 "loadStat": {
-                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "description": "Host load stat, Loadless, Inused, Exhaust, etc",
                     "type": "string"
                 },
                 "memory": {
@@ -9896,8 +10879,11 @@ var doc = `{
                     "description": "Host Spec, init while importing",
                     "type": "string"
                 },
+                "sshPort": {
+                    "type": "integer"
+                },
                 "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "description": "Host status, Online, Offline, Failed, Deleted, etc",
                     "type": "string"
                 },
                 "sysLabels": {
@@ -10145,7 +11131,7 @@ var doc = `{
                 }
             }
         },
-        "structs.ProductComponentProperty": {
+        "structs.ProductComponentPropertyWithZones": {
             "type": "object",
             "properties": {
                 "availableZones": {
@@ -10188,6 +11174,29 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "type": "integer"
+                    }
+                }
+            }
+        },
+        "structs.ProductConfigInfo": {
+            "type": "object",
+            "properties": {
+                "components": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductComponentPropertyWithZones"
+                    }
+                },
+                "productId": {
+                    "type": "string"
+                },
+                "productName": {
+                    "type": "string"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.SpecificVersionProduct"
                     }
                 }
             }
@@ -10359,13 +11368,30 @@ var doc = `{
                     "additionalProperties": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/definitions/structs.ProductComponentProperty"
+                            "$ref": "#/definitions/structs.ProductComponentPropertyWithZones"
                         }
                     }
                 },
                 "version": {
                     "description": "Version information of the product, e.g. v5.0.0",
                     "type": "string"
+                }
+            }
+        },
+        "structs.ProductWithVersions": {
+            "type": "object",
+            "properties": {
+                "productId": {
+                    "type": "string"
+                },
+                "productName": {
+                    "type": "string"
+                },
+                "versions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.SpecificVersionProduct"
+                    }
                 }
             }
         },
@@ -10377,6 +11403,23 @@ var doc = `{
                 },
                 "resource": {
                     "type": "string"
+                }
+            }
+        },
+        "structs.RegionConfigInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "zones": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ZoneInfo"
+                    }
                 }
             }
         },
@@ -10406,12 +11449,18 @@ var doc = `{
                 "diskCapacity": {
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "diskType": {
                     "description": "NVMeSSD/SSD/SATA",
                     "type": "string"
                 },
                 "enough": {
                     "type": "boolean"
+                },
+                "hostIp": {
+                    "type": "string"
                 },
                 "specCode": {
                     "description": "4C8G/8C16G ?",
@@ -10444,12 +11493,22 @@ var doc = `{
                     "description": "Name of the resource specification,eg: TiDB.c1.large",
                     "type": "string"
                 },
-                "purpose_type": {
+                "purposeType": {
                     "description": "eg:Compute/Storage/Schedule",
                     "type": "string"
+                }
+            }
+        },
+        "structs.SpecificVersionProduct": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "type": "string"
                 },
-                "status": {
-                    "description": "e.g. Online/Offline",
+                "productId": {
+                    "type": "string"
+                },
+                "version": {
                     "type": "string"
                 }
             }
@@ -10480,20 +11539,44 @@ var doc = `{
         "structs.SystemInfo": {
             "type": "object",
             "properties": {
-                "currentVersionID": {
+                "currentVersionId": {
                     "type": "string"
                 },
-                "lastVersionID": {
+                "lastVersionId": {
                     "type": "string"
+                },
+                "productComponentsInitialized": {
+                    "type": "boolean"
+                },
+                "productVersionsInitialized": {
+                    "type": "boolean"
                 },
                 "state": {
                     "type": "string"
+                },
+                "supportedProducts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ProductWithVersions"
+                    }
+                },
+                "supportedVendors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.VendorInfo"
+                    }
                 },
                 "systemLogo": {
                     "type": "string"
                 },
                 "systemName": {
                     "type": "string"
+                },
+                "vendorSpecsInitialized": {
+                    "type": "boolean"
+                },
+                "vendorZonesInitialized": {
+                    "type": "boolean"
                 }
             }
         },
@@ -10506,7 +11589,7 @@ var doc = `{
                 "releaseNote": {
                     "type": "string"
                 },
-                "versionID": {
+                "versionId": {
                     "type": "string"
                 }
             }
@@ -10607,6 +11690,44 @@ var doc = `{
                 }
             }
         },
+        "structs.VendorConfigInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The value of the VendorID is similar to AWS",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                },
+                "regions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.RegionConfigInfo"
+                    }
+                },
+                "specs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.SpecInfo"
+                    }
+                }
+            }
+        },
+        "structs.VendorInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The value of the VendorID is similar to AWS",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                }
+            }
+        },
         "structs.VendorWithRegion": {
             "type": "object",
             "properties": {
@@ -10695,7 +11816,7 @@ var doc = `{
                 }
             }
         },
-        "structs.ZoneInfo": {
+        "structs.ZoneFullInfo": {
             "type": "object",
             "properties": {
                 "comment": {
@@ -10715,6 +11836,22 @@ var doc = `{
                 },
                 "vendorName": {
                     "description": "The value of the Name is similar to AWS",
+                    "type": "string"
+                },
+                "zoneId": {
+                    "description": "The value of the ZoneID is similar to CN-HANGZHOU-H",
+                    "type": "string"
+                },
+                "zoneName": {
+                    "description": "The value of the Name is similar to Hangzhou(H)",
+                    "type": "string"
+                }
+            }
+        },
+        "structs.ZoneInfo": {
+            "type": "object",
+            "properties": {
+                "comment": {
                     "type": "string"
                 },
                 "zoneId": {

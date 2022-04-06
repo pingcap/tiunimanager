@@ -40,8 +40,11 @@ import (
 )
 
 const (
-	wfContextReqKey                       string = "wfContextReqKey"
-	wfContextOldSyncChangeFeedTaskIDKey   string = "wfContextOldSyncChangeFeedTaskIDKey"
+	wfContextReqKey                            string = "wfContextReqKey"
+	wfContextOldSyncChangeFeedTaskIDKey        string = "wfContextOldSyncChangeFeedTaskIDKey"
+	wfContextOtherSlavesMapToOldSyncCDCTaskKey string = "wfContextOtherSlavesMapToOldSyncCDCTaskKey"
+	wfContextOtherSlavesMapToNewSyncCDCTaskKey string = "wfContextOtherSlavesMapToNewSyncCDCTaskKey"
+
 	wfContextNewSyncChangeFeedTaskIDKey   string = "wfContextNewSyncChangeFeedTaskIDKey"
 	wfContextCancelDeferStackKey          string = "wfContextCancelDeferStackKey"
 	wfContextIsExecutingDeferStackFlagKey string = "wfContextIsExecutingDeferStackFlagKey"
@@ -62,6 +65,52 @@ func wfGetReqJson(ctx *workflow.FlowContext) string {
 		return "-"
 	}
 	return string(bs)
+}
+
+// wfGetOtherSlavesMapToOldSyncCDCTask workflow get otherSlavesMapToOldSyncCDCTask
+func wfGetOtherSlavesMapToOldSyncCDCTask(ctx *workflow.FlowContext) map[string]string {
+	var m map[string]string
+	s, ok := ctx.GetData(wfContextOtherSlavesMapToOldSyncCDCTaskKey).(string)
+	if ok {
+		err := json.Unmarshal([]byte(s), &m)
+		if err != nil {
+			framework.Log().Panicf("wfGetOtherSlavesMapToOldSyncCDCTask: unmarshal failed, s:%s", s)
+		}
+	} else {
+	}
+	return m
+}
+
+// wfSetOtherSlavesMapToOldSyncCDCTask workflow set otherSlavesMapToOldSyncCDCTask
+func wfSetOtherSlavesMapToOldSyncCDCTask(ctx *workflow.FlowContext, m map[string]string) {
+	bs, err := json.Marshal(&m)
+	if err != nil {
+		framework.Log().Panicf("wfSetOtherSlavesMapToOldSyncCDCTask: marshal failed, err:%s", err)
+	}
+	ctx.SetData(wfContextOtherSlavesMapToOldSyncCDCTaskKey, string(bs))
+}
+
+// wfGetOtherSlavesMapToNewSyncCDCTask workflow get otherSlavesMapToNewSyncCDCTask
+func wfGetOtherSlavesMapToNewSyncCDCTask(ctx *workflow.FlowContext) map[string]string {
+	var m map[string]string
+	s, ok := ctx.GetData(wfContextOtherSlavesMapToNewSyncCDCTaskKey).(string)
+	if ok {
+		err := json.Unmarshal([]byte(s), &m)
+		if err != nil {
+			framework.Log().Panicf("wfGetOtherSlavesMapToNewSyncCDCTask: unmarshal failed, s:%s", s)
+		}
+	} else {
+	}
+	return m
+}
+
+// wfSetOtherSlavesMapToNewSyncCDCTask workflow set otherSlavesMapToNewSyncCDCTask
+func wfSetOtherSlavesMapToNewSyncCDCTask(ctx *workflow.FlowContext, m map[string]string) {
+	bs, err := json.Marshal(&m)
+	if err != nil {
+		framework.Log().Panicf("wfSetOtherSlavesMapToNewSyncCDCTask: marshal failed, err:%s", err)
+	}
+	ctx.SetData(wfContextOtherSlavesMapToNewSyncCDCTaskKey, string(bs))
 }
 
 func wfGetIsExecutingDeferStackFlag(ctx *workflow.FlowContext) bool {
@@ -236,7 +285,10 @@ func wfnSwapMasterSlaveRelationInDB(node *workflowModel.WorkFlowNode, ctx *workf
 	} else {
 		framework.LogWithContext(ctx).Warnf("%s newTaskID is %s", funcName, newSyncChangeFeedTaskId)
 	}
-	err := mgr.swapClusterRelationInDB(ctx, wfGetOldMasterClusterId(ctx), wfGetOldSlaveClusterId(ctx), newSyncChangeFeedTaskId)
+	otherSlavesMapToNewSyncCDCTask := wfGetOtherSlavesMapToNewSyncCDCTask(ctx)
+	oldMasterClusterId := wfGetOldMasterClusterId(ctx)
+	otherSlavesMapToNewSyncCDCTask[oldMasterClusterId] = newSyncChangeFeedTaskId
+	err := mgr.swapClusterRelationsInDB(ctx, wfGetOldMasterClusterId(ctx), wfGetOldSlaveClusterId(ctx), otherSlavesMapToNewSyncCDCTask)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
@@ -306,7 +358,8 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 		framework.LogWithContext(ctx).Infof(
 			"%s dupChangeFeedTaskStructWithTiDBDownStream req:%s success", funcName, wfGetReqJson(ctx))
 	}
-
+	framework.LogWithContext(ctx).Infof(
+		"%s newMasterClusterId:%s, newSlaveClusterId:%s", funcName, wfGetNewMasterClusterId(ctx), wfGetNewSlaveClusterId(ctx))
 	var zeroT time.Time
 	newTask.ID = ""
 	newTask.Name = ""
@@ -323,6 +376,8 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 	userName, password, err = mgr.clusterGetCDCUserNameAndPwd(ctx, wfGetNewSlaveClusterId(ctx))
 	var err2 error
 	ip, port, err2 = mgr.clusterGetOneConnectIPPort(ctx, wfGetNewSlaveClusterId(ctx))
+	framework.LogWithContext(ctx).Infof(
+		"%s clusterGetOneConnectIPPort clusterID:%s, ip:%s port:%s err:%v", funcName, wfGetNewMasterClusterId(ctx), ip, port, err2)
 	var err3 error
 	tls, err3 = mgr.clusterGetTLSMode(ctx, wfGetNewSlaveClusterId(ctx))
 	if err != nil || err2 != nil || err3 != nil {
@@ -348,7 +403,7 @@ func wfnCreateReverseSyncChangeFeedTask(node *workflowModel.WorkFlowNode, ctx *w
 		return "", err
 	} else {
 		framework.LogWithContext(ctx).Infof(
-			"%s createChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+			"%s createChangeFeedTask req:%s success, taskID:%s", funcName, wfGetReqJson(ctx), newTaskId)
 	}
 
 	return newTaskId, err
@@ -386,33 +441,82 @@ func wfnGetSyncChangeFeedTaskStatus(node *workflowModel.WorkFlowNode, ctx *workf
 }
 
 func wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	return wfnMigrateAllDownStreamSyncChangeFeedTasks(node, ctx,
+	funcName := "wfnMigrateAllDownStreamSyncChangeFeedTasksToNewMaster"
+	framework.LogWithContext(ctx).Infof("start %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	originCDCTaskIDMapToNewCDCID, err := wfnMigrateAllDownStreamSyncChangeFeedTasks(node, ctx,
 		wfGetOldMasterClusterId(ctx), wfGetNewMasterClusterId(ctx), wfGetOldSyncChangeFeedTaskId(ctx))
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+		return err
+	}
+	otherSlavesMapToOldSyncCDCTaskID := wfGetOtherSlavesMapToOldSyncCDCTask(ctx)
+	otherSlavesMapToNewSyncCDCTaskID := make(map[string]string)
+	for otherSlaveID, oldSyncCDCID := range otherSlavesMapToOldSyncCDCTaskID {
+		newSyncCDCID, ok := originCDCTaskIDMapToNewCDCID[oldSyncCDCID]
+		if ok == false {
+			err := fmt.Errorf("oldSyncCDCID %s map to newSyncCDCID not found", oldSyncCDCID)
+			framework.LogWithContext(ctx).Errorf("%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+			return err
+		} else {
+			otherSlavesMapToNewSyncCDCTaskID[otherSlaveID] = newSyncCDCID
+		}
+	}
+	if len(otherSlavesMapToOldSyncCDCTaskID) != len(otherSlavesMapToNewSyncCDCTaskID) {
+		err := fmt.Errorf("len(otherSlavesMapToOldSyncCDCTaskID) != len(otherSlavesMapToNewSyncCDCTaskID): %d != %d",
+			len(otherSlavesMapToOldSyncCDCTaskID), len(otherSlavesMapToNewSyncCDCTaskID))
+		framework.LogWithContext(ctx).Errorf("%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+		return err
+	}
+	for otherSlaveID := range otherSlavesMapToOldSyncCDCTaskID {
+		newSyncCDCID, ok := otherSlavesMapToNewSyncCDCTaskID[otherSlaveID]
+		if ok == false {
+			err := fmt.Errorf("newSyncCDCID of otherSlaveID %s not found in otherSlavesMapToNewSyncCDCTaskID", otherSlaveID)
+			framework.LogWithContext(ctx).Errorf("%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+			return err
+		} else {
+			if len(newSyncCDCID) <= 0 {
+				err := fmt.Errorf("length of newSyncCDCID <= 0: %d", len(newSyncCDCID))
+				framework.LogWithContext(ctx).Errorf("%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+				return err
+			}
+		}
+	}
+	wfSetOtherSlavesMapToNewSyncCDCTask(ctx, otherSlavesMapToNewSyncCDCTaskID)
+	return nil
 }
 
 func wfnMigrateAllDownStreamSyncChangeFeedTasksBackToOldMaster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	return wfnMigrateAllDownStreamSyncChangeFeedTasks(node, ctx,
+	_, err := wfnMigrateAllDownStreamSyncChangeFeedTasks(node, ctx,
 		wfGetNewMasterClusterId(ctx), wfGetOldMasterClusterId(ctx), wfGetNewSyncChangeFeedTaskId(ctx))
+	return err
 }
 
+// ret map[oldCDCTaskID]NewCDCTaskID,err
+// the map is the superset of otherSlavesMapToOldSyncCDCTask and doesn't contain the old sync cdc task between old master and old slave
 func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,
-	fromCluster, toCluster, exceptSyncChangeFeedTaskId string) error {
+	fromCluster, toCluster, exceptSyncChangeFeedTaskId string) (map[string]string, error) {
 	funcName := "wfnMigrateAllDownStreamSyncChangeFeedTasks"
-	framework.LogWithContext(ctx).Infof("start %s", funcName)
+	framework.LogWithContext(ctx).Infof("start %s: fromCluster %s, toCluster: %s, exceptSyncChangeFeedTaskId: %s",
+		funcName, fromCluster, toCluster, exceptSyncChangeFeedTaskId)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
 
 	if len(fromCluster) == 0 || len(toCluster) == 0 {
-		return fmt.Errorf("%s: unexpected clusterID len, fromCluster:%s toCluster:%s", funcName, fromCluster, toCluster)
+		return nil, fmt.Errorf("%s: unexpected clusterID len, fromCluster:%s toCluster:%s", funcName, fromCluster, toCluster)
 	}
 
 	tasks, err := mgr.getAllChangeFeedTasksOnCluster(ctx, fromCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s req:%s err:%s", funcName, wfGetReqJson(ctx), err)
-		return err
+		return nil, err
 	} else {
+		var ids []string
+		for _, v := range tasks {
+			ids = append(ids, v.ID)
+		}
 		framework.LogWithContext(ctx).Infof(
-			"%s req:%s success", funcName, wfGetReqJson(ctx))
+			"%s req:%s success taskIDs:%s", funcName, wfGetReqJson(ctx), ids)
 	}
 	var finalTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
@@ -420,17 +524,49 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 			finalTasks = append(finalTasks, v)
 		}
 	}
+	{
+		var ids []string
+		for _, v := range finalTasks {
+			ids = append(ids, v.ID)
+		}
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s finalTaskIDs:%s", funcName, wfGetReqJson(ctx), ids)
+	}
+	var cancelFps []func()
+	cancelFlag := true
+	cancel := func() {
+		if cancelFlag {
+			for _, fp := range cancelFps {
+				fp()
+			}
+		}
+	}
+	defer cancel()
 	for _, v := range finalTasks {
 		err := mgr.pauseChangeFeedTask(ctx, v.ID)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf(
 				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.ID, err)
+			return nil, err
 		} else {
 			framework.LogWithContext(ctx).Infof(
-				"%s pauseChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+				"%s pauseChangeFeedTask req:%s taskId:%s success", funcName, wfGetReqJson(ctx), v.ID)
 		}
+		thisCDCID := v.ID
+		cancelFps = append(cancelFps, func() {
+			err := mgr.resumeChangeFeedTask(ctx, thisCDCID)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf(
+					"%s resumeChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), thisCDCID, err)
+			} else {
+				framework.LogWithContext(ctx).Infof(
+					"%s resumeChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+			}
+		})
 	}
+	retMap := make(map[string]string)
 	for _, v := range finalTasks {
+		originID := v.ID
 		var zeroT time.Time
 		v.ID = ""
 		v.Name = ""
@@ -442,13 +578,36 @@ func wfnMigrateAllDownStreamSyncChangeFeedTasks(node *workflowModel.WorkFlowNode
 		id, err := mgr.createChangeFeedTask(ctx, v)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf(
-				"%s pauseChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), v.ID, err)
+				"%s createChangeFeedTask req:%s originTaskId:%s err:%s", funcName, wfGetReqJson(ctx), originID, err)
+			return nil, err
 		} else {
 			framework.LogWithContext(ctx).Infof(
-				"%s pauseChangeFeedTask req:%s success taskId:%s", funcName, wfGetReqJson(ctx), id)
+				"%s createChangeFeedTask req:%s success, originTaskId:%s, ret new taskId:%s", funcName, wfGetReqJson(ctx), originID, id)
+			retMap[originID] = id
+		}
+		cancelFps = append(cancelFps, func() {
+			err := mgr.removeChangeFeedTask(ctx, id)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf(
+					"%s removeChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), id, err)
+			} else {
+				framework.LogWithContext(ctx).Infof(
+					"%s removeChangeFeedTask req:%s success", funcName, wfGetReqJson(ctx))
+			}
+		})
+	}
+	cancelFlag = false
+	for originCDCID := range retMap {
+		err := mgr.removeChangeFeedTask(ctx, originCDCID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf(
+				"%s removeChangeFeedTask req:%s taskId:%s err:%s", funcName, wfGetReqJson(ctx), originCDCID, err)
+		} else {
+			framework.LogWithContext(ctx).Infof(
+				"%s removeChangeFeedTask req:%s taskId:%s, success", funcName, wfGetReqJson(ctx), originCDCID)
 		}
 	}
-	return err
+	return retMap, err
 }
 
 func wfnCheckSyncChangeFeedTaskMaxLagTime(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, syncChangeFeedTaskId string) error {
@@ -466,11 +625,14 @@ func wfnCheckSyncChangeFeedTaskMaxLagTime(node *workflowModel.WorkFlowNode, ctx 
 	}
 	nowT := time.Now()
 	if nowT.After(slaveT) {
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s nowT.Sub(slaveT):%s", funcName, wfGetReqJson(ctx), nowT.Sub(slaveT))
 		minSyncT := nowT.Add(-constants.SwitchoverCheckMasterSlaveMaxLagTime)
 		if slaveT.After(minSyncT) {
 			return nil
 		} else {
-			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v", funcName, constants.SwitchoverCheckMasterSlaveMaxLagTime)
+			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v, nowT:%s, slaveT:%s", funcName,
+				constants.SwitchoverCheckMasterSlaveMaxLagTime, nowT, slaveT)
 		}
 	} else {
 		framework.LogWithContext(ctx).Infof(
@@ -484,14 +646,55 @@ func wfnCheckSyncChangeFeedTaskHealth(node *workflowModel.WorkFlowNode, ctx *wor
 	return mgr.checkSyncChangeFeedTaskHealth(ctx, wfGetReqJson(ctx), funcName, syncChangeFeedTaskId)
 }
 
-func wfnCheckSyncCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, syncChangeFeedTaskId string) error {
-	funcName := "wfnCheckSyncCaughtUp"
+func wfnCheckCDCsCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, changeFeedTaskIDs []string) error {
+	var err error
+	funcName := "wfnCheckCDCsCaughtUp"
+	for _, changeFeedTaskID := range changeFeedTaskIDs {
+		err = nil
+		for i := range make([]struct{}, constants.SwitchoverCheckChangeFeedTaskCaughtUpRetriesCount+1) {
+			if err != nil {
+				time.Sleep(constants.SwitchoverCheckChangeFeedTaskCaughtUpRetryWait)
+				framework.LogWithContext(ctx).Infof("%s retry %d", funcName, i)
+			}
+			err = wfnCheckCDCCaughtUp(node, ctx, changeFeedTaskID)
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+func wfnCheckCDCCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, changeFeedTaskId string) error {
+	funcName := "wfnCheckCDCCaughtUp"
+	framework.LogWithContext(ctx).Infof("start %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	for retryCt := range make([]struct{}, constants.SwitchoverCheckChangeFeedTaskCaughtUpMakeSureRetriesCount+1) {
+		time.Sleep(constants.SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime)
+		err := wfnCheckCDCCaughtUpHelper(node, ctx, changeFeedTaskId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf(
+				"%s call wfnCheckCDCCaughtUpHelper retryCt %d failed, req:%s err:%s", funcName, retryCt, wfGetReqJson(ctx), err)
+			return err
+		} else {
+			framework.LogWithContext(ctx).Infof(
+				"%s call wfnCheckCDCCaughtUpHelper retryCt %d success, req:%s err:%s", funcName, retryCt, wfGetReqJson(ctx), err)
+		}
+	}
+	return nil
+}
+
+func wfnCheckCDCCaughtUpHelper(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, changeFeedTaskId string) error {
+	funcName := "wfnCheckCDCCaughtUpHelper"
 	framework.LogWithContext(ctx).Infof("start %s", funcName)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
 	var slaveT time.Time
 	var firstInfo *cluster.ChangeFeedTaskInfo
 	var err error
-	firstInfo, err = mgr.queryChangeFeedTask(ctx, syncChangeFeedTaskId)
+	firstInfo, err = mgr.queryChangeFeedTask(ctx, changeFeedTaskId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"%s queryChangeFeedTask req:%s err:%s", funcName, wfGetReqJson(ctx), err)
@@ -514,11 +717,14 @@ func wfnCheckSyncCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCo
 	}
 	nowT := time.Now()
 	if nowT.After(slaveT) {
-		minSyncT := nowT.Add(-constants.SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime)
+		framework.LogWithContext(ctx).Infof(
+			"%s req:%s nowT.Sub(slaveT):%s", funcName, wfGetReqJson(ctx), nowT.Sub(slaveT))
+		minSyncT := nowT.Add(-constants.SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime)
 		if slaveT.After(minSyncT) {
 			return nil
 		} else {
-			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v", funcName, constants.SwitchoverCheckSyncChangeFeedTaskCaughtUpMaxLagTime)
+			return fmt.Errorf("%s slave checkpoint lag time is bigger than %v, nowT:%s, slaveT:%s", funcName,
+				constants.SwitchoverCheckChangeFeedTaskCaughtUpMaxLagTime, nowT, slaveT)
 		}
 	} else {
 		framework.LogWithContext(ctx).Infof(
@@ -633,6 +839,21 @@ func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 		}
 	}
 
+	for otherSlaveClusterID := range wfGetOtherSlavesMapToOldSyncCDCTask(ctx) {
+		metaOfOtherSlave, err := meta.Get(ctx, otherSlaveClusterID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get meta of cluster %s failed:%s", otherSlaveClusterID, err.Error())
+			framework.LogWithContext(ctx).Errorf("end maintenance of cluster %s failed:%s", otherSlaveClusterID, err.Error())
+			errToRet = err
+			continue
+		}
+
+		if err := metaOfOtherSlave.EndMaintenance(ctx, constants.ClusterMaintenanceStatus(wfGetOldSlavePreviousMaintenanceStatus(ctx))); err != nil {
+			errToRet = err
+			framework.LogWithContext(ctx).Errorf("end maintenance of cluster %s failed:%s", otherSlaveClusterID, err.Error())
+		}
+	}
+
 	return errToRet
 }
 
@@ -661,9 +882,12 @@ func wfStepFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	err := wfnExecuteDeferStack(node, ctx)
 	err2 := wfnEndMaintenance(node, ctx)
 	if err == nil && err2 == nil {
+		//node.Record("Rollback Successfully.")
 		return nil
 	}
-	return fmt.Errorf("wfStepFail: err:%s err2:%s", err, err2)
+	finalErr := fmt.Errorf("wfStepFail: err:%s err2:%s", err, err2)
+	//node.Record("Rollback Failed:", finalErr)
+	return finalErr
 }
 
 func ifNoErrThenPushDefer(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext,
@@ -764,7 +988,7 @@ func wfStepCheckNewSyncChangeFeedTaskHealth(node *workflowModel.WorkFlowNode, ct
 	for i := range make([]struct{}, constants.SwitchoverCheckSyncChangeFeedTaskHealthRetriesCount+1) {
 		if err != nil {
 			time.Sleep(constants.SwitchoverCheckSyncChangeFeedTaskHealthRetryWait)
-			framework.LogWithContext(ctx).Infof("%s retry %d", funcName, i)
+			framework.LogWithContext(ctx).Infof("%s retry %d, previous err:", funcName, i, err)
 		}
 		err = wfnCheckSyncChangeFeedTaskHealth(node, ctx, wfGetNewSyncChangeFeedTaskId(ctx))
 		if err == nil {
@@ -819,15 +1043,70 @@ func wfStepCheckOldSyncChangeFeedTaskHealth(node *workflowModel.WorkFlowNode, ct
 func wfStepCheckSyncCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	var err error
 	funcName := "wfStepCheckSyncCaughtUp"
-	for i := range make([]struct{}, constants.SwitchoverCheckSyncChangeFeedTaskCaughtUpRetriesCount+1) {
+	for i := range make([]struct{}, constants.SwitchoverCheckChangeFeedTaskCaughtUpRetriesCount+1) {
 		if err != nil {
-			time.Sleep(constants.SwitchoverCheckSyncChangeFeedTaskCaughtUpRetryWait)
+			time.Sleep(constants.SwitchoverCheckChangeFeedTaskCaughtUpRetryWait)
 			framework.LogWithContext(ctx).Infof("%s retry %d", funcName, i)
 		}
-		err = wfnCheckSyncCaughtUp(node, ctx, wfGetOldSyncChangeFeedTaskId(ctx))
+		err = wfnCheckCDCCaughtUp(node, ctx, wfGetOldSyncChangeFeedTaskId(ctx))
 		if err == nil {
 			return nil
 		}
 	}
 	return err
+}
+
+func wfStepWaitOldMasterCDCsCaughtUp(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	var err error
+	funcName := "wfStepWaitOldMasterCDCsCaughtUp"
+	ids, err := mgr.getAllChangeFeedTaskIDsOnCluster(ctx, wfGetOldMasterClusterId(ctx))
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"%s getAllChangeFeedTaskIDsOnCluster req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+		return err
+	} else {
+		framework.LogWithContext(ctx).Infof(
+			"%s getAllChangeFeedTaskIDsOnCluster req:%s success", funcName, wfGetReqJson(ctx))
+	}
+	err = wfnCheckCDCsCaughtUp(node, ctx, ids)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"%s wfnCheckCDCsCaughtUp req:%s err:%s", funcName, wfGetReqJson(ctx), err)
+		return err
+	} else {
+		framework.LogWithContext(ctx).Infof(
+			"%s wfnCheckCDCsCaughtUp req:%s success", funcName, wfGetReqJson(ctx))
+	}
+	return err
+}
+
+type wfStepCallback func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error
+
+func wfGenStepWithRollbackCB(fp, rollbackFp wfStepCallback) func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	return func(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+		funcName := "wfStepWithRollbackCB"
+		framework.LogWithContext(ctx).Infof("enter %s", funcName)
+		defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+		err0 := fp(node, ctx)
+		if err0 != nil {
+			framework.LogWithContext(ctx).Errorf("%s start rollback, previous err:%v", funcName, err0)
+			err1 := rollbackFp(node, ctx)
+			framework.LogWithContext(ctx).Infof("%s rollback err:%v", funcName, err1)
+			if err1 == nil {
+				err := fmt.Errorf("err:%v \nRollback Successfully.", err0)
+				return err
+			} else {
+				err := fmt.Errorf("err:%v \nRollback Failed:%v", err0, err1)
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func wfStepNOP(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
+	funcName := "wfStepNOP"
+	framework.LogWithContext(ctx).Infof("enter %s", funcName)
+	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
+	return nil
 }

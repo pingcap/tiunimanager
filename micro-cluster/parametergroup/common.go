@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Copyright (c)  2022 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
  * you may not use this file except in compliance with the License.           *
  * You may obtain a copy of the License at                                    *
@@ -14,30 +14,32 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: zone.go
- * @Description:
- * @Author: duanbing@pingcap.com
+ * @File: common.go
+ * @Description: define constants
+ * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/6
+ * @Date: 2022/3/18 10:19
 *******************************************************************************/
 
-package product
+package parametergroup
 
-import (
-	"gorm.io/gorm"
-	"time"
+type DBType int
+
+const (
+	TiDB DBType = 1
+	DM   DBType = 2
 )
 
-// Zone information provided by Enterprise Manager
-type Zone struct {
-	VendorID   string         `gorm:"primaryKey;size:32"`
-	VendorName string         `gorm:"size:32"`
-	RegionID   string         `gorm:"primaryKey;size:32"`
-	RegionName string         `gorm:"size:32"`
-	ZoneID     string         `gorm:"primaryKey;size:32"`
-	ZoneName   string         `gorm:"size:32"`
-	Comment    string         `gorm:"size:1024;"`
-	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt  gorm.DeletedAt `gorm:""`
-}
+type ParamGroupCategory int
+
+const (
+	DEFAULT ParamGroupCategory = 1
+	CUSTOM  ParamGroupCategory = 2
+)
+
+type GroupType int
+
+const (
+	Cluster  GroupType = 1
+	Instance GroupType = 2
+)

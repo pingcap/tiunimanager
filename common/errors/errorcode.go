@@ -68,6 +68,7 @@ const (
 	TIEM_BACKUP_FILE_DELETE_FAILED      EM_ERROR_CODE = 20608
 	TIEM_BACKUP_PATH_CREATE_FAILED      EM_ERROR_CODE = 20609
 	TIEM_BACKUP_RECORD_INVALID          EM_ERROR_CODE = 20610
+	TIEM_BACKUP_RECORD_CANCEL_FAILED    EM_ERROR_CODE = 20611
 
 	// upgrade
 	TIEM_UPGRADE_QUERY_PATH_FAILED EM_ERROR_CODE = 21100
@@ -75,8 +76,10 @@ const (
 	TIEM_UPGRADE_VERSION_INCORRECT EM_ERROR_CODE = 21105
 
 	// switchover
-	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND EM_ERROR_CODE = 21000
-	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED    EM_ERROR_CODE = 21001
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND               EM_ERROR_CODE = 21000
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED                  EM_ERROR_CODE = 21001
+	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND EM_ERROR_CODE = 21002
+	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT  EM_ERROR_CODE = 21003
 
 	// workflow
 	TIEM_WORKFLOW_CREATE_FAILED         EM_ERROR_CODE = 40100
@@ -85,6 +88,8 @@ const (
 	TIEM_WORKFLOW_START_FAILED          EM_ERROR_CODE = 40103
 	TIEM_WORKFLOW_DEFINE_NOT_FOUND      EM_ERROR_CODE = 40104
 	TIEM_WORKFLOW_NODE_POLLING_TIME_OUT EM_ERROR_CODE = 40105
+	TIEM_WORKFLOW_STOP_FAILED           EM_ERROR_CODE = 40106
+	TIEM_WORKFLOW_CANCEL_FAILED         EM_ERROR_CODE = 40107
 
 	// import && export
 	TIEM_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND EM_ERROR_CODE = 60100
@@ -154,8 +159,16 @@ const (
 	TIEM_RESOURCE_PREPARE_HOST_ERROR        EM_ERROR_CODE = 30133
 	TIEM_RESOURCE_INVALID_VENDOR_NAME       EM_ERROR_CODE = 30134
 	TIEM_RESOURCE_INVALID_ZONE_INFO         EM_ERROR_CODE = 30135
-	TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR    EM_ERROR_CODE = 30136
-	TIEM_RESOURCE_INIT_HOST_AUTH_ERROR      EM_ERROR_CODE = 30137
+	TIEM_RESOURCE_CHECK_COMPUTES_ERROR      EM_ERROR_CODE = 30136
+	TIEM_RESOURCE_CHECK_DISKS_ERROR         EM_ERROR_CODE = 30137
+	TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR    EM_ERROR_CODE = 30138
+	TIEM_RESOURCE_INIT_HOST_AUTH_ERROR      EM_ERROR_CODE = 30139
+	TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR     EM_ERROR_CODE = 30140
+	TIEM_RESOURCE_VALIDATE_DISK_ERROR       EM_ERROR_CODE = 30141
+	TIEM_RESOURCE_UPDATE_DISK_ERROR         EM_ERROR_CODE = 30142
+	TIEM_RESOURCE_DELETE_DISK_ERROR         EM_ERROR_CODE = 30143
+	TIEM_RESOURCE_DISK_STILL_INUSED         EM_ERROR_CODE = 30144
+	TIEM_RESOURCE_DISK_ALREADY_EXIST        EM_ERROR_CODE = 30145
 
 	TIEM_MONITOR_NOT_FOUND EM_ERROR_CODE = 614
 
@@ -204,6 +217,7 @@ const (
 	TIEM_CHECK_CLUSTER_VERSION_ERROR EM_ERROR_CODE = 21301
 	TIEM_CDC_NOT_FOUND               EM_ERROR_CODE = 21302
 	TIEM_CLONE_TIKV_ERROR            EM_ERROR_CODE = 21303
+	TIEM_CLONE_SLAVE_ERROR           EM_ERROR_CODE = 21304
 
 	CreateZonesError              EM_ERROR_CODE = 70001
 	DeleteZonesError              EM_ERROR_CODE = 70002
@@ -229,8 +243,11 @@ const (
 	DeleteUserFailed              EM_ERROR_CODE = 70613
 	UpdateUserProfileFailed       EM_ERROR_CODE = 70614
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
-	TIEM_CLUSTER_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
+	TIEM_LOG_QUERY_FAILED EM_ERROR_CODE = 80300
+	TIEM_LOG_TIME_AFTER   EM_ERROR_CODE = 80301
+
+	QueryReportsScanRowError EM_ERROR_CODE = 90001
+	CheckReportNotExist      EM_ERROR_CODE = 90002
 )
 
 type ErrorCodeExplanation struct {
@@ -281,14 +298,16 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_SYSTEM_MISSING_DATA:       {"missing system data", 500},
 	TIEM_SYSTEM_MISSING_CONFIG:     {"missing system config", 500},
 	TIEM_SYSTEM_STATE_CONFLICT:     {"system state conflict", 500},
-	TIEM_SYSTEM_INVALID_VERSION:     {"invalid system version", 500},
+	TIEM_SYSTEM_INVALID_VERSION:    {"invalid system version", 500},
 
-	TIEM_TASK_TIMEOUT:          {"task timeout", 500},
-	TIEM_FLOW_NOT_FOUND:        {"flow not found", 500},
-	TIEM_TASK_FAILED:           {"task failed", 500},
-	TIEM_TASK_CONFLICT:         {"task polling time out", 500},
-	TIEM_TASK_CANCELED:         {"task canceled", 500},
-	TIEM_TASK_POLLING_TIME_OUT: {"task polling time out", 500},
+	TIEM_TASK_TIMEOUT:           {"task timeout", 500},
+	TIEM_FLOW_NOT_FOUND:         {"flow not found", 500},
+	TIEM_TASK_FAILED:            {"task failed", 500},
+	TIEM_TASK_CONFLICT:          {"task conflict", 400},
+	TIEM_TASK_CANCELED:          {"task canceled", 500},
+	TIEM_TASK_POLLING_TIME_OUT:  {"task polling time out", 500},
+	TIEM_WORKFLOW_STOP_FAILED:   {"workflow stop failed", 500},
+	TIEM_WORKFLOW_CANCEL_FAILED: {"workflow cancel failed", 500},
 
 	TIEM_DUPLICATED_NAME:              {"duplicated cluster name", 400},
 	TIEM_INVALID_TOPOLOGY:             {"invalid cluster topology", 400},
@@ -338,6 +357,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
 	TIEM_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
 	TIEM_BACKUP_RECORD_INVALID:          {"backup record invalid", 400},
+	TIEM_BACKUP_RECORD_CANCEL_FAILED:    {"cancel backup record failed", 500},
 
 	// resource
 	TIEM_RESOURCE_HOST_NOT_FOUND:            {"host not found", 500},
@@ -356,7 +376,7 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_INVALID_DISKTYPE:          {"invalid disk type of host", 400},
 	TIEM_RESOURCE_HOST_ALREADY_EXIST:        {"host already exists in the resource pool", 409},
 	TIEM_RESOURCE_HOST_STILL_INUSED:         {"host is still in use", 409},
-	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"ailed to update disk table", 500},
+	TIEM_RESOURCE_CREATE_DISK_ERROR:         {"failed to create disk", 500},
 	TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND:   {"template file is not found", 500},
 	TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR: {"parse template file failed", 400},
 	TIEM_RESOURCE_CONNECT_TO_HOST_ERROR:     {"connect to host failed", 400},
@@ -369,8 +389,16 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_PREPARE_HOST_ERROR:        {"prepare host before verify failed", 500},
 	TIEM_RESOURCE_INVALID_VENDOR_NAME:       {"invalid vendor", 400},
 	TIEM_RESOURCE_INVALID_ZONE_INFO:         {"invalid zone info", 400},
+	TIEM_RESOURCE_CHECK_COMPUTES_ERROR:      {"check compute resource mismatch", 500},
+	TIEM_RESOURCE_CHECK_DISKS_ERROR:         {"check disk resource mismatch", 500},
 	TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR:    {"init deploy user failed", 500},
 	TIEM_RESOURCE_INIT_HOST_AUTH_ERROR:      {"init host auth failed", 500},
+	TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR:     {"update host info failed", 400},
+	TIEM_RESOURCE_VALIDATE_DISK_ERROR:       {"validate disk info failed", 400},
+	TIEM_RESOURCE_UPDATE_DISK_ERROR:         {"update disk failed", 500},
+	TIEM_RESOURCE_DELETE_DISK_ERROR:         {"delete disk failed", 500},
+	TIEM_RESOURCE_DISK_STILL_INUSED:         {"disk is still in used", 409},
+	TIEM_RESOURCE_DISK_ALREADY_EXIST:        {"disk is already existed", 409},
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL:                 {"Not allow to deleted the default parameter group", 409},
@@ -407,11 +435,13 @@ var explanationContainer = map[EM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {"Task downstream type not supported", 500},
 	TIEM_CHANGE_FEED_EXECUTE_ERROR:          {"Failed to execute task command", 500},
 
-	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND: {"master/slave relation not found", 404},
-	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:    {"master/slave switchover failed", 500},
+	TIEM_MASTER_SLAVE_SWITCHOVER_NOT_FOUND:               {"master/slave relation not found", 404},
+	TIEM_MASTER_SLAVE_SWITCHOVER_FAILED:                  {"master/slave switchover failed", 500},
+	TIEM_MASTER_SLAVE_SWITCHOVER_CDC_SYNC_TASK_NOT_FOUND: {"master/slave CDC sync task not found", 400},
+	TIEM_MASTER_SLAVE_SWITCHOVER_SLAVE_NO_CDC_COMPONENT:  {"slave has no CDC component", 400},
 
-	TIEM_CLUSTER_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
-	TIEM_CLUSTER_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
+	TIEM_LOG_QUERY_FAILED: {"Failed to query cluster log", 500},
+	TIEM_LOG_TIME_AFTER:   {"query log parameter startTime after endTime", 401},
 
 	// scale out & scale in
 	TIEM_INSTANCE_NOT_FOUND:               {"Instance of cluster is not found", 404},

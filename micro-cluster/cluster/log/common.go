@@ -23,14 +23,18 @@
 
 package log
 
-import "time"
+import (
+	"time"
+
+	"github.com/pingcap-inc/tiem/common/errors"
+)
 
 const (
 	contextClusterMeta = "ClusterMeta"
 )
 
 const (
-	dateFormat     = "2006-01-02 15:04:05"
+	DateFormat     = "2006-01-02 15:04:05"
 	logIndexPrefix = "em-database-cluster-*"
 )
 
@@ -111,4 +115,22 @@ type CollectorModuleFields struct {
 	Type      string `json:"type" yaml:"type"`
 	ClusterId string `json:"clusterId" yaml:"clusterId"`
 	Ip        string `json:"ip" yaml:"ip"`
+}
+
+// FilterTimestamp search tidb log by @timestamp
+func FilterTimestamp(startTime, endTime int64) (map[string]interface{}, error) {
+	tsFilter := map[string]interface{}{}
+
+	if startTime > 0 && endTime > 0 {
+		if startTime > endTime {
+			return nil, errors.NewErrorf(errors.TIEM_LOG_TIME_AFTER, errors.TIEM_LOG_TIME_AFTER.Explain())
+		}
+		tsFilter["gte"] = startTime * 1000
+		tsFilter["lte"] = endTime * 1000
+	} else if startTime > 0 && endTime <= 0 {
+		tsFilter["gte"] = startTime * 1000
+	} else if startTime <= 0 && endTime > 0 {
+		tsFilter["lte"] = endTime * 1000
+	}
+	return tsFilter, nil
 }

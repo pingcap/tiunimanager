@@ -19,6 +19,15 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  cluster.CancelBackupReq:
+    properties:
+      backupId:
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.CancelBackupResp:
+    type: object
   cluster.CloneClusterReq:
     properties:
       cloneStrategy:
@@ -218,6 +227,15 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  cluster.DeleteMetadataPhysicallyReq:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  cluster.DeleteMetadataPhysicallyResp:
     type: object
   cluster.DetailChangeFeedTaskResp:
     properties:
@@ -453,7 +471,19 @@ definitions:
     type: object
   cluster.MasterSlaveClusterSwitchoverReq:
     properties:
+      checkMasterWritableFlag:
+        type: boolean
+      checkSlaveReadOnlyFlag:
+        type: boolean
+      checkStandaloneClusterFlag:
+        description: |-
+          check if cluster specified in `SourceClusterID` is standalone, i.e. no cluster relation and no cdc
+          if this flag is true, always only check
+        type: boolean
       force:
+        type: boolean
+      onlyCheck:
+        description: only check if this flag is true
         type: boolean
       sourceClusterID:
         description: old master/new slave
@@ -615,6 +645,12 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
+        type: string
       topology:
         items:
           $ref: '#/definitions/structs.ClusterInstanceInfo'
@@ -778,6 +814,12 @@ definitions:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
+        type: string
     type: object
   cluster.ScaleOutClusterResp:
     properties:
@@ -1025,6 +1067,14 @@ definitions:
     type: object
   message.BindRolesForUserResp:
     type: object
+  message.CheckClusterRsp:
+    properties:
+      checkId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
   message.CheckPermissionForUserReq:
     properties:
       permissions:
@@ -1038,6 +1088,19 @@ definitions:
     properties:
       result:
         type: boolean
+    type: object
+  message.CheckPlatformReq:
+    properties:
+      displayMode:
+        type: string
+    type: object
+  message.CheckPlatformRsp:
+    properties:
+      checkId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   message.CopyParameterGroupReq:
     properties:
@@ -1055,6 +1118,22 @@ definitions:
       paramGroupId:
         example: "1"
         type: string
+    type: object
+  message.CreateDisksReq:
+    properties:
+      disks:
+        items:
+          $ref: '#/definitions/structs.DiskInfo'
+        type: array
+      hostId:
+        type: string
+    type: object
+  message.CreateDisksResp:
+    properties:
+      diskIds:
+        items:
+          type: string
+        type: array
     type: object
   message.CreateParameterGroupReq:
     properties:
@@ -1091,6 +1170,11 @@ definitions:
           $ref: '#/definitions/structs.ParameterGroupParameterSampleInfo'
         type: array
     required:
+    - clusterSpec
+    - clusterVersion
+    - dbType
+    - groupType
+    - name
     - params
     type: object
   message.CreateParameterGroupResp:
@@ -1099,32 +1183,12 @@ definitions:
         example: "1"
         type: string
     type: object
-  message.CreateProductReq:
-    properties:
-      components:
-        items:
-          $ref: '#/definitions/structs.ProductComponentProperty'
-        type: array
-      productInfo:
-        $ref: '#/definitions/structs.Product'
-    type: object
-  message.CreateProductResp:
-    type: object
   message.CreateRoleReq:
     properties:
       role:
         type: string
     type: object
   message.CreateRoleResp:
-    type: object
-  message.CreateSpecsReq:
-    properties:
-      specs:
-        items:
-          $ref: '#/definitions/structs.SpecInfo'
-        type: array
-    type: object
-  message.CreateSpecsResp:
     type: object
   message.CreateTenantReq:
     properties:
@@ -1169,15 +1233,6 @@ definitions:
     - password
     type: object
   message.CreateUserResp:
-    type: object
-  message.CreateZonesReq:
-    properties:
-      zones:
-        items:
-          $ref: '#/definitions/structs.ZoneInfo'
-        type: array
-    type: object
-  message.CreateZonesResp:
     type: object
   message.DataExportReq:
     properties:
@@ -1247,6 +1302,15 @@ definitions:
         description: Asynchronous task workflow ID
         type: string
     type: object
+  message.DeleteDisksReq:
+    properties:
+      diskIds:
+        items:
+          type: string
+        type: array
+    type: object
+  message.DeleteDisksResp:
+    type: object
   message.DeleteHostsReq:
     properties:
       force:
@@ -1287,23 +1351,7 @@ definitions:
     type: object
   message.DeletePermissionsForRoleResp:
     type: object
-  message.DeleteProductReq:
-    properties:
-      productInfo:
-        $ref: '#/definitions/structs.Product'
-    type: object
-  message.DeleteProductResp:
-    type: object
   message.DeleteRoleResp:
-    type: object
-  message.DeleteSpecsReq:
-    properties:
-      specIds:
-        items:
-          type: string
-        type: array
-    type: object
-  message.DeleteSpecsResp:
     type: object
   message.DeleteTenantReq:
     properties:
@@ -1315,15 +1363,6 @@ definitions:
   message.DeleteUserReq:
     type: object
   message.DeleteUserResp:
-    type: object
-  message.DeleteZoneReq:
-    properties:
-      zone:
-        items:
-          $ref: '#/definitions/structs.ZoneInfo'
-        type: array
-    type: object
-  message.DeleteZoneResp:
     type: object
   message.DetailParameterGroupResp:
     properties:
@@ -1371,6 +1410,11 @@ definitions:
         example: 1636698675
         type: integer
     type: object
+  message.GetCheckReportRsp:
+    properties:
+      reportInfo:
+        type: object
+    type: object
   message.GetHierarchyResp:
     properties:
       root:
@@ -1383,6 +1427,13 @@ definitions:
           $ref: '#/definitions/structs.Stocks'
         description: map[zone] -> stocks
         type: object
+    type: object
+  message.GetSystemConfigResp:
+    properties:
+      configKey:
+        type: string
+      configValue:
+        type: string
     type: object
   message.GetSystemInfoResp:
     properties:
@@ -1431,6 +1482,8 @@ definitions:
     type: object
   message.LoginResp:
     properties:
+      passwordExpired:
+        type: boolean
       tenantId:
         type: string
       token:
@@ -1524,6 +1577,58 @@ definitions:
         example: 0
         type: integer
     type: object
+  message.PlatformLogItem:
+    properties:
+      id:
+        example: zvadfwf
+        type: string
+      index:
+        example: em-system-logs-2021.12.30
+        type: string
+      level:
+        example: warn
+        type: string
+      message:
+        example: some do something
+        type: string
+      microMethod:
+        example: em.cluster.ClusterService.GetSystemInfo
+        type: string
+      timestamp:
+        example: "2021-09-23 14:23:10"
+        type: string
+      traceId:
+        example: UNe7K1uERa-2fwSxGJ6CFQ
+        type: string
+    type: object
+  message.QueryAvailableProductsResp:
+    properties:
+      products:
+        additionalProperties:
+          additionalProperties:
+            additionalProperties:
+              additionalProperties:
+                $ref: '#/definitions/structs.Product'
+              type: object
+            type: object
+          type: object
+        description: arch version
+        type: object
+    type: object
+  message.QueryAvailableVendorsResp:
+    properties:
+      vendors:
+        additionalProperties:
+          $ref: '#/definitions/structs.VendorWithRegion'
+        type: object
+    type: object
+  message.QueryCheckReportsRsp:
+    properties:
+      reportMetas:
+        additionalProperties:
+          $ref: '#/definitions/structs.CheckReportMeta'
+        type: object
+    type: object
   message.QueryDataImportExportRecordsResp:
     properties:
       transportRecords:
@@ -1593,6 +1698,16 @@ definitions:
       userId:
         type: string
     type: object
+  message.QueryPlatformLogResp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/message.PlatformLogItem'
+        type: array
+      took:
+        example: 10
+        type: integer
+    type: object
   message.QueryProductDetailResp:
     properties:
       products:
@@ -1600,32 +1715,18 @@ definitions:
           $ref: '#/definitions/structs.ProductDetail'
         type: object
     type: object
-  message.QueryProductsResp:
+  message.QueryProductsInfoResp:
     properties:
       products:
-        additionalProperties:
-          additionalProperties:
-            additionalProperties:
-              additionalProperties:
-                $ref: '#/definitions/structs.Product'
-              type: object
-            type: object
-          type: object
-        description: arch version
-        type: object
+        items:
+          $ref: '#/definitions/structs.ProductConfigInfo'
+        type: array
     type: object
   message.QueryRolesResp:
     properties:
       roles:
         items:
           type: string
-        type: array
-    type: object
-  message.QuerySpecsResp:
-    properties:
-      specs:
-        items:
-          $ref: '#/definitions/structs.SpecInfo'
         type: array
     type: object
   message.QueryTenantReq:
@@ -1660,6 +1761,13 @@ definitions:
           $ref: '#/definitions/structs.UserInfo'
         type: object
     type: object
+  message.QueryVendorInfoResp:
+    properties:
+      vendors:
+        items:
+          $ref: '#/definitions/structs.VendorConfigInfo'
+        type: array
+    type: object
   message.QueryWorkFlowDetailResp:
     properties:
       info:
@@ -1680,13 +1788,6 @@ definitions:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
     type: object
-  message.QueryZonesTreeResp:
-    properties:
-      vendors:
-        additionalProperties:
-          $ref: '#/definitions/structs.VendorWithRegion'
-        type: object
-    type: object
   message.UnbindRoleForUserReq:
     properties:
       role:
@@ -1695,6 +1796,20 @@ definitions:
         type: string
     type: object
   message.UnbindRoleForUserResp:
+    type: object
+  message.UpdateDiskReq:
+    properties:
+      newDiskInfo:
+        $ref: '#/definitions/structs.DiskInfo'
+    type: object
+  message.UpdateDiskResp:
+    type: object
+  message.UpdateHostInfoReq:
+    properties:
+      newHostInfo:
+        $ref: '#/definitions/structs.HostInfo'
+    type: object
+  message.UpdateHostInfoResp:
     type: object
   message.UpdateHostReservedReq:
     properties:
@@ -1737,10 +1852,10 @@ definitions:
           type: string
         type: array
       name:
-        example: 8C16GV4_default
+        example: 8C16GV4_new
         type: string
       note:
-        example: default param group
+        example: update param group
         type: string
       params:
         items:
@@ -1754,6 +1869,26 @@ definitions:
       paramGroupId:
         example: "1"
         type: string
+    type: object
+  message.UpdateProductsInfoReq:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/structs.ProductConfigInfo'
+        type: array
+    required:
+    - products
+    type: object
+  message.UpdateProductsInfoResp:
+    type: object
+  message.UpdateSystemConfigReq:
+    properties:
+      configKey:
+        type: string
+      configValue:
+        type: string
+    type: object
+  message.UpdateSystemConfigResp:
     type: object
   message.UpdateTenantOnBoardingStatusReq:
     properties:
@@ -1803,6 +1938,13 @@ definitions:
     type: object
   message.UpdateUserProfileResp:
     type: object
+  message.UpdateVendorInfoReq:
+    properties:
+      vendors:
+        items:
+          $ref: '#/definitions/structs.VendorConfigInfo'
+        type: array
+    type: object
   structs.AsyncTaskWorkFlowInfo:
     properties:
       workFlowId:
@@ -1847,6 +1989,19 @@ definitions:
       clusterId:
         type: string
       period:
+        type: string
+    type: object
+  structs.CheckReportMeta:
+    properties:
+      checkID:
+        type: string
+      createAt:
+        type: string
+      creator:
+        type: string
+      status:
+        type: string
+      type:
         type: string
     type: object
   structs.ClusterInfo:
@@ -1901,6 +2056,8 @@ definitions:
         $ref: '#/definitions/structs.Usage'
       region:
         type: string
+      relations:
+        $ref: '#/definitions/structs.ClusterRelations'
       role:
         type: string
       status:
@@ -1935,6 +2092,8 @@ definitions:
         type: array
       cpuUsage:
         $ref: '#/definitions/structs.Usage'
+      diskId:
+        type: string
       hostID:
         type: string
       id:
@@ -1965,7 +2124,7 @@ definitions:
       version:
         type: string
       zone:
-        $ref: '#/definitions/structs.ZoneInfo'
+        $ref: '#/definitions/structs.ZoneFullInfo'
         description: ??
     type: object
   structs.ClusterInstanceParameterValue:
@@ -1987,7 +2146,7 @@ definitions:
         example: zvadfwf
         type: string
       index:
-        example: tiem-tidb-cluster-2021.09.23
+        example: em-tidb-cluster-2021.09.23
         type: string
       ip:
         example: 127.0.0.1
@@ -2115,12 +2274,29 @@ definitions:
     - paramId
     - realValue
     type: object
+  structs.ClusterRelations:
+    properties:
+      masters:
+        items:
+          type: string
+        type: array
+      slaves:
+        items:
+          type: string
+        type: array
+    type: object
   structs.ClusterResourceInfo:
     properties:
       instanceResource:
         items:
           $ref: '#/definitions/structs.ClusterResourceParameterCompute'
         type: array
+      requestResourceMode:
+        default: SpecificZone
+        enum:
+        - SpecificZone
+        - SpecificHost
+        type: string
     type: object
   structs.ClusterResourceParameterCompute:
     properties:
@@ -2140,8 +2316,12 @@ definitions:
         type: integer
       diskCapacity:
         type: integer
+      diskId:
+        type: string
       diskType:
         description: NVMeSSD/SSD/SATA
+        type: string
+      hostIp:
         type: string
       specCode:
         description: 4C8G/8C16G ?
@@ -2270,6 +2450,9 @@ definitions:
       arch:
         description: x86 or arm64
         type: string
+      availableDiskCount:
+        description: available disk count which could be used for allocation
+        type: integer
       az:
         type: string
       clusterType:
@@ -2291,12 +2474,18 @@ definitions:
         type: string
       hostName:
         type: string
+      instances:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
       ip:
         type: string
       kernel:
         type: string
       loadStat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        description: Host load stat, Loadless, Inused, Exhaust, etc
         type: string
       memory:
         description: Host memory, init while importing
@@ -2321,8 +2510,10 @@ definitions:
       spec:
         description: Host Spec, init while importing
         type: string
+      sshPort:
+        type: integer
       status:
-        description: Host Status, 0 for Online, 1 for offline
+        description: Host status, Online, Offline, Failed, Deleted, etc
         type: string
       sysLabels:
         items:
@@ -2500,7 +2691,7 @@ definitions:
       version:
         type: string
     type: object
-  structs.ProductComponentProperty:
+  structs.ProductComponentPropertyWithZones:
     properties:
       availableZones:
         description: Information on the specifications of the resources online for
@@ -2535,6 +2726,21 @@ definitions:
       suggestedInstancesCount:
         items:
           type: integer
+        type: array
+    type: object
+  structs.ProductConfigInfo:
+    properties:
+      components:
+        items:
+          $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
+        type: array
+      productId:
+        type: string
+      productName:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
         type: array
     type: object
   structs.ProductDetail:
@@ -2659,7 +2865,7 @@ definitions:
       arch:
         additionalProperties:
           items:
-            $ref: '#/definitions/structs.ProductComponentProperty'
+            $ref: '#/definitions/structs.ProductComponentPropertyWithZones'
           type: array
         description: Arch information of the product, e.g. X86/X86_64
         type: object
@@ -2667,12 +2873,34 @@ definitions:
         description: Version information of the product, e.g. v5.0.0
         type: string
     type: object
+  structs.ProductWithVersions:
+    properties:
+      productId:
+        type: string
+      productName:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/structs.SpecificVersionProduct'
+        type: array
+    type: object
   structs.RbacPermission:
     properties:
       action:
         type: string
       resource:
         type: string
+    type: object
+  structs.RegionConfigInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      zones:
+        items:
+          $ref: '#/definitions/structs.ZoneInfo'
+        type: array
     type: object
   structs.RegionInfo:
     properties:
@@ -2691,11 +2919,15 @@ definitions:
         type: integer
       diskCapacity:
         type: integer
+      diskId:
+        type: string
       diskType:
         description: NVMeSSD/SSD/SATA
         type: string
       enough:
         type: boolean
+      hostIp:
+        type: string
       specCode:
         description: 4C8G/8C16G ?
         type: string
@@ -2718,11 +2950,17 @@ definitions:
       name:
         description: 'Name of the resource specification,eg: TiDB.c1.large'
         type: string
-      purpose_type:
+      purposeType:
         description: eg:Compute/Storage/Schedule
         type: string
-      status:
-        description: e.g. Online/Offline
+    type: object
+  structs.SpecificVersionProduct:
+    properties:
+      arch:
+        type: string
+      productId:
+        type: string
+      version:
         type: string
     type: object
   structs.Stocks:
@@ -2742,16 +2980,32 @@ definitions:
     type: object
   structs.SystemInfo:
     properties:
-      currentVersionID:
+      currentVersionId:
         type: string
-      lastVersionID:
+      lastVersionId:
         type: string
+      productComponentsInitialized:
+        type: boolean
+      productVersionsInitialized:
+        type: boolean
       state:
         type: string
+      supportedProducts:
+        items:
+          $ref: '#/definitions/structs.ProductWithVersions'
+        type: array
+      supportedVendors:
+        items:
+          $ref: '#/definitions/structs.VendorInfo'
+        type: array
       systemLogo:
         type: string
       systemName:
         type: string
+      vendorSpecsInitialized:
+        type: boolean
+      vendorZonesInitialized:
+        type: boolean
     type: object
   structs.SystemVersionInfo:
     properties:
@@ -2759,7 +3013,7 @@ definitions:
         type: string
       releaseNote:
         type: string
-      versionID:
+      versionId:
         type: string
     type: object
   structs.TenantInfo:
@@ -2825,6 +3079,32 @@ definitions:
       updateAt:
         type: string
     type: object
+  structs.VendorConfigInfo:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+      regions:
+        items:
+          $ref: '#/definitions/structs.RegionConfigInfo'
+        type: array
+      specs:
+        items:
+          $ref: '#/definitions/structs.SpecInfo'
+        type: array
+    type: object
+  structs.VendorInfo:
+    properties:
+      id:
+        description: The value of the VendorID is similar to AWS
+        type: string
+      name:
+        description: The value of the Name is similar to AWS
+        type: string
+    type: object
   structs.VendorWithRegion:
     properties:
       id:
@@ -2886,7 +3166,7 @@ definitions:
         - Canceled
         type: string
     type: object
-  structs.ZoneInfo:
+  structs.ZoneFullInfo:
     properties:
       comment:
         type: string
@@ -2901,6 +3181,17 @@ definitions:
         type: string
       vendorName:
         description: The value of the Name is similar to AWS
+        type: string
+      zoneId:
+        description: The value of the ZoneID is similar to CN-HANGZHOU-H
+        type: string
+      zoneName:
+        description: The value of the Name is similar to Hangzhou(H)
+        type: string
+    type: object
+  structs.ZoneInfo:
+    properties:
+      comment:
         type: string
       zoneId:
         description: The value of the ZoneID is similar to CN-HANGZHOU-H
@@ -3062,6 +3353,47 @@ paths:
       summary: delete backup record
       tags:
       - cluster backup
+  /backups/cancel:
+    post:
+      consumes:
+      - application/json
+      description: cancel backup
+      parameters:
+      - description: cancel backup request
+        in: body
+        name: backupReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.CancelBackupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.CancelBackupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: cancel backup
+      tags:
+      - cancel cluster backup
   /changefeeds/:
     get:
       consumes:
@@ -3456,137 +3788,6 @@ paths:
       summary: create a cluster
       tags:
       - cluster
-  /clusters/:clusterId/upgrade:
-    post:
-      consumes:
-      - application/json
-      description: request for upgrade TiDB cluster
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - description: upgrade request
-        in: body
-        name: upgradeReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.UpgradeClusterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.UpgradeClusterResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: request for upgrade TiDB cluster
-      tags:
-      - cluster upgrade
-  /clusters/:clusterId/upgrade/diff:
-    get:
-      consumes:
-      - application/json
-      description: query config diff between current cluster and target upgrade version
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - example: v5.0.0
-        in: query
-        name: targetVersion
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query config diff between current cluster and target upgrade version
-      tags:
-      - cluster upgrade
-  /clusters/:clusterId/upgrade/path:
-    get:
-      consumes:
-      - application/json
-      description: query upgrade path for given cluster id
-      parameters:
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query upgrade path for given cluster id
-      tags:
-      - cluster upgrade
   /clusters/{clusterId}:
     delete:
       consumes:
@@ -4267,6 +4468,137 @@ paths:
       summary: save the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/{clusterId}/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: request for upgrade TiDB cluster
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: upgrade request
+        in: body
+        name: upgradeReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.UpgradeClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.UpgradeClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: request for upgrade TiDB cluster
+      tags:
+      - cluster upgrade
+  /clusters/{clusterId}/upgrade/diff:
+    get:
+      consumes:
+      - application/json
+      description: query config diff between current cluster and target upgrade version
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: v5.0.0
+        in: query
+        name: targetVersion
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradeVersionDiffInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query config diff between current cluster and target upgrade version
+      tags:
+      - cluster upgrade
+  /clusters/{clusterId}/upgrade/path:
+    get:
+      consumes:
+      - application/json
+      description: query upgrade path for given cluster id
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.QueryUpgradePathRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query upgrade path for given cluster id
+      tags:
+      - cluster upgrade
   /clusters/clone:
     post:
       consumes:
@@ -4658,6 +4990,85 @@ paths:
       summary: delete data transport record
       tags:
       - cluster data transport
+  /config/:
+    get:
+      consumes:
+      - application/json
+      description: get system config
+      parameters:
+      - in: query
+        name: configKey
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetSystemConfigResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get system config
+      tags:
+      - get system config
+  /config/update:
+    post:
+      consumes:
+      - application/json
+      description: UpdateSystemConfig
+      parameters:
+      - description: system config for update
+        in: body
+        name: systemConfig
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateSystemConfigReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateSystemConfigResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update system config
+      tags:
+      - UpdateSystemConfig
   /downstream/:
     delete:
       consumes:
@@ -4706,6 +5117,52 @@ paths:
       summary: unused, just display downstream config
       tags:
       - change feed
+  /metadata/{clusterId}/:
+    delete:
+      consumes:
+      - application/json
+      description: for handling exceptions only
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: delete request
+        in: body
+        name: deleteReq
+        schema:
+          $ref: '#/definitions/cluster.DeleteMetadataPhysicallyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.DeleteMetadataPhysicallyResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete cluster metadata in this system physically, but keep the real
+        cluster alive
+      tags:
+      - cluster
   /param-groups/:
     get:
       consumes:
@@ -5045,18 +5502,17 @@ paths:
       summary: copy a parameter group
       tags:
       - parameter group
-  /products/:
-    delete:
+  /platform/check:
+    post:
       consumes:
       - application/json
-      description: delete product
+      description: platform check
       parameters:
-      - description: create product request parameter
+      - description: check platform
         in: body
-        name: CreateProductReq
-        required: true
+        name: checkPlatformReq
         schema:
-          $ref: '#/definitions/message.DeleteProductReq'
+          $ref: '#/definitions/message.CheckPlatformReq'
       produces:
       - application/json
       responses:
@@ -5064,10 +5520,10 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/controller.CommonResult'
+            - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  $ref: '#/definitions/message.DeleteProductResp'
+                  $ref: '#/definitions/message.CheckPlatformRsp'
               type: object
         "401":
           description: Unauthorized
@@ -5083,9 +5539,274 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: delete product
+      summary: platform check
       tags:
       - platform
+  /platform/check/{clusterId}:
+    post:
+      consumes:
+      - application/json
+      description: platform check cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CheckClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: platform check cluster
+      tags:
+      - platform
+  /platform/log:
+    get:
+      consumes:
+      - application/json
+      description: query platform log
+      parameters:
+      - example: 1638331200
+        in: query
+        name: endTime
+        type: integer
+      - example: warn
+        in: query
+        name: level
+        type: string
+      - example: some do something
+        in: query
+        name: message
+        type: string
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      - example: 1630468800
+        in: query
+        name: startTime
+        type: integer
+      - example: UNe7K1uERa-2fwSxGJ6CFQ
+        in: query
+        name: traceId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryPlatformLogResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query platform log
+      tags:
+      - platform log
+  /platform/report/{checkId}:
+    get:
+      consumes:
+      - application/json
+      description: get check report based on checkId
+      parameters:
+      - description: check id
+        in: path
+        name: checkId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.GetCheckReportRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: get check report based on checkId
+      tags:
+      - platform
+  /platform/reports:
+    get:
+      consumes:
+      - application/json
+      description: get query check reports
+      parameters:
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryCheckReportsRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query check reports
+      tags:
+      - platform
+  /products/:
+    get:
+      consumes:
+      - application/json
+      description: query products
+      parameters:
+      - collectionFormat: multi
+        description: product id collection
+        in: query
+        items:
+          type: string
+        name: productIDs
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryProductsInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query products
+      tags:
+      - product
+    post:
+      consumes:
+      - application/json
+      description: update products
+      parameters:
+      - description: update products info request parameter
+        in: body
+        name: UpdateProductsInfoReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateProductsInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateProductsInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update products
+      tags:
+      - product
+  /products/available:
     get:
       consumes:
       - application/json
@@ -5110,7 +5831,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/message.QueryProductsResp'
+                  $ref: '#/definitions/message.QueryAvailableProductsResp'
               type: object
         "401":
           description: Unauthorized
@@ -5128,47 +5849,7 @@ paths:
       - ApiKeyAuth: []
       summary: queries all products' information
       tags:
-      - platform
-    post:
-      consumes:
-      - application/json
-      description: created product
-      parameters:
-      - description: create product request parameter
-        in: body
-        name: CreateProductReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.CreateProductReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.CreateProductResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: created product
-      tags:
-      - platform
+      - product
   /products/detail:
     get:
       consumes:
@@ -5218,7 +5899,7 @@ paths:
       - ApiKeyAuth: []
       summary: query all product detail
       tags:
-      - platform
+      - product
   /rbac/permission/{userId}:
     get:
       consumes:
@@ -5584,6 +6265,92 @@ paths:
       summary: unbind rbac role from user
       tags:
       - rbac UnbindRoleForUser
+  /resources/disk:
+    put:
+      consumes:
+      - application/json
+      description: update disk information
+      parameters:
+      - description: update disk information
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateDiskReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateDiskResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update disk info
+      tags:
+      - resource
+  /resources/disks:
+    delete:
+      consumes:
+      - application/json
+      description: remove disks by a list
+      parameters:
+      - description: list of disk IDs
+        in: body
+        name: diskIds
+        required: true
+        schema:
+          $ref: '#/definitions/message.DeleteDisksReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.DeleteDisksResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a batch of disks
+      tags:
+      - resource
+    post:
+      consumes:
+      - application/json
+      description: add disks to the specified host
+      parameters:
+      - description: specify the hostId and disks
+        in: body
+        name: createDisksReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.CreateDisksReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.CreateDisksResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Add disks to the specified host
+      tags:
+      - resource
   /resources/hierarchy:
     get:
       consumes:
@@ -5601,7 +6368,16 @@ paths:
         name: arch
         type: string
       - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -5627,6 +6403,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show the resources hierarchy
+      tags:
+      - resource
+  /resources/host:
+    put:
+      consumes:
+      - application/json
+      description: update host information
+      parameters:
+      - description: update host information
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateHostInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateHostInfoResp'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host info
       tags:
       - resource
   /resources/host-reserved:
@@ -5725,10 +6530,19 @@ paths:
         name: arch
         type: string
       - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
         type: string
       - in: query
         name: hostIp
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -5845,16 +6659,25 @@ paths:
         name: capacity
         type: integer
       - in: query
+        name: clusterType
+        type: string
+      - in: query
         name: diskStatus
         type: string
       - in: query
         name: diskType
         type: string
       - in: query
+        name: hostDiskType
+        type: string
+      - in: query
         name: hostId
         type: string
       - in: query
         name: hostIp
+        type: string
+      - in: query
+        name: hostName
         type: string
       - in: query
         name: loadStat
@@ -5891,120 +6714,6 @@ paths:
       summary: Show the resources stocks
       tags:
       - resource
-  /specs/:
-    delete:
-      consumes:
-      - application/json
-      description: deleted specs
-      parameters:
-      - description: delete specs request parameter
-        in: body
-        name: DeleteSpecsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.DeleteSpecsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.DeleteSpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: deleted  specs
-      tags:
-      - platform
-    get:
-      consumes:
-      - application/json
-      description: queries all specs information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QuerySpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: queries all specs information
-      tags:
-      - platform
-    post:
-      consumes:
-      - application/json
-      description: created specs
-      parameters:
-      - description: create specs request parameter
-        in: body
-        name: CreateSpecsReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.CreateSpecsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.CreateSpecsResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: created  specs
-      tags:
-      - platform
   /system/info:
     get:
       consumes:
@@ -6621,6 +7330,122 @@ paths:
       summary: update user profile
       tags:
       - platform
+  /vendors/:
+    get:
+      consumes:
+      - application/json
+      description: query vendors
+      parameters:
+      - collectionFormat: multi
+        description: vendor id collection
+        in: query
+        items:
+          type: string
+        name: vendorIDs
+        type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryVendorInfoResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query vendors
+      tags:
+      - vendor
+    post:
+      consumes:
+      - application/json
+      description: update vendors
+      parameters:
+      - description: update vendor info request parameter
+        in: body
+        name: UpdateVendorInfoReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.UpdateVendorInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.UpdateVendorInfoReq'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update vendors
+      tags:
+      - vendor
+  /vendors/available:
+    get:
+      consumes:
+      - application/json
+      description: query available vendors and regions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryAvailableVendorsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query available vendors and regions
+      tags:
+      - vendor
   /workflow/:
     get:
       consumes:
@@ -6716,121 +7541,6 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /zones/:
-    delete:
-      consumes:
-      - application/json
-      description: deleted zones
-      parameters:
-      - description: delete zone request parameter
-        in: body
-        name: CreateZoneReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.DeleteZoneReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.DeleteZoneResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: deleted zones
-      tags:
-      - platform
-    post:
-      consumes:
-      - application/json
-      description: created  zones
-      parameters:
-      - description: create zones request parameter
-        in: body
-        name: CreateZoneReq
-        required: true
-        schema:
-          $ref: '#/definitions/message.CreateZonesReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.CreateZonesResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: created  zones
-      tags:
-      - platform
-  /zones/tree:
-    get:
-      consumes:
-      - application/json
-      description: queries all regions information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/message.QueryZonesTreeResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: queries all regions information
-      tags:
-      - platform
 securityDefinitions:
   ApiKeyAuth:
     in: header

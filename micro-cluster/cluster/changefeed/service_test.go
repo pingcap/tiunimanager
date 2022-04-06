@@ -39,23 +39,29 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "sourceId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "sourceId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
-		{ClusterID: "sourceId", Name: "root", Password: "123455678", RoleType: string(constants.DBUserCDCDataSync)},
+		{ClusterID: "sourceId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, nil).AnyTimes()
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "targetId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "targetId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
-		{ClusterID: "targetId", Name: "root", Password: "123455678", RoleType: string(constants.DBUserCDCDataSync)},
+		{ClusterID: "targetId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, nil).AnyTimes()
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
-		{ClusterID: "errorId", Name: "root", Password: "123455678", RoleType: string(constants.DBUserCDCDataSync)},
+		{ClusterID: "errorId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
@@ -76,17 +82,17 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 			},
 			Downstream: &changefeed.TiDBDownstream{},
 		}, nil).Times(1)
-		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
+		id, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", 0, constants.ClusterRelationStandBy)
 		assert.NoError(t, err)
 		assert.Equal(t, "11111", id)
 		time.Sleep(time.Millisecond * 10)
 	})
 	t.Run("error1", func(t *testing.T) {
-		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "errorId", "targetId", constants.ClusterRelationStandBy)
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "errorId", "targetId", 0, constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 	t.Run("error2", func(t *testing.T) {
-		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "errorId", constants.ClusterRelationStandBy)
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "errorId", 0, constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 	t.Run("error3", func(t *testing.T) {
@@ -97,7 +103,7 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 			Downstream: &changefeed.TiDBDownstream{},
 		}, errors.Error(errors.TIEM_UNRECOGNIZED_ERROR)).AnyTimes()
 
-		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
+		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", 0, constants.ClusterRelationStandBy)
 		assert.Error(t, err)
 	})
 }
@@ -108,23 +114,29 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "sourceId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "sourceId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
-		{ClusterID: "targetId", Name: "root", Password: "123455678", RoleType: string(constants.DBUserCDCDataSync)},
+		{ClusterID: "targetId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, nil).AnyTimes()
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "targetId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "targetId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
-		{ClusterID: "targetId", Name: "root", Password: "123455678", RoleType: string(constants.DBUserCDCDataSync)},
+		{ClusterID: "targetId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, nil).AnyTimes()
-	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{}, []*management.ClusterInstance{
+	clusterRW.EXPECT().GetMeta(gomock.Any(), "errorId").Return(&management.Cluster{
+		Version: "v5.2.2",
+	}, []*management.ClusterInstance{
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.1"}, Ports: []int32{111}},
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
-		{ClusterID: "targetId", Name: "root", Password: "123455678", RoleType: string(constants.DBUserCDCDataSync)},
+		{ClusterID: "targetId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
 	}, errors.Error(errors.TIEM_PARAMETER_INVALID)).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)

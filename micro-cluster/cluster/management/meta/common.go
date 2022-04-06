@@ -42,6 +42,7 @@ import (
 
 const CheckMaxReplicaCmd = "SELECT MAX(replica_count) as max_replica_count FROM information_schema.tiflash_replica;"
 const DefaultTiupTimeOut = 360
+const LongTiupTimeOut = 600
 const DefaultPDMaxCount = 7
 const CheckInstanceStatusTimeout = 30 * 24 * time.Hour
 const CheckInstanceStatusInterval = 10 * time.Second
@@ -99,8 +100,8 @@ func Contain(list interface{}, target interface{}) bool {
 // @Return      if v1 >= v2 return true
 // @Return      error
 func CompareTiDBVersion(v1, v2 string) (bool, error) {
-	v1Nums := strings.Split(v1[1:len(v1)], ".")
-	v2Nums := strings.Split(v2[1:len(v2)], ".")
+	v1Nums := strings.Split(v1[1:], ".")
+	v2Nums := strings.Split(v2[1:], ".")
 
 	if len(v1Nums) != 3 || len(v2Nums) != 3 {
 		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
@@ -194,7 +195,6 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 				return errors.NewError(errors.TIEM_CHECK_PLACEMENT_RULES_ERROR,
 					"enable-placement-rules is false, can not scale out TiFlash, please check it!")
 			}
-			break
 		}
 	}
 
@@ -211,7 +211,7 @@ func CreateSQLLink(ctx context.Context, meta *ClusterMeta) (*sql.DB, error) {
 	}
 	rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
-		rootUser.Name, rootUser.Password, address[0].IP, address[0].Port))
+		rootUser.Name, rootUser.Password.Val, address[0].IP, address[0].Port))
 	if err != nil {
 		return nil, errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
 	}
@@ -274,6 +274,15 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 // When use CDCSyncClone strategy to clone cluster, source cluster must have CDC
 func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMeta, cloneStrategy string) error {
 	if cloneStrategy == string(constants.CDCSyncClone) {
+		masters, err := models.GetClusterReaderWriter().GetMasters(ctx, sourceMeta.Cluster.ID)
+		if err != nil {
+			return err
+		}
+		if len(masters) > 0 {
+			return errors.NewErrorf(errors.TIEM_CLONE_SLAVE_ERROR,
+				"cluster %s is slave, which can not be cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
+		}
+
 		cmp, err := CompareTiDBVersion(sourceMeta.Cluster.Version, "v5.2.2")
 		if err != nil {
 			return err
@@ -358,22 +367,6 @@ func getRetainedPortRange(ctx context.Context) ([]int, error) {
 		return nil, err
 	}
 	return portRange, nil
-}
-
-func GetProductDetail(ctx context.Context, vendor, region, clusterType string) (*structs.ProductDetail, error) {
-	products, err := models.GetProductReaderWriter().QueryProductDetail(ctx, vendor, region, clusterType, constants.ProductStatusOnline, constants.EMInternalProductNo)
-	if err != nil {
-		errMsg := fmt.Sprintf("get product detail failed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
-		framework.LogWithContext(ctx).Errorf("%s, err = %s", errMsg, err.Error())
-		return nil, err
-	}
-	if product, ok := products[clusterType]; !ok {
-		errMsg := fmt.Sprintf("product is not existed, vendor = %s, region = %s, productID = %s", vendor, region, clusterType)
-		framework.LogWithContext(ctx).Error(errMsg)
-		return nil, errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, errMsg)
-	} else {
-		return &product, nil
-	}
 }
 
 // GetRandomString get random password

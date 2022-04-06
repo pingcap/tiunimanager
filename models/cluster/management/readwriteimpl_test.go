@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -251,21 +250,21 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
 		assert.NoError(t, err)
-		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID)
+		err = testRW.ClearClusterPhysically(context.TODO(), cluster.ID, "deleteIt")
 		assert.NoError(t, err)
-		err = testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
+		err = testRW.DB(context.TODO()).First(&Cluster{}, "id = ?", cluster.ID).Error
 		assert.Error(t, err)
-		err = testRW.DB(context.TODO()).Where("cluster_id = ?", cluster.ID).First(&ClusterInstance{}).Error
+		err = testRW.DB(context.TODO()).First(&ClusterInstance{}, "cluster_id = ?", cluster.ID).Error
 		assert.Error(t, err)
-		assert.NoError(t, testRW.DB(context.TODO()).Where("id = ?", cluster2.ID).First(cluster2).Error)
+		assert.NoError(t, testRW.DB(context.TODO()).First(cluster2, "id = ?", cluster2.ID).Error)
 	})
 
-	t.Run("not found", func(t *testing.T) {
-		err := testRW.ClearClusterPhysically(context.TODO(), "whatever")
+	t.Run("parameter", func(t *testing.T) {
+		err := testRW.ClearClusterPhysically(context.TODO(), "whatever", "")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 
-		err = testRW.ClearClusterPhysically(context.TODO(), "")
+		err = testRW.ClearClusterPhysically(context.TODO(), "", "empty")
 		assert.Error(t, err)
 		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
@@ -350,12 +349,13 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 	}
 	err := testRW.UpdateInstance(context.TODO(), instances...)
 	users := []*DBUser{
-		{ClusterID: got.ID, Name: "root", Password: "12222", RoleType: string(constants.Root)},
+		{ClusterID: got.ID, Name: "root", Password: common.PasswordInExpired{Val: "123456"}, RoleType: string(constants.Root)},
 	}
 	err = testRW.UpdateDBUser(context.TODO(), users[0])
 	assert.NoError(t, err)
 
 	gotCluster, gotInstances, gotUsers, err := testRW.GetMeta(context.TODO(), got.ID)
+	fmt.Println(gotUsers[0].Password.UpdateTime)
 	assert.NoError(t, err)
 	assert.Equal(t, gotCluster.Tags, gotCluster.Tags)
 	assert.Equal(t, 2, len(gotInstances))
@@ -587,6 +587,31 @@ func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
 	})
 }
 
+func TestClusterReadWrite_QueryClusters(t *testing.T) {
+	cluster1 := mockCluster("QueryMetas_test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster2 := mockCluster("QueryMetas_test2", "TiDB", constants.ClusterInitializing, []string{"tag2", "tag1"})
+	cluster3 := mockCluster("3test_QueryMetas", "TiDB", constants.ClusterInitializing, []string{"tag1", "tag2"})
+
+	cluster4 := mockCluster("tes_QueryMetas", "Other", constants.ClusterRunning, []string{"tag1", "tag2"})
+	cluster5 := mockCluster("QueryMetas_test5", "TiDB", constants.ClusterRunning, []string{"tag121"})
+	cluster6 := mockCluster("QueryMetas_test6", "TiDB", constants.ClusterRunning, []string{""})
+	cluster7 := mockCluster("QueryMetas_test7", "TiDB", constants.ClusterStopped, []string{"tag1"})
+
+	defer testRW.Delete(context.TODO(), cluster1)
+	defer testRW.Delete(context.TODO(), cluster2)
+	defer testRW.Delete(context.TODO(), cluster3)
+	defer testRW.Delete(context.TODO(), cluster4)
+	defer testRW.Delete(context.TODO(), cluster5)
+	defer testRW.Delete(context.TODO(), cluster6)
+	defer testRW.Delete(context.TODO(), cluster7)
+
+	t.Run("normal", func(t *testing.T) {
+		results, err := testRW.QueryClusters(context.TODO(), "1919")
+		assert.NoError(t, err)
+		assert.Equal(t, len(results), 7)
+	})
+}
+
 func TestClusterReadWrite_QueryMetas(t *testing.T) {
 	cluster1 := mockCluster("QueryMetas_test1", "TiDB", constants.ClusterRunning, []string{"tag1", "tag2"})
 	cluster2 := mockCluster("QueryMetas_test2", "TiDB", constants.ClusterInitializing, []string{"tag2", "tag1"})
@@ -778,6 +803,16 @@ func TestClusterReadWrite_Relations(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(r))
 
+	r, err = testRW.GetMasters(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(r))
+
+	r, err = testRW.GetSlaves(context.TODO(), "test_relation")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(r))
+
+	err = testRW.SwapMasterSlaveRelations(context.TODO(), "test_relation", "333", map[string]string{"test_relation": "task02"})
+	assert.NoError(t, err)
 }
 
 func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
@@ -834,13 +869,59 @@ func TestClusterReadWrite_QueryInstancesByHost(t *testing.T) {
 	})
 }
 
+func TestClusterReadWrite_QueryHostInstances(t *testing.T) {
+	got, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "testQueryInstance",
+		Entity: common.Entity{
+			TenantId: "testQueryInstance",
+		},
+		Tags: []string{"tag1", "tag2"},
+	})
+	defer testRW.Delete(context.TODO(), got.ID)
+
+	instances := []*ClusterInstance{
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRunning)}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got.ID, Type: "PD", Version: "v5.0.0"},
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceFailure)}, ClusterID: got.ID, Type: "CDC", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances...)
+
+	got2, _ := testRW.Create(context.TODO(), &Cluster{
+		Name: "another",
+		Entity: common.Entity{
+			TenantId: "testQueryInstance",
+		},
+		Tags: []string{"tag1", "tag2"},
+	})
+	defer testRW.Delete(context.TODO(), got2.ID)
+
+	instances2 := []*ClusterInstance{
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "TiKV", Version: "v5.0.0"},
+		{HostID: "testHostId3", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got2.ID, Type: "PD", Version: "v5.0.0"},
+		{Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "CDC", Version: "v5.0.0"},
+		{HostID: "testHostId4", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceRecovering)}, ClusterID: got2.ID, Type: "TiDB", Version: "v5.0.0"},
+		{HostID: "testHostId4", Entity: common.Entity{TenantId: "testQueryInstance", Status: string(constants.ClusterInstanceInitializing)}, ClusterID: got2.ID, Type: "TiFlash", Version: "v5.0.0"},
+	}
+	testRW.UpdateInstance(context.TODO(), instances2...)
+
+	t.Run("normal", func(t *testing.T) {
+		items, err := testRW.QueryHostInstances(context.TODO(), []string{"testHostId3"})
+		assert.NoError(t, err)
+		assert.Equal(t, 4, len(items))
+	})
+	t.Run("two hosts", func(t *testing.T) {
+		items, err := testRW.QueryHostInstances(context.TODO(), []string{"testHostId3", "testHostId4"})
+		assert.NoError(t, err)
+		assert.Equal(t, 6, len(items))
+	})
+}
+
 func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 	user := &DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "testName1",
-		Password:                 "ppppppp",
-		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
+		ClusterID: "clusterid",
+		Name:      "testName1",
+		Password:  common.PasswordInExpired{Val: "123456"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	type args struct {
 		ctx  context.Context
@@ -858,6 +939,9 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 			if err := testRW.CreateDBUser(tt.args.ctx, tt.args.user); (err != nil) != tt.wantErr {
 				t.Errorf("CreateDBUser() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
+				got, _ := testRW.GetDBUser(context.TODO(), "clusterid")
+				fmt.Println(got[0].Password.UpdateTime)
+				assert.NotEmpty(t, got[0].Password.UpdateTime)
 				assert.NotEmpty(t, user.ID)
 				assert.NotEmpty(t, user.CreatedAt)
 			}
@@ -867,11 +951,10 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 
 func TestClusterReadWrite_GetDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "testName2",
-		Password:                 "ppppppp",
-		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
+		ClusterID: "clusterid1",
+		Name:      "testName2",
+		Password:  common.PasswordInExpired{Val: "abcd12345"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.DeleteDBUser(context.TODO(), user.ID)
@@ -896,7 +979,8 @@ func TestClusterReadWrite_GetDBUser(t *testing.T) {
 				return
 			}
 			if len(got) != 0 {
-				fmt.Println(got[0].ID, len(got))
+				fmt.Println(got[0].Password)
+				assert.Equal(t, got[0].Password.Val, "abcd12345")
 				assert.NotEmpty(t, got[0].ID)
 				assert.NotEmpty(t, got[0].CreatedAt)
 			}
@@ -906,11 +990,10 @@ func TestClusterReadWrite_GetDBUser(t *testing.T) {
 
 func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "12333",
-		Password:                 "ppppppp",
-		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
+		ClusterID: "clusterid",
+		Name:      "12333",
+		Password:  common.PasswordInExpired{Val: "123456"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	type args struct {
@@ -941,16 +1024,16 @@ func TestClusterReadWrite_DeleteDBUser(t *testing.T) {
 
 func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 	user := DBUser{
-		ClusterID:                "clusterid",
-		Name:                     "update",
-		Password:                 "ppppppp",
-		RoleType:                 string(constants.DBUserBackupRestore),
-		LastPasswordGenerateTime: time.Now(),
+		ClusterID: "clusterid",
+		Name:      "update",
+		Password:  common.PasswordInExpired{Val: "pppppp"},
+		RoleType:  string(constants.DBUserBackupRestore),
 	}
 	testRW.CreateDBUser(context.TODO(), &user)
 	defer testRW.Delete(context.TODO(), user.ClusterID)
 	users, _ := testRW.GetDBUser(context.TODO(), user.ClusterID)
-	users[0].Password = "12345"
+	fmt.Println(users[0].Password)
+	users[0].Password = common.PasswordInExpired{Val: "123456"}
 	type args struct {
 		ctx  context.Context
 		user *DBUser
@@ -968,8 +1051,9 @@ func TestClusterReadWrite_UpdateDBUser(t *testing.T) {
 				t.Errorf("UpdateDBUser() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				got, err := testRW.GetDBUser(tt.args.ctx, tt.args.user.ClusterID)
+				fmt.Println(got[0].Password)
 				assert.NoError(t, err)
-				assert.Equal(t, string(got[0].Password), "12345")
+				assert.Equal(t, got[0].Password.Val, "123456")
 			}
 		})
 	}

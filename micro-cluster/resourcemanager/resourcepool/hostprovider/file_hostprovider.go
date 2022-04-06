@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 
+	cluster_rw "github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
@@ -45,15 +46,20 @@ func (p *FileHostProvider) SetResourceReaderWriter(rw resource.ReaderWriter) {
 
 func (p *FileHostProvider) ValidateZoneInfo(ctx context.Context, host *structs.HostInfo) (err error) {
 	productRW := models.GetProductReaderWriter()
-	_, count, err := productRW.GetZone(ctx, host.Vendor, host.Region, host.AZ)
+	_, zones, _, err := productRW.GetVendor(ctx, host.Vendor)
 	if err != nil {
 		return err
 	}
-	if count == 0 {
-		errMsg := fmt.Sprintf("can not get zone info for host %s %s, with vendor %s, region %s, zone %s", host.HostName, host.IP, host.Vendor, host.Region, host.AZ)
-		return errors.NewError(errors.TIEM_RESOURCE_INVALID_ZONE_INFO, errMsg)
+
+	// any matched
+	for _, zone := range zones {
+		if zone.RegionID == host.Region && zone.ZoneID == host.AZ {
+			return nil
+		}
 	}
-	return nil
+	errMsg := fmt.Sprintf("can not get zone info for host %s %s, with vendor %s, region %s, zone %s", host.HostName, host.IP, host.Vendor, host.Region, host.AZ)
+	return errors.NewError(errors.TIEM_RESOURCE_INVALID_ZONE_INFO, errMsg)
+
 }
 
 func (p *FileHostProvider) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
@@ -82,6 +88,12 @@ func (p *FileHostProvider) QueryHosts(ctx context.Context, location *structs.Loc
 		var host structs.HostInfo
 		dbhost.ToHostInfo(&host)
 		hosts = append(hosts, host)
+	}
+
+	err = p.getInstancesOnHosts(ctx, hosts)
+	if err != nil {
+		// maybe query cluster_instances table failed, return hosts info without instances relationship
+		framework.LogWithContext(ctx).Warnf("get hosts instances failed, %v", err)
 	}
 	return
 }
@@ -223,4 +235,88 @@ func (p *FileHostProvider) GetStocks(ctx context.Context, location *structs.Loca
 		}
 	}
 	return stocks, nil
+}
+
+func (p *FileHostProvider) buildInstancesOnHost(ctx context.Context, items []cluster_rw.HostInstanceItem) map[string]map[string][]string {
+	result := make(map[string]map[string][]string)
+	for i := range items {
+		if instances, ok := result[items[i].HostID]; !ok {
+			result[items[i].HostID] = make(map[string][]string)
+			result[items[i].HostID][items[i].ClusterID] = []string{items[i].Component}
+		} else {
+			instances[items[i].ClusterID] = append(instances[items[i].ClusterID], items[i].Component)
+		}
+	}
+	return result
+}
+
+func (p *FileHostProvider) getInstancesOnHosts(ctx context.Context, hosts []structs.HostInfo) (err error) {
+	clusterRW := models.GetClusterReaderWriter()
+	var hostIds []string
+	for i := range hosts {
+		hostIds = append(hostIds, hosts[i].ID)
+	}
+
+	items, err := clusterRW.QueryHostInstances(ctx, hostIds)
+	if err != nil {
+		return err
+	}
+
+	instances := p.buildInstancesOnHost(ctx, items)
+
+	for i := range hosts {
+		if hostInstances, ok := instances[hosts[i].ID]; ok {
+			hosts[i].Instances = hostInstances
+		} else {
+			hosts[i].Instances = make(map[string][]string)
+		}
+	}
+
+	return nil
+}
+
+func (p *FileHostProvider) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
+	if host.ID == "" {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "update host failed without host id")
+	}
+	if host.UsedCpuCores != 0 || host.UsedMemory != 0 {
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "used cpu cores or used memory field should not be set while update host %s", host.ID)
+	}
+	if host.CpuCores < 0 || host.Memory < 0 {
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "input cpu cores(%d) or memory(%d) is invalid to update host %s", host.CpuCores, host.Memory, host.ID)
+	}
+	var dbHost resourcepool.Host
+	err = dbHost.ConstructFromHostInfo(&host)
+	if err != nil {
+		return err
+	}
+	dbHost.ID = host.ID
+	return p.rw.UpdateHostInfo(ctx, dbHost)
+}
+
+func (p *FileHostProvider) CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error) {
+	var dbDisks []resourcepool.Disk
+	for i := range disks {
+		if err = disks[i].ValidateDisk(hostId, ""); err != nil {
+			return nil, err
+		}
+		var dbDisk resourcepool.Disk
+		dbDisk.ConstructFromDiskInfo(&disks[i])
+		dbDisks = append(dbDisks, dbDisk)
+	}
+	return p.rw.CreateDisks(ctx, hostId, dbDisks)
+}
+
+func (p *FileHostProvider) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	return p.rw.DeleteDisks(ctx, diskIds)
+}
+
+func (p *FileHostProvider) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
+	if disk.ID == "" {
+		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "update disk failed without disk id")
+	}
+	var dbDisk resourcepool.Disk
+	dbDisk.ConstructFromDiskInfo(&disk)
+	dbDisk.ID = disk.ID
+	return p.rw.UpdateDisk(ctx, dbDisk)
 }

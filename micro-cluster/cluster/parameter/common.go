@@ -30,6 +30,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/library/spec"
+
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
@@ -141,6 +143,11 @@ const (
 	Reboot
 )
 
+type GlobalComponentConfig struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	ConfigMap            map[string]interface{}
+}
+
 // ValidateRange
 // @Description: validate parameter value by range field
 // @Parameter param
@@ -152,6 +159,10 @@ func ValidateRange(param *ModifyClusterParameterInfo, hasModify bool) bool {
 	}
 	// If it is a modified parameter workflow, the value empty is skipped
 	if hasModify && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+		return true
+	}
+	// If you are modifying a parameter group and it is a modify apply parameter type with a null value, skip directly
+	if !hasModify && param.HasApply == int(ModifyApply) && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 		return true
 	}
 	switch param.Type {

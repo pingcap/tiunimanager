@@ -29,7 +29,9 @@ type WorkFlowStatus string
 const (
 	WorkFlowStatusInitializing = "Initializing"
 	WorkFlowStatusProcessing   = "Processing"
+	WorkFlowStatusCanceling    = "Canceling"
 	WorkFlowStatusFinished     = "Finished"
 	WorkFlowStatusError        = "Error"
 	WorkFlowStatusCanceled     = "Canceled"
+	WorkFlowStatusStopped      = "Stopped"
 )

@@ -304,23 +304,83 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
 	}
 
-	pgs := make([]*parameter.ClusterParameterMapping, len(params))
-	for i, param := range params {
-		value := ""
-		if !hasEmptyValue {
-			value = param.DefaultValue
-		}
-		realValue := structs.ParameterRealValue{ClusterValue: value}
-		b, err := json.Marshal(realValue)
+	// Define the list of prepared component IDs
+	preCompIDs := []constants.EMProductComponentIDType{constants.ComponentIDTiDB, constants.ComponentIDTiKV,
+		constants.ComponentIDPD, constants.ComponentIDCDC, constants.ComponentIDTiFlash}
+	// Define the list of component IDs that exist
+	existsCompIDs := make([]string, 0)
+
+	// Define modify param grouping by instance type
+	modifyParamContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
+	// Defines the parameters for storing components that are not included in the current cluster
+	otherParamContainer := make(map[interface{}][]*ModifyClusterParameterInfo)
+
+	// Define the cluster mapping parameter object used to store
+	pgs := make([]*parameter.ClusterParameterMapping, 0)
+
+	// If hasEmptyValue is true, get the running value of the cluster by parameter inspection
+	if hasEmptyValue {
+		// Fill by cluster parameter inspect
+		clusterMeta, err := meta.Get(ctx, req.ClusterID)
 		if err != nil {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+			return resp, err
 		}
-		pgs[i] = &parameter.ClusterParameterMapping{
-			ClusterID:   req.ClusterID,
-			ParameterID: param.ID,
-			RealValue:   string(b),
+		// Determine which deployment components are included in the takeover cluster
+		for _, compID := range preCompIDs {
+			if _, ok := clusterMeta.Instances[string(compID)]; ok {
+				existsCompIDs = append(existsCompIDs, string(compID))
+			}
+		}
+
+		// Parameter grouping based on existing components
+		existsCompIDStr := strings.Join(existsCompIDs, ",")
+		for _, param := range params {
+			clusterParamInfo := &ModifyClusterParameterInfo{
+				ParamId:      param.ID,
+				Category:     param.Category,
+				Name:         param.Name,
+				InstanceType: param.InstanceType,
+				Type:         param.Type,
+				RealValue:    structs.ParameterRealValue{ClusterValue: ""},
+			}
+			if strings.Contains(existsCompIDStr, param.InstanceType) {
+				putParameterContainer(modifyParamContainer, param.InstanceType, clusterParamInfo)
+			} else {
+				putParameterContainer(otherParamContainer, param.InstanceType, clusterParamInfo)
+			}
+		}
+
+		// Iterate through filled patrol parameter values
+		for compID, modifyParams := range modifyParamContainer {
+			if err := fillParameter(ctx, compID.(string), clusterMeta, modifyParams); err != nil {
+				return resp, err
+			}
+			// Adding cluster parameter mapping object data
+			for _, param := range modifyParams {
+				if err = appendClusterParamMapping(req.ClusterID, param.ParamId, param.RealValue, pgs); err != nil {
+					return resp, err
+				}
+			}
+		}
+
+		// Add cluster parameters other mapped object relationships
+		for _, modifyParams := range otherParamContainer {
+			for _, param := range modifyParams {
+				if err = appendClusterParamMapping(req.ClusterID, param.ParamId, param.RealValue, pgs); err != nil {
+					return resp, err
+				}
+			}
+		}
+	} else {
+		// Fill by default with the parameter group
+		for _, param := range params {
+			realValue := structs.ParameterRealValue{ClusterValue: param.DefaultValue}
+			if err = appendClusterParamMapping(req.ClusterID, param.ID, realValue, pgs); err != nil {
+				return resp, err
+			}
 		}
 	}
+	// Persist cluster parameter mappings record.
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
@@ -331,6 +391,26 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 		ParamGroupID: req.ParamGroupId,
 	}
 	return resp, nil
+}
+
+// appendClusterParamMapping
+// @Description: append cluster parameter mappings
+// @Parameter clusterId
+// @Parameter paramId
+// @Parameter realValue
+// @Parameter pgs
+// @return error
+func appendClusterParamMapping(clusterId, paramId string, realValue structs.ParameterRealValue, pgs []*parameter.ClusterParameterMapping) error {
+	b, err := json.Marshal(realValue)
+	if err != nil {
+		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
+	}
+	pgs = append(pgs, &parameter.ClusterParameterMapping{ // nolint
+		ClusterID:   clusterId,
+		ParameterID: paramId,
+		RealValue:   string(b),
+	})
+	return nil
 }
 
 func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectParametersReq) (resp cluster.InspectParametersResp, err error) {
@@ -421,10 +501,10 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 		return resp, err
 	}
 	for comp, compParams := range compContainer {
+		// Get component cluster instances
+		instances := clusterMeta.Instances[comp]
 		switch comp {
 		case string(constants.ComponentIDTiDB):
-			// Get tidb cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDTiDB)]
 			// Iterating over instances to get connection information
 			for _, instance := range instances {
 				inspectParams, err := inspectTiDBComponentInstance(ctx, instance, compParams)
@@ -434,8 +514,6 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 				inspectAllParameters = append(inspectAllParameters, inspectParams)
 			}
 		case string(constants.ComponentIDTiKV):
-			// Get tikv cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDTiKV)]
 			for _, instance := range instances {
 				inspectParams, err := inspectTiKVComponentInstance(ctx, instance, compParams)
 				if err != nil {
@@ -444,8 +522,6 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 				inspectAllParameters = append(inspectAllParameters, inspectParams)
 			}
 		case string(constants.ComponentIDPD):
-			// Get pd cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDPD)]
 			for _, instance := range instances {
 				inspectParams, err := inspectPDComponentInstance(ctx, instance, compParams)
 				if err != nil {
@@ -453,19 +529,7 @@ func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.Insp
 				}
 				inspectAllParameters = append(inspectAllParameters, inspectParams)
 			}
-		case string(constants.ComponentIDCDC):
-			// Get cdc cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDCDC)]
-			for _, instance := range instances {
-				inspectParams, err := inspectInstanceByConfig(ctx, instance, compParams)
-				if err != nil {
-					return resp, err
-				}
-				inspectAllParameters = append(inspectAllParameters, inspectParams)
-			}
-		case string(constants.ComponentIDTiFlash):
-			// Get tiflash cluster instances
-			instances := clusterMeta.Instances[string(constants.ComponentIDTiFlash)]
+		case string(constants.ComponentIDCDC), string(constants.ComponentIDTiFlash):
 			for _, instance := range instances {
 				inspectParams, err := inspectInstanceByConfig(ctx, instance, compParams)
 				if err != nil {
@@ -606,6 +670,7 @@ func inspectInstancesByApiAndConfig(ctx context.Context, instance *management.Cl
 	inspectParameterInfos := make([]cluster.InspectParameterInfo, 0)
 
 	// Inspect api parameter
+	framework.LogWithContext(ctx).Infof("request %s api show config response: %v", instance.Type, string(apiContent))
 	inspectApiParams, instDiffParams, err := inspectApiParameter(ctx, instance, apiContent, compParams)
 	if err != nil {
 		return inspectParams, err
@@ -685,17 +750,9 @@ func inspectApiParameter(ctx context.Context, instance *management.ClusterInstan
 // @return err
 func inspectConfigParameter(ctx context.Context, instance *management.ClusterInstance, instDiffParams []structs.ClusterParameterInfo) (inspectParams []cluster.InspectParameterInfo, err error) {
 	inspectParams = make([]cluster.InspectParameterInfo, 0)
-
-	// Calling the tiup pull interface
-	configPath := fmt.Sprintf("%s/conf/%s.toml", instance.GetDeployDir(), strings.ToLower(instance.Type))
-	framework.LogWithContext(ctx).Debugf("current instance type %s config path is %s", instance.Type, configPath)
-
-	// Call the pull command to get the instance configuration
-	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
-	configContentStr, err := deployment.M.Pull(ctx, deployment.TiUPComponentTypeCluster, instance.ClusterID, configPath,
-		tiupHomeForTidb, []string{"-N", instance.HostIP[0]}, 0)
+	// pull config
+	configContentStr, err := pullConfig(ctx, instance.ClusterID, instance.Type, instance.GetDeployDir(), instance.HostIP[0])
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("call secondparty tiup pull %s config err = %s", instance.Type, err.Error())
 		return inspectParams, err
 	}
 	reqConfigParams := map[string]interface{}{}
@@ -724,6 +781,31 @@ func inspectConfigParameter(ctx context.Context, instance *management.ClusterIns
 	return inspectParams, nil
 }
 
+// pullConfig
+// @Description: pull component config by tiup
+// @Parameter ctx
+// @Parameter clusterID
+// @Parameter instanceType
+// @Parameter deployDir
+// @Parameter remoteHostIP
+// @return string
+// @return error
+func pullConfig(ctx context.Context, clusterID, instanceType, deployDir, remoteHostIP string) (string, error) {
+	// Calling the tiup pull interface
+	configPath := fmt.Sprintf("%s/conf/%s.toml", deployDir, strings.ToLower(instanceType))
+	framework.LogWithContext(ctx).Debugf("current instance type %s config path is %s", instanceType, configPath)
+
+	// Call the pull command to get the instance configuration
+	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
+	configContentStr, err := deployment.M.Pull(ctx, deployment.TiUPComponentTypeCluster, clusterID, configPath,
+		tiupHomeForTidb, []string{"-N", remoteHostIP}, 0)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call secondparty tiup pull %s config err = %s", instanceType, err.Error())
+		return "", err
+	}
+	return configContentStr, nil
+}
+
 // inspectParameterValue
 // @Description: inspect parameter value
 // @Parameter ctx
@@ -745,7 +827,7 @@ func inspectParameterValue(ctx context.Context, flattenedParams map[string]strin
 
 	// If the value is numeric, inst value if it is with units, then convert the units
 	if param.Type == int(Integer) || param.Type == int(Float) {
-		for srcUnit, _ := range units {
+		for srcUnit := range units {
 			if strings.HasSuffix(instValue, srcUnit) {
 				if cvtInstValue, ok := convertUnitValue([]string{srcUnit}, instValue); ok {
 					instValue = fmt.Sprintf("%d", cvtInstValue)

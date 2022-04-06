@@ -19,6 +19,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
@@ -59,11 +60,19 @@ func (m *ResourceManager) GetManagement() *management.Management {
 }
 
 func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo, condition *structs.ImportCondition) (flowIds []string, hostIds []string, err error) {
+	ok := framework.CheckAndSetInEMTiupProcess()
+	if !ok {
+		errMsg := "a import/delete hosts workflow is running, please retry later"
+		framework.LogWithContext(ctx).Errorln(errMsg)
+		return nil, nil, errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
+	}
 	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts, condition)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("import hosts %v in batch failed from db service: %v", hosts, err)
+		framework.UnsetInEmTiupProcess()
 	} else {
 		framework.LogWithContext(ctx).Infof("import %d hosts in batch %v succeed from db service.", len(hosts), flowIds)
+		// if err is nil, call framework.UnsetInEmTiupProcess() after async background import flows done
 	}
 
 	return
@@ -81,11 +90,19 @@ func (m *ResourceManager) QueryHosts(ctx context.Context, location *structs.Loca
 }
 
 func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
+	ok := framework.CheckAndSetInEMTiupProcess()
+	if !ok {
+		errMsg := "a import/delete hosts workflow is running, please retry later"
+		framework.LogWithContext(ctx).Errorln(errMsg)
+		return nil, errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
+	}
 	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds, force)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("delete %d hosts %v in failed from db service: %v", len(hostIds), hostIds, err)
+		framework.LogWithContext(ctx).Warnf("delete %d hosts %v in batch failed from db service: %v", len(hostIds), hostIds, err)
+		framework.UnsetInEmTiupProcess()
 	} else {
 		framework.LogWithContext(ctx).Infof("delete %d hosts %v in batch %v succeed from db service.", len(hostIds), hostIds, flowIds)
+		// if err is nil, call framework.UnsetInEmTiupProcess() after async background delete flows done
 	}
 
 	return
@@ -130,6 +147,50 @@ func (m *ResourceManager) GetStocks(ctx context.Context, location *structs.Locat
 		framework.LogWithContext(ctx).Warnf("get stocks on location %v, host filter %v, disk filter %v failed from db service: %v", *location, *hostFilter, *diskFilter, err)
 	} else {
 		framework.LogWithContext(ctx).Infof("get stocks on location %v, host filter %v, disk filter %v succeed from db service.", *location, *hostFilter, *diskFilter)
+	}
+
+	return
+}
+
+func (m *ResourceManager) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
+	err = m.resourcePool.UpdateHostInfo(ctx, host)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update host %s failed from db service: %v", host.ID, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("update host %s succeed from db service.", host.ID)
+	}
+
+	return
+}
+
+func (m *ResourceManager) CreateDisks(ctx context.Context, hostId string, disks []structs.DiskInfo) (diskIds []string, err error) {
+	diskIds, err = m.resourcePool.CreateDisks(ctx, hostId, disks)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("create %d disks for host %s failed from db service: %v", len(disks), hostId, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("create %d disks for host %s succeed from db service.", len(disks), hostId)
+	}
+
+	return
+}
+
+func (m *ResourceManager) DeleteDisks(ctx context.Context, diskIds []string) (err error) {
+	err = m.resourcePool.DeleteDisks(ctx, diskIds)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("delete %d disks failed from db service: %v", len(diskIds), err)
+	} else {
+		framework.LogWithContext(ctx).Infof("delete %d disks succeed from db service.", len(diskIds))
+	}
+
+	return
+}
+
+func (m *ResourceManager) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
+	err = m.resourcePool.UpdateDisk(ctx, disk)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update disk %s failed from db service: %v", disk.ID, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("update disk %s succeed from db service.", disk.ID)
 	}
 
 	return

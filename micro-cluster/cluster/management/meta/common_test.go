@@ -28,8 +28,10 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/platform/config"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -53,6 +55,9 @@ func TestContain(t *testing.T) {
 
 	got = Contain(hosts, "127.0.0.3")
 	assert.Equal(t, got, false)
+
+	got = Contain("127.0.0.1,127.0.0.2,127.0.0.3", "127.0.0.2")
+	assert.Equal(t, got, true)
 }
 
 func TestCompareTiDBVersion(t *testing.T) {
@@ -122,6 +127,10 @@ func TestScaleOutPreCheck(t *testing.T) {
 			{
 				Type: "TiFlash",
 			},
+			{
+				Count: 2,
+				Type: "PD",
+			},
 		}
 
 		err := ScaleOutPreCheck(ctx.TODO(), meta, computes)
@@ -170,47 +179,8 @@ func TestScaleOutPreCheck(t *testing.T) {
 func TestScaleInPreCheck(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-
-	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-		"TiDB": {
-			Versions: map[string]structs.ProductVersion{
-				"v5.2.2": {
-					Version: "v5.2.2",
-					Arch: map[string][]structs.ProductComponentProperty{
-						"x86_64": {
-							{
-								ID:                      "TiDB",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "TiKV",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "PD",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{1, 3, 5, 7},
-							},
-							{
-								ID:                      "TiFlash",
-								MinInstance:             0,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil).AnyTimes()
 
 	t.Run("parameter invalid", func(t *testing.T) {
 		err := ScaleInPreCheck(ctx.TODO(), nil, nil)
@@ -230,16 +200,18 @@ func TestScaleInPreCheck(t *testing.T) {
 			string(constants.Root): {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 		}}
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		instance := &management.ClusterInstance{Type: string(constants.ComponentIDTiFlash)}
 		err := ScaleInPreCheck(ctx.TODO(), meta, instance)
 		assert.Error(t, err)
 	})
 
 	t.Run("component required error", func(t *testing.T) {
+		mockQueryTiDBFromDB(productRW.EXPECT())
 		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", CpuArchitecture: "x86_64"}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiDB): {
 				{
@@ -252,7 +224,7 @@ func TestScaleInPreCheck(t *testing.T) {
 			string(constants.Root): {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 		}}
@@ -262,6 +234,8 @@ func TestScaleInPreCheck(t *testing.T) {
 	})
 
 	t.Run("check copies error", func(t *testing.T) {
+		mockQueryTiDBFromDB(productRW.EXPECT())
+
 		meta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.0.0", Copies: 3}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDTiKV): {
 				{
@@ -279,7 +253,7 @@ func TestScaleInPreCheck(t *testing.T) {
 			string(constants.Root): {
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "12345678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 		}}
@@ -291,6 +265,13 @@ func TestScaleInPreCheck(t *testing.T) {
 }
 
 func TestClonePreCheck(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(rw)
+	rw.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(make([]*management.ClusterRelation, 0), nil).AnyTimes()
+
 	t.Run("normal", func(t *testing.T) {
 		sourceMeta := &ClusterMeta{Cluster: &management.Cluster{Type: "TiDB", Version: "v5.2.2", Copies: 1}, Instances: map[string][]*management.ClusterInstance{
 			string(constants.ComponentIDCDC): {
@@ -523,7 +504,7 @@ func Test_getRetainedPortRange(t *testing.T) {
 		}, nil).Times(1)
 		portRange, err := getRetainedPortRange(context.TODO())
 		assert.NoError(t, err)
-		assert.Equal(t, []int{10,11}, portRange)
+		assert.Equal(t, []int{10, 11}, portRange)
 	})
 	t.Run("error", func(t *testing.T) {
 		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
@@ -566,4 +547,150 @@ func TestGetRandomString(t *testing.T) {
 			fmt.Println(got)
 		})
 	}
+}
+func mockQueryTiDBFromDBAnyTimes(expect *mock_product.MockReaderWriterMockRecorder) {
+	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
+		ProductID:   "TiDB",
+		ProductName: "tidb",
+	}, []*product.ProductVersion{
+		{
+			ProductID: "TiDB",
+			Arch:      "x86_64",
+			Version:   "v5.2.2",
+		}, {
+			ProductID: "TiDB",
+			Arch:      "ARM64",
+			Version:   "v5.2.2",
+		}, {
+			ProductID: "TiDB",
+			Arch:      "x86_64",
+			Version:   "v5.3.0",
+		},
+	}, []*product.ProductComponentInfo{
+		{
+			ProductID:               "TiDB",
+			ComponentID:             "TiDB",
+			ComponentName:           "TiDB",
+			PurposeType:             "Compute",
+			StartPort:               8,
+			EndPort:                 16,
+			MaxPort:                 4,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{},
+		},
+		{
+			ProductID:               "TiDB",
+			ComponentID:             "TiKV",
+			ComponentName:           "TiKV",
+			PurposeType:             "Storage",
+			StartPort:               1,
+			EndPort:                 2,
+			MaxPort:                 2,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "PD",
+			ComponentName:           "PD",
+			PurposeType:             "Schedule",
+			StartPort:               23,
+			EndPort:                 413,
+			MaxPort:                 22,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{1, 3, 5, 7},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "CDC",
+			ComponentName:           "CDC",
+			PurposeType:             "Compute",
+			StartPort:               23,
+			EndPort:                 43,
+			MaxPort:                 2,
+			MinInstance:             0,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{},
+		},
+	}, nil).AnyTimes()
+}
+
+func mockQueryTiDBFromDB(expect *mock_product.MockReaderWriterMockRecorder) {
+	expect.GetProduct(gomock.Any(), gomock.Any()).Return(&product.ProductInfo{
+		ProductID:   "TiDB",
+		ProductName: "tidb",
+	}, []*product.ProductVersion{
+		{
+			ProductID: "TiDB",
+			Arch:      "x86_64",
+			Version:   "v5.2.2",
+		}, {
+			ProductID: "TiDB",
+			Arch:      "ARM64",
+			Version:   "v5.2.2",
+		}, {
+			ProductID: "TiDB",
+			Arch:      "x86_64",
+			Version:   "v5.3.0",
+		},
+	}, []*product.ProductComponentInfo{
+		{
+			ProductID:               "TiDB",
+			ComponentID:             "TiDB",
+			ComponentName:           "TiDB",
+			PurposeType:             "Compute",
+			StartPort:               8,
+			EndPort:                 16,
+			MaxPort:                 4,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{},
+		},
+		{
+			ProductID:               "TiDB",
+			ComponentID:             "TiKV",
+			ComponentName:           "TiKV",
+			PurposeType:             "Storage",
+			StartPort:               1,
+			EndPort:                 2,
+			MaxPort:                 2,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "PD",
+			ComponentName:           "PD",
+			PurposeType:             "Schedule",
+			StartPort:               23,
+			EndPort:                 413,
+			MaxPort:                 22,
+			MinInstance:             1,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{1, 3, 5, 7},
+		}, {
+			ProductID:               "TiDB",
+			ComponentID:             "CDC",
+			ComponentName:           "CDC",
+			PurposeType:             "Compute",
+			StartPort:               23,
+			EndPort:                 43,
+			MaxPort:                 2,
+			MinInstance:             0,
+			MaxInstance:             128,
+			SuggestedInstancesCount: []int32{},
+		},
+	}, nil).Times(1)
+}
+
+func TestCreateSQLLink(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		_, err := CreateSQLLink(context.TODO(), nil)
+		assert.Error(t, err)
+	})
+	t.Run("empty", func(t *testing.T) {
+		_, err := CreateSQLLink(context.TODO(), &ClusterMeta{})
+		assert.Error(t, err)
+	})
 }

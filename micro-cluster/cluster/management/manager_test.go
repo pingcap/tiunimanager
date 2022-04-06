@@ -19,10 +19,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/message"
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
+	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
+
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
@@ -43,7 +47,6 @@ import (
 	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_upgrade "github.com/pingcap-inc/tiem/test/mockmodels/mockupgrade"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/pkg/sftp"
@@ -305,45 +308,9 @@ func TestManager_ScaleIn(t *testing.T) {
 		{Entity: common.Entity{ID: "instance02"}, Type: "TiFlash"},
 	}, make([]*management.DBUser, 0), nil).AnyTimes()
 
-	productRW := mock_product.NewMockProductReadWriterInterface(ctrl)
+	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
-	productRW.EXPECT().QueryProductDetail(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]structs.ProductDetail{
-		"TiDB": {
-			Versions: map[string]structs.ProductVersion{
-				"v5.2.2": {
-					Version: "v5.2.2",
-					Arch: map[string][]structs.ProductComponentProperty{
-						"x86_64": {
-							{
-								ID:                      "TiDB",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "TiKV",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-							{
-								ID:                      "PD",
-								MinInstance:             1,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{1, 3, 5, 7},
-							},
-							{
-								ID:                      "TiFlash",
-								MinInstance:             0,
-								MaxInstance:             8,
-								SuggestedInstancesCount: []int32{},
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil).AnyTimes()
+	mockQueryTiDBFromDBAnyTimes(productRW.EXPECT())
 
 	workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 	workflow.MockWorkFlowService(workflowService)
@@ -466,7 +433,7 @@ func TestManager_Clone(t *testing.T) {
 			{
 				ClusterID: "111",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
 			},
 		}, nil).AnyTimes()
@@ -1012,8 +979,20 @@ func TestManager_DetailCluster(t *testing.T) {
 			{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678"},
 				RoleType:  string(constants.Root),
+			},
+		}, nil)
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
+			},
+		}, nil)
+		clusterRW.EXPECT().GetSlaves(gomock.Any(), gomock.Any()).Return([]*management.ClusterRelation{
+			{
+				SubjectClusterID: "01",
+				ObjectClusterID:  "02",
 			},
 		}, nil)
 		got, err := manager.DetailCluster(context.TODO(), cluster.QueryClusterDetailReq{
@@ -1643,62 +1622,134 @@ func TestManager_QueryProductUpdatePath(t *testing.T) {
 	defer ctrl.Finish()
 
 	manager := Manager{}
-	t.Run("normal", func(t *testing.T) {
-		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-		models.SetClusterReaderWriter(clusterRW)
-
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
-			Version: "v5.2.2",
-		}, []*management.ClusterInstance{
-			{},
-			{},
-		}, make([]*management.DBUser, 0), nil)
-
-		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
-		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return([]*upgrade.ProductUpgradePath{
-			{
-				Type:       "in-place",
-				SrcVersion: "v5.2",
-				DstVersion: "v5.3",
-			},
-			{
-				Type:       "in-place",
-				SrcVersion: "v5.2",
-				DstVersion: "v5.4",
-			},
-		}, nil)
-		models.SetUpgradeReaderWriter(mockUpgrade)
-
-		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
-		assert.NoError(t, err)
-	})
 	t.Run("not found meta", func(t *testing.T) {
 		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 		models.SetClusterReaderWriter(clusterRW)
 		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(nil, nil, nil, errors.New(""))
 
-		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
-			ClusterID: "111",
-		})
-		assert.Error(t, err)
-	})
-	t.Run("not found path", func(t *testing.T) {
-		clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
-		models.SetClusterReaderWriter(clusterRW)
-
-		clusterRW.EXPECT().GetMeta(gomock.Any(), "111").Return(&management.Cluster{
-			Version: "v5.2.2",
-		}, []*management.ClusterInstance{
-			{},
-			{},
-		}, make([]*management.DBUser, 0), nil)
-
-		mockUpgrade := mock_upgrade.NewMockReaderWriter(ctrl)
-		mockUpgrade.EXPECT().QueryBySrcVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
-		models.SetUpgradeReaderWriter(mockUpgrade)
-
 		_, err := manager.QueryProductUpdatePath(context.TODO(), "111")
 		assert.Error(t, err)
+	})
+}
+
+func Test_generatePaths(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		resp := message.QueryProductsInfoResp{
+			Products: []structs.ProductConfigInfo{
+				{
+					ProductID:   "TiDB",
+					ProductName: "TiDB",
+					Versions: []structs.SpecificVersionProduct{
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.0.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.1.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.2.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.2.2",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.2.3",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.3.0",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.3.1",
+						},
+						{
+							ProductID: "TiDB",
+							Arch:      "X86_64",
+							Version:   "v5.4.0",
+						},
+					},
+				},
+			},
+		}
+		paths := generatePaths(context.TODO(), resp, "v5.2.2", "X86_64")
+		assert.Equal(t, 1, len(paths))
+		assert.Equal(t, string(constants.UpgradeTypeInPlace), paths[0].UpgradeType)
+		assert.Equal(t, 4, len(paths[0].Versions))
+		assert.True(t, meta.Contain(paths[0].Versions, "v5.2.3"))
+		assert.True(t, meta.Contain(paths[0].Versions, "v5.3.0"))
+		assert.True(t, meta.Contain(paths[0].Versions, "v5.3.1"))
+		assert.True(t, meta.Contain(paths[0].Versions, "v5.4.0"))
+		assert.Equal(t, 2, len(paths[0].UpgradeWays))
+	})
+	t.Run("wrong product id", func(t *testing.T) {
+		resp := message.QueryProductsInfoResp{
+			Products: []structs.ProductConfigInfo{
+				{
+					ProductID:   "DM",
+					ProductName: "DM",
+					Versions: []structs.SpecificVersionProduct{
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.0.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.1.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.2.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.2.2",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.2.3",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.3.0",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.3.1",
+						},
+						{
+							ProductID: "DM",
+							Arch:      "X86_64",
+							Version:   "v5.4.0",
+						},
+					},
+				},
+			},
+		}
+		paths := generatePaths(context.TODO(), resp, "v5.2.2", "X86_64")
+		assert.Equal(t, 1, len(paths))
+		assert.Equal(t, string(constants.UpgradeTypeInPlace), paths[0].UpgradeType)
+		assert.Equal(t, 0, len(paths[0].Versions))
+		assert.Equal(t, 2, len(paths[0].UpgradeWays))
 	})
 }
 
@@ -1740,113 +1791,375 @@ func Test_getMinorVersion(t *testing.T) {
 }
 
 func Test_compareConfigDifference(t *testing.T) {
-	cParamInfos := []structs.ClusterParameterInfo{
-		{
+	t.Run("normal", func(t *testing.T) {
+		cParamInfos := []structs.ClusterParameterInfo{
+			{
+				ParamId:      "1",
+				Category:     "basic1",
+				Name:         "param1",
+				InstanceType: "tidb",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v1_real",
+				},
+				Type:        1,
+				Unit:        "MB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 100"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param1 desc",
+			},
+			{
+				ParamId:      "2",
+				Category:     "basic2",
+				Name:         "param2",
+				InstanceType: "tikv",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v2",
+				},
+				Type:        2,
+				Unit:        "GB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 1000"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param2 desc",
+			},
+			{
+				ParamId:      "3",
+				Category:     "basic3",
+				Name:         "param3",
+				InstanceType: "pd",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "",
+				},
+				Type:        3,
+				Unit:        "KB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 10000"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param3 desc",
+			},
+			{
+				ParamId:      "4",
+				Category:     "basic4",
+				Name:         "param4",
+				InstanceType: "tiflash",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v4_real",
+				},
+				Type:        4,
+				Unit:        "KB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 100000"},
+				RangeType:   1,
+				HasApply:    int(parameter.DirectApply),
+				Description: "param4 desc",
+			},
+			{
+				ParamId:      "5",
+				Category:     "basic5",
+				Name:         "param5",
+				InstanceType: "tidb",
+				RealValue: structs.ParameterRealValue{
+					ClusterValue: "v5_real",
+				},
+				Type:        5,
+				Unit:        "KB",
+				UnitOptions: []string{"KB", "MB", "GB"},
+				Range:       []string{"1, 100000"},
+				RangeType:   1,
+				HasApply:    int(parameter.ModifyApply),
+				Description: "param5 desc",
+			},
+		}
+
+		pgParamInfos := []structs.ParameterGroupParameterInfo{
+			{
+				ID:           "1",
+				Category:     "basic1",
+				Name:         "param1",
+				InstanceType: "tidb",
+				DefaultValue: "v1new",
+				Type:         1,
+				Unit:         "MB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 100"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param1 desc",
+			},
+			{
+				ID:           "2",
+				Category:     "basic2",
+				Name:         "param2",
+				InstanceType: "tikv",
+				DefaultValue: "v2",
+				Type:         2,
+				Unit:         "GB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 1000"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param2 desc",
+			},
+			{
+				ID:           "3",
+				Category:     "basic3",
+				Name:         "param3",
+				InstanceType: "pd",
+				DefaultValue: " ",
+				Type:         3,
+				Unit:         "KB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 10000"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param3 desc",
+			},
+			{
+				ID:           "4",
+				Category:     "basic4",
+				Name:         "param4",
+				InstanceType: "tiflash",
+				DefaultValue: "v4new",
+				Type:         4,
+				Unit:         "KB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 100000"},
+				RangeType:    1,
+				HasApply:     int(parameter.DirectApply),
+				Description:  "param4 desc",
+			},
+			{
+				ID:           "5",
+				Category:     "basic5",
+				Name:         "param5",
+				InstanceType: "tidb",
+				DefaultValue: "v5new",
+				Type:         5,
+				Unit:         "KB",
+				UnitOptions:  []string{"KB", "MB", "GB"},
+				Range:        []string{"1, 100000"},
+				RangeType:    1,
+				HasApply:     int(parameter.ModifyApply),
+				Description:  "param5 desc",
+			},
+		}
+
+		resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos, []string{"tidb", "tikv", "pd"})
+		assert.Equal(t, 1, len(resp))
+		item := structs.ProductUpgradeVersionConfigDiffItem{
 			ParamId:      "1",
 			Category:     "basic1",
 			Name:         "param1",
 			InstanceType: "tidb",
-			RealValue: structs.ParameterRealValue{
-				ClusterValue: "v1_real",
-			},
-			Type:        1,
-			Unit:        "MB",
-			UnitOptions: []string{"KB", "MB", "GB"},
-			Range:       []string{"1, 100"},
-			RangeType:   1,
-			Description: "param1 desc",
-		},
-		{
-			ParamId:      "2",
-			Category:     "basic2",
-			Name:         "param2",
-			InstanceType: "tikv",
-			RealValue: structs.ParameterRealValue{
-				ClusterValue: "v2",
-			},
-			Type:        2,
-			Unit:        "GB",
-			UnitOptions: []string{"KB", "MB", "GB"},
-			Range:       []string{"1, 1000"},
-			RangeType:   1,
-			Description: "param2 desc",
-		},
-		{
-			ParamId:      "3",
-			Category:     "basic3",
-			Name:         "param3",
-			InstanceType: "pd",
-			RealValue: structs.ParameterRealValue{
-				ClusterValue: "",
-			},
-			Type:        3,
-			Unit:        "KB",
-			UnitOptions: []string{"KB", "MB", "GB"},
-			Range:       []string{"1, 10000"},
-			RangeType:   1,
-			Description: "param3 desc",
-		},
-	}
-
-	pgParamInfos := []structs.ParameterGroupParameterInfo{
-		{
-			ID:           "1",
-			Category:     "basic1",
-			Name:         "param1",
-			InstanceType: "tidb",
-			DefaultValue: "v1new",
+			CurrentValue: "v1_real",
+			SuggestValue: "v1new",
 			Type:         1,
 			Unit:         "MB",
 			UnitOptions:  []string{"KB", "MB", "GB"},
 			Range:        []string{"1, 100"},
 			RangeType:    1,
 			Description:  "param1 desc",
-		},
-		{
-			ID:           "2",
-			Category:     "basic2",
-			Name:         "param2",
-			InstanceType: "tikv",
-			DefaultValue: "v2",
-			Type:         2,
-			Unit:         "GB",
-			UnitOptions:  []string{"KB", "MB", "GB"},
-			Range:        []string{"1, 1000"},
-			RangeType:    1,
-			Description:  "param2 desc",
-		},
-		{
-			ID:           "3",
-			Category:     "basic3",
-			Name:         "param3",
-			InstanceType: "pd",
-			DefaultValue: " ",
-			Type:         3,
-			Unit:         "KB",
-			UnitOptions:  []string{"KB", "MB", "GB"},
-			Range:        []string{"1, 10000"},
-			RangeType:    1,
-			Description:  "param3 desc",
-		},
-	}
-
-	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos)
-	assert.Equal(t, 1, len(resp))
-	item := structs.ProductUpgradeVersionConfigDiffItem{
-		ParamId:      "1",
-		Category:     "basic1",
-		Name:         "param1",
-		InstanceType: "tidb",
-		CurrentValue: "v1_real",
-		SuggestValue: "v1new",
-		Type:         1,
-		Unit:         "MB",
-		UnitOptions:  []string{"KB", "MB", "GB"},
-		Range:        []string{"1, 100"},
-		RangeType:    1,
-		Description:  "param1 desc",
-	}
-	assert.Equal(t, item, *resp[0])
+		}
+		assert.Equal(t, 1, len(resp))
+		assert.Equal(t, item, *resp[0])
+	})
+	//t.Run("sort", func(t *testing.T) {
+	//	cParamInfos := []structs.ClusterParameterInfo{
+	//		{
+	//			ParamId:      "1",
+	//			Category:     "basic1",
+	//			Name:         "param1",
+	//			InstanceType: "tidb",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v1_real",
+	//			},
+	//			Type:        1,
+	//			Unit:        "MB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 100"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param1 desc",
+	//		},
+	//		{
+	//			ParamId:      "2",
+	//			Category:     "basic2",
+	//			Name:         "param2",
+	//			InstanceType: "tikv",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v2_real",
+	//			},
+	//			Type:        2,
+	//			Unit:        "GB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 1000"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param2 desc",
+	//		},
+	//		{
+	//			ParamId:      "3",
+	//			Category:     "basicB",
+	//			Name:         "param3",
+	//			InstanceType: "pd",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v3_real",
+	//			},
+	//			Type:        3,
+	//			Unit:        "KB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 10000"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param3 desc",
+	//		},
+	//		{
+	//			ParamId:      "4",
+	//			Category:     "basicA",
+	//			Name:         "param4",
+	//			InstanceType: "pd",
+	//			RealValue: structs.ParameterRealValue{
+	//				ClusterValue: "v4_real",
+	//			},
+	//			Type:        4,
+	//			Unit:        "KB",
+	//			UnitOptions: []string{"KB", "MB", "GB"},
+	//			Range:       []string{"1, 100000"},
+	//			RangeType:   1,
+	//			HasApply:    int(parameter.DirectApply),
+	//			Description: "param4 desc",
+	//		},
+	//	}
+	//
+	//	pgParamInfos := []structs.ParameterGroupParameterInfo{
+	//		{
+	//			ID:           "1",
+	//			Category:     "basic1",
+	//			Name:         "param1",
+	//			InstanceType: "tidb",
+	//			DefaultValue: "v1new",
+	//			Type:         1,
+	//			Unit:         "MB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param1 desc",
+	//		},
+	//		{
+	//			ID:           "2",
+	//			Category:     "basic2",
+	//			Name:         "param2",
+	//			InstanceType: "tikv",
+	//			DefaultValue: "v2new",
+	//			Type:         2,
+	//			Unit:         "GB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 1000"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param2 desc",
+	//		},
+	//		{
+	//			ID:           "3",
+	//			Category:     "basicB",
+	//			Name:         "param3",
+	//			InstanceType: "pd",
+	//			DefaultValue: "v3new",
+	//			Type:         3,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 10000"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param3 desc",
+	//		},
+	//		{
+	//			ID:           "4",
+	//			Category:     "basicA",
+	//			Name:         "param4",
+	//			InstanceType: "pd",
+	//			DefaultValue: "v4new",
+	//			Type:         4,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100000"},
+	//			RangeType:    1,
+	//			HasApply:     int(parameter.DirectApply),
+	//			Description:  "param4 desc",
+	//		},
+	//	}
+	//
+	//	resp := compareConfigDifference(context.TODO(), cParamInfos, pgParamInfos, []string{"tidb", "tikv", "pd"})
+	//	items := []structs.ProductUpgradeVersionConfigDiffItem{
+	//		{
+	//			ParamId:      "4",
+	//			Category:     "basicA",
+	//			Name:         "param4",
+	//			InstanceType: "pd",
+	//			CurrentValue: "v4_real",
+	//			SuggestValue: "v4new",
+	//			Type:         4,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100000"},
+	//			RangeType:    1,
+	//			Description:  "param4 desc",
+	//		},
+	//		{
+	//			ParamId:      "3",
+	//			Category:     "basicB",
+	//			Name:         "param3",
+	//			InstanceType: "pd",
+	//			CurrentValue: "v3_real",
+	//			SuggestValue: "v3new",
+	//			Type:         3,
+	//			Unit:         "KB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 10000"},
+	//			RangeType:    1,
+	//			Description:  "param3 desc",
+	//		},
+	//		{
+	//			ParamId:      "1",
+	//			Category:     "basic1",
+	//			Name:         "param1",
+	//			InstanceType: "tidb",
+	//			CurrentValue: "v1_real",
+	//			SuggestValue: "v1new",
+	//			Type:         1,
+	//			Unit:         "MB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 100"},
+	//			RangeType:    1,
+	//			Description:  "param1 desc",
+	//		},
+	//		{
+	//			ParamId:      "2",
+	//			Category:     "basic2",
+	//			Name:         "param2",
+	//			InstanceType: "tikv",
+	//			CurrentValue: "v2_real",
+	//			SuggestValue: "v2new",
+	//			Type:         2,
+	//			Unit:         "GB",
+	//			UnitOptions:  []string{"KB", "MB", "GB"},
+	//			Range:        []string{"1, 1000"},
+	//			RangeType:    1,
+	//			Description:  "param2 desc",
+	//		},
+	//	}
+	//	fmt.Printf("real: \n%s %s\n%s %s\n%s %s\n%s %s\n", resp[0].InstanceType, resp[0].Category, resp[1].InstanceType, resp[1].Category, resp[2].InstanceType, resp[2].Category, resp[3].InstanceType, resp[3].Category)
+	//	assert.Equal(t, 4, len(resp))
+	//	assert.Equal(t, items[0].InstanceType, resp[0].InstanceType)
+	//	assert.Equal(t, items[1].InstanceType, resp[1].InstanceType)
+	//	assert.Equal(t, items[2].InstanceType, resp[2].InstanceType)
+	//	assert.Equal(t, items[3].InstanceType, resp[3].InstanceType)
+	//})
 }
 
 func TestManager_InPlaceUpgradeCluster(t *testing.T) {
@@ -1931,6 +2244,34 @@ func TestManager_InPlaceUpgradeCluster(t *testing.T) {
 		_, err := manager.InPlaceUpgradeCluster(context.TODO(), cluster.UpgradeClusterReq{
 			ClusterID: "111",
 		})
+		assert.Error(t, err)
+	})
+}
+
+func TestManager_DeleteMetadataPhysically(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
+	models.SetClusterReaderWriter(clusterRW)
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil).AnyTimes()
+
+	resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)
+	resourceManager.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	resourceManagement.GetManagement().SetAllocatorRecycler(resourceManager)
+
+	manager := &Manager{}
+	t.Run("normal", func(t *testing.T) {
+		_, err := manager.DeleteMetadataPhysically(context.TODO(), cluster.DeleteMetadataPhysicallyReq{
+			ClusterID: "111",
+			Reason:    "no why",
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("failed", func(t *testing.T) {
+		_, err := manager.DeleteMetadataPhysically(context.TODO(), cluster.DeleteMetadataPhysicallyReq{})
 		assert.Error(t, err)
 	})
 }

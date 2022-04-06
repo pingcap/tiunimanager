@@ -26,8 +26,11 @@ package meta
 import (
 	"bytes"
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
 	"text/template"
 )
@@ -47,7 +50,7 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 	}
 
 	topology := new(bytes.Buffer)
-	if err = t.Execute(topology, p); err != nil {
+	if err = t.Execute(topology, NewClusterMetaRenderData(ctx, *p)); err != nil {
 		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
@@ -55,3 +58,45 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 	return topology.String(), nil
 }
 
+func NewClusterMetaRenderData(ctx context.Context, meta ClusterMeta) *ClusterMetaRenderData {
+	globalUser := framework.Current.GetClientArgs().DeployUser
+	if len(globalUser) == 0 {
+		globalUser = "tidb"
+	}
+	globalGroup := framework.Current.GetClientArgs().DeployGroup
+	if len(globalGroup) == 0 {
+		globalGroup = globalUser
+	}
+	sshConfigPort, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyDefaultSSHPort)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get config ConfigKeyDefaultSSHPort failed, err = %s", err.Error())
+		sshConfigPort = &config.SystemConfig{
+			ConfigValue: "22",
+		}
+	}
+
+	// init grafana user and password
+	grafanaUser := framework.Current.GetClientArgs().DeployUser
+	if len(grafanaUser) == 0 {
+		grafanaUser = "admin"
+	}
+	grafanaPassword := GetRandomString(10)
+
+	return &ClusterMetaRenderData{
+		ClusterMeta:     meta,
+		GlobalUser:      globalUser,
+		GlobalGroup:     globalGroup,
+		GlobalSSHPort:   sshConfigPort.ConfigValue,
+		GrafanaUser:     grafanaUser,
+		GrafanaPassword: grafanaPassword,
+	}
+}
+
+type ClusterMetaRenderData struct {
+	ClusterMeta
+	GlobalUser      string
+	GlobalGroup     string
+	GlobalSSHPort   string
+	GrafanaUser     string
+	GrafanaPassword string
+}

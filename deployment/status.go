@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/pingcap-inc/tiem/util/disk"
 )
@@ -59,7 +60,7 @@ func Create(tiUPHome string, op Operation) (fileName string, err error) {
 		return "", err
 	}
 
-	fileName, err = disk.CreateWithContent(fmt.Sprintf("%s/storage", tiUPHome), "operation", "json", b)
+	fileName, err = disk.CreateWithContent(fmt.Sprintf("%s/storage", tiUPHome), fmt.Sprintf("operation-%s-%s", time.Now().Format("20060102-150405"), op.Type), "json", b)
 	return
 }
 

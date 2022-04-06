@@ -27,6 +27,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 
@@ -72,6 +73,7 @@ var apiContent = []byte(`
 			"max-size": 102400
 		}
 	},
+	"quota-backend-bytes": "8GiB",
 	"coprocessor": {
 		"region-max-size": "144MiB",
 		"region-max-keys": "1.44e+06"
@@ -140,25 +142,25 @@ func mockClusterMeta() *meta.ClusterMeta {
 			string(constants.Root): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.Root],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.Root),
 			},
 			string(constants.DBUserBackupRestore): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.DBUserBackupRestore],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserBackupRestore),
 			},
 			string(constants.DBUserParameterManagement): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.DBUserParameterManagement],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserParameterManagement),
 			},
 			string(constants.DBUserCDCDataSync): &management.DBUser{
 				ClusterID: "id",
 				Name:      constants.DBUserName[constants.DBUserCDCDataSync],
-				Password:  "12345678",
+				Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 				RoleType:  string(constants.DBUserCDCDataSync),
 			},
 		},
@@ -172,7 +174,7 @@ func mockCluster() *management.Cluster {
 		Entity:            common.Entity{ID: "123", TenantId: "1", Status: "1"},
 		Name:              "testCluster",
 		Type:              "0",
-		Version:           "5.0",
+		Version:           "v5.2.2",
 		TLS:               false,
 		Tags:              nil,
 		TagInfo:           "",
@@ -318,25 +320,25 @@ func mockDBUsers() []*management.DBUser {
 		{
 			ClusterID: "clusterId",
 			Name:      "backup",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.DBUserBackupRestore),
 		},
 		{
 			ClusterID: "clusterId",
 			Name:      "root",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.Root),
 		},
 		{
 			ClusterID: "clusterId",
 			Name:      "parameter",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.DBUserParameterManagement),
 		},
 		{
 			ClusterID: "clusterId",
 			Name:      "data_sync",
-			Password:  "123455678",
+			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now()},
 			RoleType:  string(constants.DBUserCDCDataSync),
 		},
 	}
@@ -365,7 +367,7 @@ func mockModifyParameter() *ModifyParameter {
 				Category:       "log",
 				Name:           "test_param_2",
 				InstanceType:   "TiKV",
-				UpdateSource:   0,
+				UpdateSource:   2,
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
@@ -401,7 +403,7 @@ func mockModifyParameter() *ModifyParameter {
 				ParamId:        "5",
 				Name:           "test_param_5",
 				InstanceType:   "TiDB",
-				UpdateSource:   1,
+				UpdateSource:   4,
 				HasApply:       1,
 				SystemVariable: "",
 				Type:           0,
@@ -464,7 +466,7 @@ func mockModifyParameter() *ModifyParameter {
 				Name:           "test_param_11",
 				InstanceType:   "drainer",
 				UpdateSource:   0,
-				HasApply:       1,
+				HasApply:       0,
 				SystemVariable: "",
 				Type:           4,
 				Range:          []string{"10"},
@@ -474,7 +476,7 @@ func mockModifyParameter() *ModifyParameter {
 			{
 				ParamId:        "12",
 				Name:           "test_param_12",
-				InstanceType:   "CDC",
+				InstanceType:   "TiFlash",
 				UpdateSource:   0,
 				HasApply:       1,
 				SystemVariable: "",

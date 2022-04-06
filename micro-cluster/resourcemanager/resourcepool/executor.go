@@ -33,7 +33,8 @@ func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin validate host info")
 
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("validate host failed for get flow context, %v", err)
 		return err
@@ -44,9 +45,9 @@ func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			log.Errorf("validate host %s %s failed, %v", host.HostName, host.IP, err)
 			return err
 		}
-		log.Infof("validate host %v succeed", host)
+		log.Infof("validate host %s %s on %s %s succeed", host.HostName, host.IP, host.Region, host.AZ)
 	}
-	node.Record(fmt.Sprintf("validate hosts %v succeed", hosts))
+	node.Record(fmt.Sprintf("validate hosts %s %s on %s %s succeed", hosts[0].HostName, hosts[0].IP, hosts[0].Region, hosts[0].AZ))
 	return nil
 }
 
@@ -55,9 +56,10 @@ func authHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err
 	log.Infoln("begin authHosts")
 
 	deployUser := framework.GetCurrentDeployUser()
-	userGroup := deployUser
+	userGroup := framework.GetCurrentDeployGroup()
 
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("auth host failed for get flow context, %v", err)
 		return err
@@ -78,7 +80,8 @@ func prepare(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err e
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin prepare host env before verify")
 
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
@@ -101,7 +104,8 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin verifyHosts")
 
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("verify host failed for get flow context, %v", err)
 		return err
@@ -112,7 +116,7 @@ func verifyHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 		return err
 	}
 	// Store ignoreWarnings for Verify results
-	wrapCtx := context.WithValue(ctx, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextIgnoreWarnings, ignoreWarnings) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	for _, host := range hosts {
 		err = resourcePool.hostInitiator.Verify(wrapCtx, &host)
 		if err != nil {
@@ -129,7 +133,8 @@ func installSoftware(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin installSoftware")
 
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("install software failed for get flow context, %v", err)
 		return err
@@ -148,7 +153,8 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin join em cluster")
 
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("join em cluster failed for get flow context, %v", err)
 		return err
@@ -157,25 +163,25 @@ func joinEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	// Check whether host has already install filebeat
 	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
 	if err != nil {
-		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		log.Errorf("precheck host %s %s filebeat failed, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
 	if installed {
-		msg := fmt.Sprintf("host %v has already installed filebeat, no need to re-join em cluster", hosts)
+		msg := fmt.Sprintf("host %s %s has already installed filebeat, no need to re-join em cluster", hosts[0].HostName, hosts[0].IP)
 		log.Infoln(msg)
 		node.Success(msg)
 		return nil
 	}
 
 	// Store nodeID for second party service
-	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+	installSoftwareCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	operationID, err := resourcePool.hostInitiator.JoinEMCluster(installSoftwareCtx, hosts)
 	if err != nil {
-		log.Errorf("join em cluster failed for %v, %v", hosts, err)
+		log.Errorf("join em cluster failed for host %s %s, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
-
-	node.Record(fmt.Sprintf("join em cluster for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
+	log.Infof("join em cluster for host %s %s in operation %s", hosts[0].HostName, hosts[0].IP, operationID)
+	node.Record(fmt.Sprintf("joining em cluster for host %s %s", hosts[0].HostName, hosts[0].IP))
 	node.OperationID = operationID
 	return nil
 }
@@ -184,7 +190,8 @@ func setHostsOnline(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin set host online")
 
-	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("set host online failed for get flow context, %v", err)
 		return err
@@ -204,7 +211,8 @@ func setHostsFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin set host failed")
 
-	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("set host failed failed for get flow context, %v", err)
 		return err
@@ -225,7 +233,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin check hosts before delete")
 
-	_, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("delete hosts failed for get host info from flow context, %v", err)
 		return err
@@ -247,7 +255,8 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin delete hosts")
 
-	resourcePool, hostIds, err := getHostIDArrayFromFlowContext(ctx)
+	resourcePool := GetResourcePool()
+	hostIds, err := getHostIDArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("delete hosts failed for get flow context, %v", err)
 		return err
@@ -267,7 +276,9 @@ func deleteHosts(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (e
 func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infoln("begin leave em cluster")
-	resourcePool, hosts, err := getHostInfoArrayFromFlowContext(ctx)
+
+	resourcePool := GetResourcePool()
+	hosts, err := getHostInfoArrayFromFlowContext(ctx)
 	if err != nil {
 		log.Errorf("leave em cluster failed for get flow context, %v", err)
 		return err
@@ -275,18 +286,18 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 
 	installed, err := resourcePool.hostInitiator.PreCheckHostInstallFilebeat(ctx, hosts)
 	if err != nil {
-		log.Errorf("precheck host %v filebeat failed, %v", hosts, err)
+		log.Errorf("precheck host %s %s filebeat failed, %v", hosts[0].HostName, hosts[0].IP, err)
 		return err
 	}
 	if !installed {
-		msg := fmt.Sprintf("host %v has already uninstalled filebeat, no need to leave em cluster", hosts)
+		msg := fmt.Sprintf("host %s %s has already uninstalled filebeat, no need to leave em cluster", hosts[0].HostName, hosts[0].IP)
 		log.Infoln(msg)
 		node.Success(msg)
 		return nil
 	}
 
 	// Store nodeID for second party service
-	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID)
+	wrapCtx := context.WithValue(ctx, rp_consts.ContextWorkFlowIDKey, node.ID) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 
 	for _, host := range hosts {
 		clusterNodeId := fmt.Sprintf("%s:%d", host.IP, rp_consts.HostFileBeatPort)
@@ -296,39 +307,31 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 			return err
 		}
 		node.OperationID = operationID
+		log.Infof("leave em cluster for host %s %s in operation %s", host.HostName, host.IP, operationID)
+		node.Record(fmt.Sprintf("leaving em cluster for host %s %s", host.HostName, host.IP))
 	}
-	node.Record(fmt.Sprintf("leave em cluster for host %s %s succeed", hosts[0].HostName, hosts[0].IP))
+
 	return nil
 }
 
-func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hosts []structs.HostInfo, err error) {
+func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (hosts []structs.HostInfo, err error) {
 	var ok bool
-	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
-	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
-		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
-	}
 	hosts, ok = ctx.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
 	if !ok {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostInfoArrayKey)
-		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	return rp, hosts, nil
+	return hosts, nil
 }
 
-func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (rp *ResourcePool, hostIds []string, err error) {
+func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (hostIds []string, err error) {
 	var ok bool
-	rp, ok = ctx.GetData(rp_consts.ContextResourcePoolKey).(*ResourcePool)
-	if !ok {
-		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextResourcePoolKey)
-		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
-	}
 	hostIds, ok = ctx.GetData(rp_consts.ContextHostIDArrayKey).([]string)
 	if !ok {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostIDArrayKey)
-		return nil, nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
-	return rp, hostIds, nil
+	return hostIds, nil
 }
 
 func getIgnoreWarningsFromFlowContext(ctx *workflow.FlowContext) (ignoreWarnings bool, err error) {

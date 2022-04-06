@@ -30,6 +30,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
+	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
 	"github.com/pingcap-inc/tiem/workflow"
 	"os"
 	"path/filepath"
@@ -226,6 +227,70 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	return resp, nil
 }
 
+func (mgr *BRManager) CancelBackup(ctx context.Context, request cluster.CancelBackupReq) (resp cluster.CancelBackupResp, cancelErr error) {
+	framework.LogWithContext(ctx).Infof("Begin CancelBackup, request: %+v", request)
+	defer framework.LogWithContext(ctx).Infof("End CancelBackup")
+
+	brRW := models.GetBRReaderWriter()
+	records, _, err := brRW.QueryBackupRecords(ctx, request.ClusterID, request.BackupID, "", 0, 0, 1, 10)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v failed %s", request, err.Error())
+		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster %s backup record %s failed %s", request.ClusterID, request.BackupID, err.Error()), err)
+	}
+	if len(records) < 1 {
+		framework.LogWithContext(ctx).Errorf("query cluster backup records %+v not found", request)
+		return resp, errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("query cluster %s backup record %s not found", request.ClusterID, request.BackupID))
+	}
+	if string(constants.ClusterBackupProcessing) != records[0].Status {
+		framework.LogWithContext(ctx).Errorf("backup record %+v status not processing", records[0])
+		return resp, errors.NewErrorf(errors.TIEM_BACKUP_RECORD_CANCEL_FAILED, fmt.Sprintf("query cluster %s backup record %s status not processing", request.ClusterID, request.BackupID))
+	}
+
+	meta, err := meta.Get(ctx, request.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
+	}
+
+	tidbServers := meta.GetClusterConnectAddresses()
+	if len(tidbServers) == 0 {
+		framework.LogWithContext(ctx).Errorf("get tidb servers address from cluster %s meta result empty", request.ClusterID)
+		return resp, errors.NewErrorf(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("get tidb servers address from cluster %s meta result empty", request.ClusterID))
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s tidb address from meta, %+v", meta.Cluster.ID, tidbServers)
+	tidbServerHost := tidbServers[0].IP
+	tidbServerPort := tidbServers[0].Port
+	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.DBUserBackupRestore)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get cluster %s user info from meta falied, %s ", meta.Cluster.ID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("get cluster %s user info from meta falied", meta.Cluster.ID), err)
+	}
+	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
+
+	showResp, err := utilsql.ExecShowBackupSQL(ctx, utilsql.ShowBackupReq{DbConnParameter: utilsql.DbConnParam{
+		Username: tidbUserInfo.Name,
+		Password: tidbUserInfo.Password.Val,
+		IP:       tidbServerHost,
+		Port:     strconv.Itoa(tidbServerPort),
+	}, Destination: records[0].FilePath})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("show cluster %s backups falied, %s ", request.ClusterID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("show cluster %s backups falied", request.ClusterID), err)
+	}
+
+	err = utilsql.CancelBackupSQL(ctx, utilsql.CancelBackupReq{Connection: showResp.Connection, DbConnParameter: utilsql.DbConnParam{
+		Username: tidbUserInfo.Name,
+		Password: tidbUserInfo.Password.Val,
+		IP:       tidbServerHost,
+		Port:     strconv.Itoa(tidbServerPort),
+	}})
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("cancel cluster %s backups falied, %s ", request.ClusterID, err.Error())
+		return resp, errors.WrapError(errors.TIEM_BACKUP_RECORD_CANCEL_FAILED, fmt.Sprintf("cancel cluster %s backups falied", request.ClusterID), err)
+	}
+	return
+}
+
 func (mgr *BRManager) QueryClusterBackupRecords(ctx context.Context, request cluster.QueryBackupRecordsReq) (resp cluster.QueryBackupRecordsResp, page structs.Page, err error) {
 	framework.LogWithContext(ctx).Infof("Begin QueryClusterBackupRecords, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End QueryClusterBackupRecords")
@@ -293,6 +358,10 @@ func (mgr *BRManager) DeleteBackupRecords(ctx context.Context, request cluster.D
 		for _, record := range records {
 			if _, ok := excludeBackupIdMap[record.ID]; ok {
 				framework.LogWithContext(ctx).Infof("current backupId %s in excludeBackupIds, skip delete!", record.ID)
+				continue
+			}
+			if string(constants.ClusterBackupProcessing) == record.Status {
+				framework.LogWithContext(ctx).Infof("current backupId %s status can not delete, skip delete!", record.ID)
 				continue
 			}
 			deleteRecordMap[record.ID] = record

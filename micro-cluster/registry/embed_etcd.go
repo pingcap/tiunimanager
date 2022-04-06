@@ -139,6 +139,7 @@ func parseEtcdConfig() (*EmbedEtcdConfig, error) {
 		} else {
 			peerPort := clientPort + 1
 			embedEtcdConfig.EtcdPeerUrls[i] = ipAndPort[0] + ":" + strconv.Itoa(peerPort)
+			embedEtcdConfig.PeerUrl = embedEtcdConfig.EtcdPeerUrls[i]
 		}
 	}
 	// set name

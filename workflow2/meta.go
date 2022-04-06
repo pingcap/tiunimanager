@@ -212,6 +212,17 @@ func (flow *WorkFlowMeta) Fail() {
 		flow.Flow.Status = constants.WorkFlowStatusError
 		if flow.CurrentNodeDefine != nil && flow.Define.TaskNodes[flow.CurrentNodeDefine.FailEvent] != nil {
 			flow.CurrentNodeDefine = flow.Define.TaskNodes[flow.CurrentNodeDefine.FailEvent]
+			flow.CurrentNode = &workflow.WorkFlowNode{
+				Entity: dbModel.Entity{
+					TenantId: flow.Flow.TenantId,
+					Status:   constants.WorkFlowStatusInitializing,
+				},
+				Name:       flow.CurrentNodeDefine.Name,
+				BizID:      flow.Flow.BizID,
+				ParentID:   flow.Flow.ID,
+				ReturnType: string(flow.CurrentNodeDefine.ReturnType),
+				StartTime:  time.Now(),
+			}
 			flow.Execute()
 		}
 	}

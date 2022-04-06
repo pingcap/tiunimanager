@@ -17,6 +17,7 @@ package resourcepool
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/message"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -134,6 +135,7 @@ func Test_ImportHosts(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl2)
 	workflow.MockWorkFlowService(workflowService)
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).Times(3)
+	workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(message.QueryWorkFlowDetailResp{Info: &structs.WorkFlowInfo{Status: constants.WorkFlowStatusFinished}}, nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flowId string) error {
 		return nil
 	}).AnyTimes()
@@ -172,6 +174,7 @@ func Test_DeleteHosts(t *testing.T) {
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, flowId string) error {
 		return nil
 	}).AnyTimes()
+	workflowService.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(message.QueryWorkFlowDetailResp{Info: &structs.WorkFlowInfo{Status: constants.WorkFlowStatusFinished}}, nil).AnyTimes()
 	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(6)
 
 	flowIds, err := resourcePool.DeleteHosts(context.TODO(), []string{"hostId1", "hostId2", "hostId3"}, false)

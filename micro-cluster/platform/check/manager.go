@@ -67,7 +67,7 @@ var checkDefine = workflow.WorkFlowDefine{
 		"start":            {"checkTenants", "checkTenantsDone", "fail", workflow.SyncFuncNode, checkTenants},
 		"checkTenantsDone": {"checkHosts", "checkHostsDone", "fail", workflow.SyncFuncNode, checkHosts},
 		"checkHostsDone":   {"end", "", "", workflow.SyncFuncNode, endCheck},
-		"fail":             {"end", "", "", workflow.SyncFuncNode, handleFail},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, handleFail},
 	},
 }
 
@@ -122,7 +122,7 @@ var checkClusterDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":            {"checkCluster", "checkClusterDone", "fail", workflow.SyncFuncNode, checkCluster},
 		"checkClusterDone": {"end", "", "", workflow.SyncFuncNode, endCheck},
-		"fail":             {"end", "", "", workflow.SyncFuncNode, handleFail},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, handleFail},
 	},
 }
 

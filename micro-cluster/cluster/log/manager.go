@@ -73,7 +73,7 @@ var buildLogConfigDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":   {"collect", "success", "fail", workflow.SyncFuncNode, collectorClusterLogConfig},
 		"success": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-		"fail":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
+		"fail":    {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
 	},
 }
 

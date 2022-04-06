@@ -126,6 +126,7 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 			framework.LogWithContext(ctx).Errorf("end cluster %s maintenance status failed, %s", clusterMeta.Cluster.ID, err.Error())
 			return err
 		}
+		ctx.SetData(contextClusterMeta, &clusterMeta)
 	}
 	return nil
 }
@@ -377,6 +378,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			return err
 		}
 	}
+	ctx.SetData(contextModifyParameters, &modifyParam)
 	node.Record("modify parameters")
 	return nil
 }

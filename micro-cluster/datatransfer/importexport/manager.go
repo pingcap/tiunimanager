@@ -62,7 +62,7 @@ func NewImportExportManager() *ImportExportManager {
 			"start":            {"exportDataFromCluster", "exportDataDone", "fail", workflow.PollingNode, exportDataFromCluster},
 			"exportDataDone":   {"updateDataExportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataExportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"end", "", "", workflow.SyncFuncNode, exportDataFailed},
+			"fail":             {"fail", "", "", workflow.SyncFuncNode, exportDataFailed},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowImportData, &workflow.WorkFlowDefine{
@@ -72,7 +72,7 @@ func NewImportExportManager() *ImportExportManager {
 			"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", workflow.PollingNode, importDataToCluster},
 			"importDataDone":   {"updateDataImportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataImportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"end", "", "", workflow.SyncFuncNode, importDataFailed},
+			"fail":             {"fail", "", "", workflow.SyncFuncNode, importDataFailed},
 		},
 	})
 
@@ -277,7 +277,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		info = &importInfo{
 			ClusterId:   request.ClusterID,
 			UserName:    request.UserName,
-			Password: string(request.Password),
+			Password:    string(request.Password),
 			FilePath:    recordGet.FilePath,
 			RecordId:    recordCreate.ID,
 			StorageType: request.StorageType,

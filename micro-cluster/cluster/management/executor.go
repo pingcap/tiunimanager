@@ -128,6 +128,10 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			continue
 		}
 	}
+	err = context.SetData(ContextClusterMeta, clusterMeta)
+	if err != nil {
+		return err
+	}
 
 	//print success information
 	for _, ins := range instances {
@@ -632,6 +636,7 @@ func setClusterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 			"update cluster %s instances status into failure error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	framework.LogWithContext(context.Context).Infof(
 		"set cluster %s status into failure", clusterMeta.Cluster.ID)
 	node.Record(fmt.Sprintf("set cluster %s status into %v ", clusterMeta.Cluster.ID, constants.ClusterFailure))
@@ -666,6 +671,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			"update cluster %s status into running error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	framework.LogWithContext(context.Context).Infof(
 		"set cluster %s status into running successfully", clusterMeta.Cluster.ID)
 	node.Record(fmt.Sprintf("set cluster %s status into %v ", clusterMeta.Cluster.ID, constants.ClusterRunning))
@@ -696,7 +702,7 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 			"update cluster %s status into stopped error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	node.Record(fmt.Sprintf("set cluster %s status into %v ", clusterMeta.Cluster.ID, constants.ClusterStopped))
 	return nil
 }
@@ -757,7 +763,13 @@ func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if err != nil {
 		return err
 	}
-	return clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
+	err = clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
+	if err != nil {
+		return err
+	}
+	context.SetData(ContextClusterMeta, &clusterMeta)
+	context.SetData(ContextSourceClusterMeta, &sourceClusterMeta)
+	return nil
 }
 
 // persistCluster
@@ -2144,7 +2156,7 @@ func takeoverResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		node.Record(fmt.Sprintf("type: %s, zone: %s, host IP: %s; ", instance.Type, instance.Zone, instance.HostIP[0]))
 	}
 	node.Record(fmt.Sprintf("alloc recouser for cluster %s ", clusterMeta.Cluster.ID))
-
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	return nil
 }
 
@@ -2441,5 +2453,6 @@ func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflo
 		return err
 	}
 	clusterInfo.ParameterGroupID = originalParameterGroupId
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	return nil
 }

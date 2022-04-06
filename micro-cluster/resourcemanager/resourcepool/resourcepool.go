@@ -18,8 +18,10 @@ package resourcepool
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/message"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -194,11 +196,32 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		defer framework.UnsetInEmTiupProcess()
 		for i, flowId := range flowIds {
 			if err = flowManager.Start(ctx, flowId); err != nil {
-				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP, err.Error())
+				errMsg := fmt.Sprintf("async start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP, err.Error())
 				framework.LogWithContext(ctx).Errorln(errMsg)
 				continue
 			} else {
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP)
+			}
+			ticker := time.NewTicker(5 * time.Second)
+			sequence := int32(0)
+			for range ticker.C {
+				sequence++
+				if sequence > 1000 {
+					break
+				}
+				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
+				if err != nil {
+					framework.LogWithContext(ctx).Errorln(err)
+					continue
+				}
+				if constants.WorkFlowStatusError == resp.Info.Status {
+					framework.LogWithContext(ctx).Errorln(fmt.Sprintf("%s workflow %s end failed", flowName, flowId))
+					continue
+				}
+				if constants.WorkFlowStatusError == resp.Info.Status {
+					framework.LogWithContext(ctx).Infof("%s workflow %s end success", flowName, flowId)
+					break
+				}
 			}
 		}
 		return nil
@@ -255,6 +278,27 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 				framework.LogWithContext(ctx).Errorln(errMsg)
 			} else {
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flowId, hostIds[i])
+			}
+			ticker := time.NewTicker(5 * time.Second)
+			sequence := int32(0)
+			for range ticker.C {
+				sequence++
+				if sequence > 1000 {
+					break
+				}
+				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
+				if err != nil {
+					framework.LogWithContext(ctx).Errorln(err)
+					continue
+				}
+				if constants.WorkFlowStatusError == resp.Info.Status {
+					framework.LogWithContext(ctx).Errorln(fmt.Sprintf("deleteHosts workflow %s end failed", flowId))
+					continue
+				}
+				if constants.WorkFlowStatusError == resp.Info.Status {
+					framework.LogWithContext(ctx).Infof("deleteHosts workflow %s end success", flowId)
+					break
+				}
 			}
 		}
 		return nil

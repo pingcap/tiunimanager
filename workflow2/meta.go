@@ -232,11 +232,6 @@ func (flow *WorkFlowMeta) Execute() {
 	if flow.Flow.Status == constants.WorkFlowStatusInitializing {
 		flow.Flow.Status = constants.WorkFlowStatusProcessing
 	}
-	if flow.IsFailNode {
-		flow.Fail()
-		flow.Restore()
-		return
-	}
 	if flow.CurrentNodeDefine == nil {
 		flow.Flow.Status = constants.WorkFlowStatusFinished
 		flow.Restore()
@@ -257,6 +252,11 @@ func (flow *WorkFlowMeta) Execute() {
 	flow.Restore()
 
 	err = nodeDefine.Executor(node, flow.Context)
+	if flow.IsFailNode {
+		flow.Fail()
+		flow.Restore()
+		return
+	}
 	if err != nil {
 		framework.LogWithContext(flow.Context).Infof("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
 		node.Fail(err)

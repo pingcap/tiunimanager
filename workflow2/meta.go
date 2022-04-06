@@ -39,7 +39,6 @@ type WorkFlowMeta struct {
 	CurrentNodeDefine *NodeDefine
 	Nodes             []*workflow.WorkFlowNode
 	Context           *FlowContext
-	IsFailNode        bool
 }
 
 type FlowContext struct {
@@ -128,7 +127,6 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		}
 	}
 
-	var isFailNode bool
 	var currentNodeDefine *NodeDefine
 	if latest != nil {
 		latestNodeDefineKey = define.getNodeDefineKeyByName(latest.Name)
@@ -145,7 +143,6 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 			currentNodeDefine = define.TaskNodes[currentNodeDefine.SuccessEvent]
 		case constants.WorkFlowStatusError:
 			currentNodeDefine = define.TaskNodes[currentNodeDefine.FailEvent]
-			isFailNode = true
 		}
 	} else {
 		currentNodeDefine = define.TaskNodes["start"]
@@ -173,7 +170,6 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		CurrentNode:       current,
 		CurrentNodeDefine: currentNodeDefine,
 		Context:           NewFlowContext(ctx, flowData),
-		IsFailNode:        isFailNode,
 	}
 
 	return meta, nil

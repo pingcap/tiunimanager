@@ -53,7 +53,7 @@ http {
             proxy_pass http://openapi-servers;
         }
 
-        location ~ ^/(swagger|system|web)/ {
+        location ~ ^/(swagger|web)/ {
             proxy_pass http://openapi-servers;
         }
 

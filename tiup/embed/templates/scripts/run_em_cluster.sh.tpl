@@ -7,7 +7,10 @@ DEPLOY_DIR={{.DeployDir}}
 
 cd "${DEPLOY_DIR}" || exit 1
 
-source ~/.bash_profile
+if [ -f "~/.bash_profile" ]; then
+  source ~/.bash_profile
+
+fi
 
 LANG=en_US.UTF-8 \
 exec env GODEBUG=madvdontneed=1 bin/cluster-server \

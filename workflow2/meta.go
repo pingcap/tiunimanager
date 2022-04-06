@@ -39,6 +39,7 @@ type WorkFlowMeta struct {
 	CurrentNodeDefine *NodeDefine
 	Nodes             []*workflow.WorkFlowNode
 	Context           *FlowContext
+	IsFailNode        bool
 }
 
 type FlowContext struct {
@@ -127,6 +128,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		}
 	}
 
+	var isFailNode bool
 	var currentNodeDefine *NodeDefine
 	if latest != nil {
 		latestNodeDefineKey = define.getNodeDefineKeyByName(latest.Name)
@@ -143,6 +145,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 			currentNodeDefine = define.TaskNodes[currentNodeDefine.SuccessEvent]
 		case constants.WorkFlowStatusError:
 			currentNodeDefine = define.TaskNodes[currentNodeDefine.FailEvent]
+			isFailNode = true
 		}
 	} else {
 		currentNodeDefine = define.TaskNodes["start"]
@@ -170,6 +173,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		CurrentNode:       current,
 		CurrentNodeDefine: currentNodeDefine,
 		Context:           NewFlowContext(ctx, flowData),
+		IsFailNode:        isFailNode,
 	}
 
 	return meta, nil
@@ -228,6 +232,11 @@ func (flow *WorkFlowMeta) Execute() {
 	if flow.Flow.Status == constants.WorkFlowStatusInitializing {
 		flow.Flow.Status = constants.WorkFlowStatusProcessing
 	}
+	if flow.IsFailNode {
+		flow.Fail()
+		flow.Restore()
+		return
+	}
 	if flow.CurrentNodeDefine == nil {
 		flow.Flow.Status = constants.WorkFlowStatusFinished
 		flow.Restore()
@@ -251,7 +260,6 @@ func (flow *WorkFlowMeta) Execute() {
 	if err != nil {
 		framework.LogWithContext(flow.Context).Infof("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
 		node.Fail(err)
-		flow.Fail()
 		flow.Restore()
 		return
 	}
@@ -272,7 +280,6 @@ func (flow *WorkFlowMeta) Execute() {
 			sequence++
 			if sequence > maxPollingSequence {
 				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
-				flow.Fail()
 				flow.Restore()
 				return
 			}
@@ -282,14 +289,12 @@ func (flow *WorkFlowMeta) Execute() {
 			if err != nil {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
-				flow.Fail()
 				flow.Restore()
 				return
 			}
 			if op.Status == deployment.Error {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
-				flow.Fail()
 				flow.Restore()
 				return
 			}

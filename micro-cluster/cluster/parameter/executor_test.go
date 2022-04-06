@@ -86,6 +86,7 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
 				return "flowId", nil
 			})
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -139,6 +140,7 @@ func TestExecutor_asyncMaintenance_Success(t *testing.T) {
 			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
 				return "flowId", nil
 			})
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes().Return(errors.New("async start fail"))
 		data := map[string]interface{}{}
 		data[contextModifyParameters] = mockModifyParameter()

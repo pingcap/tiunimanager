@@ -59,7 +59,11 @@ func NewFlowContext(ctx context.Context, data map[string]string) *FlowContext {
 func (c *FlowContext) GetData(key string, data interface{}) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	return json.Unmarshal([]byte(c.FlowData[key]), data)
+	if _, ok := c.FlowData[key]; !ok {
+		return nil
+	} else {
+		return json.Unmarshal([]byte(c.FlowData[key]), data)
+	}
 }
 
 func (c *FlowContext) SetData(key string, value interface{}) error {

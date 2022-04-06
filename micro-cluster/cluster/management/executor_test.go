@@ -475,6 +475,7 @@ func TestClearBackupData(t *testing.T) {
 		},
 	})
 	flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{KeepHistoryBackupRecords: false})
+	flowContext.SetData(ContextBackupID, "record")
 
 	t.Run("normal", func(t *testing.T) {
 		brService := mock_br_service.NewMockBRService(ctrl)
@@ -944,7 +945,7 @@ func TestEndMaintenance(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 
 	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
@@ -955,12 +956,19 @@ func TestEndMaintenance(t *testing.T) {
 			MaintenanceStatus: constants.ClusterMaintenanceTakeover,
 		},
 	})
+	flowContext.SetData(ContextSourceClusterMeta, &meta.ClusterMeta{
+		Cluster: &management.Cluster{
+			Entity: common.Entity{
+				ID: "testCluster",
+			},
+			MaintenanceStatus: constants.ClusterMaintenanceTakeover,
+		},
+	})
 
 	err := endMaintenance(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.NoError(t, err)
-
 	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(),
-		gomock.Any()).Return(fmt.Errorf("clear maintenance status fail"))
+		gomock.Any()).Return(fmt.Errorf("clear maintenance status fail")).Times(1)
 	err = endMaintenance(&workflowModel.WorkFlowNode{}, flowContext)
 	assert.Error(t, err)
 }

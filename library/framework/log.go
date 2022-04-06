@@ -18,9 +18,6 @@
 package framework
 
 import (
-	"context"
-	"fmt"
-	"github.com/asim/go-micro/v3/server"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"io"
 	"os"
@@ -195,22 +192,3 @@ func getLogLevel(level string) logrus.Level {
 	return logrus.DebugLevel
 }
 
-// logWrapper returns a Handler Wrapper for log
-func logWrapper(bf *BaseFramework) server.HandlerWrapper {
-	return func(h server.HandlerFunc) server.HandlerFunc {
-		return func(ctx context.Context, req server.Request, rsp interface{}) error {
-			name := fmt.Sprintf("%s.%s", req.Service(), req.Method())
-			microLog := bf.LogWithContext(ctx).
-				WithField("micro-method", name)
-
-			microLog.Infof("micro-method start, [request]%s", req.Body())
-
-			if err := h(ctx, req, rsp); err != nil {
-				microLog.Errorf("micro-method failed, [request]%s, [error]%s", req.Body(), err.Error())
-			} else {
-				microLog.Infof("micro-method end, [response]%s", rsp)
-			}
-			return nil
-		}
-	}
-}

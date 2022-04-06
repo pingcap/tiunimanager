@@ -588,7 +588,7 @@ func (p *Report) CheckHosts(ctx context.Context) error {
 	}
 
 	checkHosts := make(map[string]structs.HostCheck)
-	for key, _ := range cpu {
+	for key := range cpu {
 		diskAllocated := make(map[string]structs.CheckString)
 		for path, value := range disk[key] {
 			if _, ok := diskAllocated[path]; !ok {

@@ -184,7 +184,8 @@ func TestBRManager_CancelBackup_case1(t *testing.T) {
 	records := make([]*backuprestore.BackupRecord, 1)
 	records[0] = &backuprestore.BackupRecord{
 		Entity: common.Entity{
-			ID: "record-xxx",
+			ID:     "record-xxx",
+			Status: string(constants.ClusterBackupProcessing),
 		},
 		FilePath: "./testdata",
 	}

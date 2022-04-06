@@ -100,7 +100,6 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 						defer mgr.nodeGoroutineMap.Delete(flow.ID) //clean node go routine map whether end or stop
 						//load workflow, call executor and handle polling, restore workflow
 						flowMeta.Execute()
-						return
 					}()
 				} else {
 					//workflow has processing goroutine

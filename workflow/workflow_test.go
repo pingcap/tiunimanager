@@ -18,17 +18,19 @@ package workflow
 /*
 import (
 	"context"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
@@ -48,6 +50,7 @@ var defaultSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) erro
 }
 
 func init() {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	models.MockDB()
 }
 

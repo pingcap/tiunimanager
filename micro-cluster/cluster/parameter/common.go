@@ -161,6 +161,10 @@ func ValidateRange(param *ModifyClusterParameterInfo, hasModify bool) bool {
 	if hasModify && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 		return true
 	}
+	// If you are modifying a parameter group and it is a modify apply parameter type with a null value, skip directly
+	if !hasModify && param.HasApply == int(ModifyApply) && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+		return true
+	}
 	switch param.Type {
 	case int(Integer):
 		clusterValue, err := strconv.ParseInt(param.RealValue.ClusterValue, 0, 64)

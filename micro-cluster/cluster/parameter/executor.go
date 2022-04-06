@@ -541,7 +541,7 @@ func handleFillParamResult(ctx context.Context, reqConfigParams map[string]inter
 			}
 			if param.Type == int(Integer) || param.Type == int(Float) {
 				// If the value of the numeric type contains units, the units need to be converted to the int value of the base unit
-				for srcUnit, _ := range units {
+				for srcUnit := range units {
 					if strings.HasSuffix(instValue, srcUnit) {
 						if cvtInstValue, ok := convertUnitValue([]string{srcUnit}, instValue); ok {
 							instValue = fmt.Sprintf("%d", cvtInstValue)

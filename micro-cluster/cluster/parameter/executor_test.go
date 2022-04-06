@@ -371,7 +371,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 		}
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, mockModifyParameter())
-		modifyCtx.SetData(contextHasApplyParameter, true)
+		modifyCtx.SetData(contextHasApplyParameter, false)
 		err := modifyParameters(&workflowModel.WorkFlowNode{}, modifyCtx)
 		assert.NoError(t, err)
 	})
@@ -506,6 +506,7 @@ func TestExecutor_modifyParameters(t *testing.T) {
 			Context:  context.TODO(),
 			FlowData: make(map[string]string),
 		}
+		modifyCtx.SetData(contextHasApplyParameter, true)
 		modifyCtx.SetData(contextClusterMeta, mockClusterMeta())
 		modifyCtx.SetData(contextModifyParameters, &ModifyParameter{
 			Reboot: false,

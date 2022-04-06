@@ -401,23 +401,6 @@ func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID str
 	return p.checkClusterWritable(ctx, clusterID, userName, password, addr)
 }
 
-func (p *Manager) clusterGetMysqlUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
-	panic("NIY")
-	framework.LogWithContext(ctx).Info("clusterGetMysqlUserNameAndPwd clusterID:", clusterID)
-	db := models.GetClusterReaderWriter()
-	_, err = db.Get(ctx, clusterID)
-	if err != nil {
-		framework.LogWithContext(ctx).Error("clusterGetMysqlUserNameAndPwd get cluster record err:", err)
-		return userName, password, err
-	} else {
-		userName = "" //cluster.DBUser
-		password = "" //cluster.DBPassword
-		framework.LogWithContext(ctx).Infof(
-			"clusterGetMysqlUserNameAndPwd get cluster record userName:%s password:%s err:%s", userName, password, err)
-		return userName, password, err
-	}
-}
-
 // with special `RESTRICTED_REPLICA_WRITER_ADMIN` privilege already set
 func (p *Manager) clusterGetCDCUserNameAndPwd(ctx context.Context, clusterID string) (userName, password string, err error) {
 	framework.LogWithContext(ctx).Info("clusterGetCDCUserNameAndPwd clusterID:", clusterID)
@@ -623,17 +606,16 @@ func (m *Manager) getAllChangeFeedTasksOnCluster(ctx context.Context, clusterId 
 	if err != nil {
 		return nil, err
 	}
-	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster tasks:%v err:%v", tasks, err)
+	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster taskAmt:%d err:%v", len(tasks), err)
 	var myTasks []*cluster.ChangeFeedTask
 	for _, v := range tasks {
-		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster task:%v id:%v", v, v.ID)
+		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster taskID:%s", v.ID)
 		dupV := v
 		myTasks = append(myTasks, &dupV.ChangeFeedTask)
 	}
 
-	framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster ret myTasks:%v err:%v", myTasks, err)
 	for _, v := range myTasks {
-		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster ret task:%v id:%v", v, v.ID)
+		framework.LogWithContext(ctx).Infof("getAllChangeFeedTasksOnCluster iterate taskID:%s", v.ID)
 	}
 
 	return myTasks, err

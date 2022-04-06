@@ -106,14 +106,14 @@ type ChangeFeedTask struct {
 // @Description: only for swagger, never use
 //
 type MysqlDownstream struct {
-	Ip                string `json:"ip" form:"ip" example:"127.0.0.1"`
-	Port              int    `json:"port" form:"port" example:"8001"`
-	Username          string `json:"username" form:"username" example:"root"`
-	Password          string `json:"password" form:"password" example:"my_password"`
-	ConcurrentThreads int    `json:"concurrentThreads" form:"concurrentThreads" example:"7"`
-	WorkerCount       int    `json:"workerCount" form:"workerCount" example:"2"`
-	MaxTxnRow         int    `json:"maxTxnRow" form:"maxTxnRow" example:"5"`
-	Tls               bool   `json:"tls" form:"tls" example:"false"`
+	Ip                string                `json:"ip" form:"ip" example:"127.0.0.1"`
+	Port              int                   `json:"port" form:"port" example:"8001"`
+	Username          string                `json:"username" form:"username" example:"root"`
+	Password          structs.SensitiveText `json:"password" form:"password" example:"my_password"`
+	ConcurrentThreads int                   `json:"concurrentThreads" form:"concurrentThreads" example:"7"`
+	WorkerCount       int                   `json:"workerCount" form:"workerCount" example:"2"`
+	MaxTxnRow         int                   `json:"maxTxnRow" form:"maxTxnRow" example:"5"`
+	Tls               bool                  `json:"tls" form:"tls" example:"false"`
 }
 
 //
@@ -149,15 +149,15 @@ type Dispatcher struct {
 // @Description: only for swagger, never use
 //
 type TiDBDownstream struct {
-	Ip                string `json:"ip" form:"ip" example:"127.0.0.1"`
-	Port              int    `json:"port" form:"port" example:"4534"`
-	Username          string `json:"username" form:"username" example:"tidb"`
-	Password          string `json:"password" form:"password" example:"my_password"`
-	ConcurrentThreads int    `json:"concurrentThreads" form:"concurrentThreads" example:"5"`
-	WorkerCount       int    `json:"workerCount" form:"workerCount" example:"2"`
-	MaxTxnRow         int    `json:"maxTxnRow" form:"maxTxnRow" example:"4"`
-	Tls               bool   `json:"tls" form:"tls" example:"false"`
-	TargetClusterID   string `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	Ip                string                `json:"ip" form:"ip" example:"127.0.0.1"`
+	Port              int                   `json:"port" form:"port" example:"4534"`
+	Username          string                `json:"username" form:"username" example:"tidb"`
+	Password          structs.SensitiveText `json:"password" form:"password" example:"my_password"`
+	ConcurrentThreads int                   `json:"concurrentThreads" form:"concurrentThreads" example:"5"`
+	WorkerCount       int                   `json:"workerCount" form:"workerCount" example:"2"`
+	MaxTxnRow         int                   `json:"maxTxnRow" form:"maxTxnRow" example:"4"`
+	Tls               bool                  `json:"tls" form:"tls" example:"false"`
+	TargetClusterID   string                `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIEM__22"`
 }
 
 type ChangeFeedTaskInfo struct {

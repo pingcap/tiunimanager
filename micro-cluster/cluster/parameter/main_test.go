@@ -480,7 +480,7 @@ func mockModifyParameter() *ModifyParameter {
 				Type:           0,
 				Range:          []string{"0", "1024"},
 				RangeType:      1,
-				RealValue:      structs.ParameterRealValue{ClusterValue: ""},
+				RealValue:      structs.ParameterRealValue{ClusterValue: "0"},
 			},
 		},
 		Nodes: []string{"172.16.1.12:9000", "172.16.1.12:9001"},

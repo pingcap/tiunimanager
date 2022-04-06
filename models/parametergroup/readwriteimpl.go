@@ -335,7 +335,7 @@ func (m ParameterGroupReadWrite) ExistsParameter(ctx context.Context, category, 
 }
 
 func (m ParameterGroupReadWrite) addParameters(ctx context.Context, pgID string, addParameters []message.ParameterInfo) (err error) {
-	if addParameters != nil && len(addParameters) > 0 {
+	if len(addParameters) > 0 {
 		for _, addParameter := range addParameters {
 			var rangeByte []byte
 			if addParameter.Range != nil && len(addParameter.Range) > 0 {

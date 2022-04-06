@@ -47,6 +47,10 @@ type Metrics struct {
 
 	// micro server start time metrics
 	ServerStartTimeGaugeMetric *prometheus.GaugeVec
+
+	// work flow metrics
+	WorkFlowCounterMetric     *prometheus.CounterVec
+	WorkFlowNodeCounterMetric *prometheus.CounterVec
 }
 
 func RegisterNewGaugeVec(metricDef MetricDef) *prometheus.GaugeVec {
@@ -115,6 +119,8 @@ func GetMetrics() *Metrics {
 				SqliteRequestsCounterMetric:    RegisterNewCounterVec(SqliteRequestsCounterMetricDef),
 				SqliteDurationHistogramMetric:  RegisterNewHistogramVec(SqliteDurationHistogramMetricDef),
 				ServerStartTimeGaugeMetric:     RegisterNewGaugeVec(ServerStartTimeGaugeMetricDef),
+				WorkFlowCounterMetric:          RegisterNewCounterVec(WorkFlowCounterMetricDef),
+				WorkFlowNodeCounterMetric:      RegisterNewCounterVec(WorkFlowNodeCounterMetricDef),
 			}
 		}
 	})
@@ -177,5 +183,39 @@ func HandleClusterMetrics(start time.Time, funcName string, code int) {
 		ServiceLabel: ClusterServer,
 		MethodLabel:  funcName,
 		CodeLabel:    strconv.Itoa(code)}).
+		Inc()
+}
+
+type WorkFlowLabel struct {
+	BizType string
+	Name    string
+	Status  string
+}
+
+func HandleWorkFlowMetrics(label WorkFlowLabel) {
+	GetMetrics().WorkFlowCounterMetric.With(prometheus.Labels{
+		ServiceLabel:    ClusterServer,
+		BizTypeLabel:    label.BizType,
+		FlowNameLabel:   label.Name,
+		FlowStatusLabel: label.Status,
+	}).
+		Inc()
+}
+
+type WorkFlowNodeLabel struct {
+	BizType  string
+	FlowName string
+	Node     string
+	Status   string
+}
+
+func HandleWorkFlowNodeMetrics(label WorkFlowNodeLabel) {
+	GetMetrics().WorkFlowNodeCounterMetric.With(prometheus.Labels{
+		ServiceLabel:        ClusterServer,
+		BizTypeLabel:        label.BizType,
+		FlowNameLabel:       label.FlowName,
+		FlowNodeLabel:       label.Node,
+		FlowNodeStatusLabel: label.Status,
+	}).
 		Inc()
 }

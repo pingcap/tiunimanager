@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	"net"
@@ -451,7 +452,7 @@ func preCheckStock(ctx context.Context, region string, arch string, instanceReso
 
 	for _, instance := range instanceResource {
 		for _, resource := range instance.Resource {
-			enough := true
+			enough := true // nolint
 			if zoneResource, ok := stocks[resource.Zone]; ok &&
 				zoneResource.FreeHostCount >= int32(resource.Count) &&
 				zoneResource.FreeDiskCount >= int32(resource.Count) &&
@@ -663,7 +664,7 @@ type openSftpClientFunc func(ctx context.Context, req cluster.TakeoverClusterReq
 
 var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.TakeoverClusterReq) (*ssh.Client, *sftp.Client, error) {
 	conf := ssh.ClientConfig{User: req.TiUPUserName,
-		Auth: []ssh.AuthMethod{ssh.Password(req.TiUPUserPassword)},
+		Auth: []ssh.AuthMethod{ssh.Password(string(req.TiUPUserPassword))},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
@@ -705,7 +706,7 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 		return
 	}
 	meta := &meta.ClusterMeta{}
-	if err = meta.BuildForTakeover(ctx, req.ClusterName, req.DBPassword); err != nil {
+	if err = meta.BuildForTakeover(ctx, req.ClusterName, string(req.DBPassword)); err != nil {
 		framework.LogWithContext(ctx).Errorf(err.Error())
 		return
 	}
@@ -865,7 +866,7 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 
 func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.RestoreNewClusterReq) error {
 	if req.BackupID == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("restore new cluster input backupId empty"))
+		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "restore new cluster input backupId empty")
 	}
 
 	brService := backuprestore.GetBRService()
@@ -883,7 +884,7 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
 	}
 	if resp.BackupRecords[0].Status != string(constants.ClusterBackupFinished) {
-		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, fmt.Sprintf("backup record status invalid"))
+		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, "backup record status invalid")
 	}
 
 	return nil
@@ -902,7 +903,8 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
 		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
-		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"checkSystemHealthDone":   {"initDatabaseAccount", "initDatabaseAccountDone", "failAfterUpgrade", workflow.SyncFuncNode, initDatabaseAccount},
+		"initDatabaseAccountDone": {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
 		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
 		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
@@ -928,7 +930,8 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"checkMD5Done":            {"checkUpgradeTime", "checkUpgradeTimeDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeTime},
 		"checkUpgradeTimeDone":    {"checkConfig", "checkConfigDone", "failAfterUpgrade", workflow.SyncFuncNode, checkUpgradeConfig},
 		"checkConfigDone":         {"checkSystemHealth", "checkSystemHealthDone", "failAfterUpgrade", workflow.SyncFuncNode, checkRegionHealth},
-		"checkSystemHealthDone":   {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
+		"checkSystemHealthDone":   {"initDatabaseAccount", "initDatabaseAccountDone", "failAfterUpgrade", workflow.SyncFuncNode, initDatabaseAccount},
+		"initDatabaseAccountDone": {"applyParameterGroup", "applyParameterGroupDone", "failAfterUpgrade", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroup)},
 		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
 		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
@@ -956,40 +959,40 @@ func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) 
 	version := clusterMeta.Cluster.Version
 	framework.LogWithContext(ctx).Infof("query update path for cluster %s, version %s, using minor version %s",
 		clusterID, version, clusterMeta.GetMinorVersion())
-	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, clusterMeta.GetMinorVersion())
+
+	queryProductsInfoResp, err := product.NewManager().QueryProducts(ctx, message.QueryProductsInfoReq{
+		ProductIDs: []string{"TiDB"},
+	})
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("failed to query update path for cluster %s version %s: %s", clusterID, version, err.Error())
+		framework.LogWithContext(ctx).Errorf("failed to query products for TiDB: %s", err.Error())
 		return
 	}
-	framework.LogWithContext(ctx).Infof("query update path for cluster %s version %s: %v", clusterID, version, productUpgradePaths)
 
-	// key: type, value: dstVersions
-	pathMap := make(map[string][]string)
-	for _, productUpgradePath := range productUpgradePaths {
-		if versions, ok := pathMap[productUpgradePath.Type]; ok {
-			versions = append(versions, getFullVersion(productUpgradePath.DstVersion))
-			pathMap[productUpgradePath.Type] = versions
-		} else {
-			versions = []string{getFullVersion(productUpgradePath.DstVersion)}
-			pathMap[productUpgradePath.Type] = versions
+	resp.Paths = generatePaths(ctx, queryProductsInfoResp, clusterMeta.Cluster.Version, string(clusterMeta.Cluster.CpuArchitecture))
+	return
+}
+
+func generatePaths(ctx context.Context, queryProductsInfoResp message.QueryProductsInfoResp, clusterVersion, clusterCpuArch string) (paths []*structs.ProductUpgradePathItem) {
+	var versions []string
+	for _, p := range queryProductsInfoResp.Products {
+		for _, v := range p.Versions {
+			cmp, e := meta.CompareTiDBVersion(v.Version, clusterVersion)
+			if e != nil {
+				framework.LogWithContext(ctx).Errorf("failed to compare %s and %s: %s", v.Version, clusterVersion, e.Error())
+				continue
+			}
+			if v.ProductID == "TiDB" && v.Arch == clusterCpuArch && cmp && v.Version != clusterVersion {
+				versions = append(versions, v.Version)
+			}
 		}
 	}
 
-	framework.LogWithContext(ctx).Debugf("query pathMap for cluster %s version %s: %v", clusterID, version, pathMap)
-	var paths []*structs.ProductUpgradePathItem
-	for k, v := range pathMap {
-		path := structs.ProductUpgradePathItem{
-			UpgradeType: k,
-			Versions:    v,
-		}
-		if k == string(constants.UpgradeTypeInPlace) {
-			path.UpgradeWays = []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)}
-		}
-		paths = append(paths, &path)
+	path := structs.ProductUpgradePathItem{
+		UpgradeType: string(constants.UpgradeTypeInPlace),
+		Versions:    versions,
+		UpgradeWays: []string{string(constants.UpgradeWayOffline), string(constants.UpgradeWayOnline)},
 	}
-	framework.LogWithContext(ctx).Debugf("query paths for cluster %s version %s: %v", clusterID, version, paths)
-
-	resp.Paths = paths
+	paths = append(paths, &path)
 	return
 }
 
@@ -1012,7 +1015,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	}
 
 	runningInstanceTypes := make([]string, 0)
-	for instanceType, _ := range clusterMeta.Instances {
+	for instanceType := range clusterMeta.Instances {
 		runningInstanceTypes = append(runningInstanceTypes, instanceType)
 	}
 

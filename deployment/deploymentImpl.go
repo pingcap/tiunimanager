@@ -27,9 +27,7 @@ package deployment
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -471,11 +469,12 @@ func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentTyp
 // @return ID, operation id to help check the status
 // @return err
 func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	//logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDDumpling, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-	logInFunc.Infof("recv operation req: %s", op)
+	// todo op contains password
+	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDumpling,
@@ -502,11 +501,12 @@ func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []
 // @return ID, operation id to help check the status
 // @return err
 func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	//logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDLightning, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-	logInFunc.Infof("recv operation req: %s", op)
+	// todo op contains password
+	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDLightning,
@@ -588,11 +588,7 @@ func (m *Manager) Pull(ctx context.Context, componentType TiUPComponentType, clu
 		return
 	}
 
-	data, err := ioutil.ReadFile(localPath)
-	if err != nil {
-		return
-	}
-	return string(data), nil
+	return disk.ReadFileContent(localPath)
 }
 
 // Ctl
@@ -780,7 +776,6 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		}
 
 		updateStatus(ctx, id, "operation finished", Finished, t0)
-		return
 	}()
 }
 
@@ -806,7 +801,7 @@ func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int, allInf
 
 	data, err := cmd.Output()
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data)))
+		return "", fmt.Errorf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data))
 	}
 	if allInfo {
 		return fmt.Sprintf("%s%s", string(data), stderr.String()), nil

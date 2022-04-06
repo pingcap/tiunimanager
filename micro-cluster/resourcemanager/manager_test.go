@@ -32,7 +32,6 @@ import (
 	config "github.com/pingcap-inc/tiem/models/platform/config"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
@@ -41,21 +40,6 @@ import (
 	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/stretchr/testify/assert"
 )
-
-var emptyNode = func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
-	return nil
-}
-
-func getEmptyFlow(name string) *workflow.WorkFlowDefine {
-	return &workflow.WorkFlowDefine{
-		FlowName: name,
-		TaskNodes: map[string]*workflow.NodeDefine{
-			"start": {Name: "start", SuccessEvent: "done", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"done":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-			"fail":  {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: emptyNode},
-		},
-	}
-}
 
 func genHostInfo(hostName string) *structs.HostInfo {
 	host := structs.HostInfo{
@@ -454,7 +438,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 		} else {
 			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
-	})
+	}).Times(2)
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
 	assert.True(t, ok)
@@ -469,6 +453,11 @@ func Test_GetStocks_Succeed(t *testing.T) {
 	assert.Equal(t, int32(5), stocks["TEST_Region1,TEST_Zone1"].FreeMemory)
 	assert.Equal(t, int32(3), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCount)
 	assert.Equal(t, int32(512), stocks["TEST_Region1,TEST_Zone1"].FreeDiskCapacity)
+
+	// bad request test
+	location = structs.Location{Region: "UnknownRegion"}
+	_, err = resourceManager.GetStocks(context.TODO(), &location, &structs.HostFilter{}, &structs.DiskFilter{})
+	assert.NotNil(t, err)
 }
 
 func Test_AllocResources_Succeed(t *testing.T) {
@@ -588,7 +577,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
 		}
 		return nil
-	})
+	}).Times(2)
 	allocRecycle := resourceManager.GetManagement().GetAllocatorRecycler()
 	localHostManage, ok := (allocRecycle).(*(allocrecycle.LocalHostManagement))
 	assert.True(t, ok)
@@ -602,6 +591,16 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 	req.RecycleReqs = append(req.RecycleReqs, require)
 	err := resourceManager.RecycleResources(context.TODO(), &req)
 	assert.Nil(t, err)
+
+	// bad request test
+	var req2 resource_structs.RecycleRequest
+	var require2 resource_structs.RecycleRequire
+	require2.HolderID = "Test-Bad-Cluster-ID"
+	require2.RecycleType = 1
+
+	req2.RecycleReqs = append(req2.RecycleReqs, require2)
+	err = resourceManager.RecycleResources(context.TODO(), &req2)
+	assert.NotNil(t, err)
 }
 
 func Test_UpdateHostInfo(t *testing.T) {

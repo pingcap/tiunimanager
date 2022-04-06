@@ -283,9 +283,9 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 		},
 		"instances": [
 		  {
-			"id": "172.16.6.252:4112",
+			"id": "172.16.6.555:4112",
 			"role": "alertmanager",
-			"host": "172.16.6.252",
+			"host": "172.16.6.555",
 			"ports": "4112/4113",
 			"os_arch": "linux/x86_64",
 			"status": "Up",
@@ -296,12 +296,25 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 			"Port": 4112
 		  },
 		  {
-			"id": "172.16.6.252:0",
+			"id": "172.16.6.555:0",
 			"role": "filebeat",
-			"host": "172.16.6.252",
+			"host": "172.16.6.555",
 			"ports": "",
 			"os_arch": "linux/x86_64",
 			"status": "Up",
+			"since": "-",
+			"data_dir": "/em-data/filebeat-0",
+			"deploy_dir": "/em-deploy/filebeat-0",
+			"ComponentName": "filebeat",
+			"Port": 0
+		  },
+		  {
+			"id": "172.16.6.999:0",
+			"role": "filebeat",
+			"host": "172.16.6.999",
+			"ports": "",
+			"os_arch": "linux/x86_64",
+			"status": "Down",
 			"since": "-",
 			"data_dir": "/em-data/filebeat-0",
 			"deploy_dir": "/em-deploy/filebeat-0",
@@ -314,19 +327,23 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
-	mockSec.EXPECT().Display(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil).Times(2)
+	mockSec.EXPECT().Display(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil).Times(3)
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	installed, err := fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.252"}})
+	installed, err := fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.555"}})
 	assert.Nil(t, err)
 	assert.True(t, installed)
 
-	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.253"}})
+	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.666"}})
 	assert.Nil(t, err)
 	assert.False(t, installed)
+
+	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.999"}})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.TIEM_RESOURCE_BAD_INSTANCE_EXIST, err.(errors.EMError).GetCode())
 }
 
 func Test_JoinEMCluster(t *testing.T) {

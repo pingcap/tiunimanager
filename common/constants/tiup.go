@@ -26,3 +26,14 @@ package constants
 const TiUPBinPath = "tiup"
 const TiUPTopologyTmpFilePrefix = "em-topology"
 const TiUPCollectorTmpFilePrefix = "em-collector"
+
+type EMInstanceStatus string
+
+const (
+	EMInstanceUP   EMInstanceStatus = "Up"
+	EMInstanceDown EMInstanceStatus = "Down"
+)
+
+const (
+	EMInstanceNameOfFileBeat string = "filebeat"
+)

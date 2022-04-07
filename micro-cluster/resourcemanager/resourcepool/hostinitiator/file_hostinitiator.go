@@ -246,19 +246,30 @@ func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hos
 		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
 	}
 	installed = false
-LOOP:
-	for _, instance := range emTopo.Instances {
-		if instance.Role == "filebeat" {
-			for _, host := range hosts {
-				if instance.Host == host.IP {
-					installed = true
-					log.Infof("host %s %s has been install filebeat", host.HostName, host.IP)
-					break LOOP
-				}
+	// []hosts only contains one host since importing each host in a async workflow
+	for _, host := range hosts {
+		installed, err = p.checkInstanceInstalled(ctx, emTopo, host.IP, constants.EMInstanceNameOfFileBeat)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return installed, nil
+}
+
+func (p *FileHostInitiator) checkInstanceInstalled(ctx context.Context, emTopo *structs.EMMetaTopo, hostIp string, instance string) (installed bool, err error) {
+	log := framework.LogWithContext(ctx)
+	for _, emInstance := range emTopo.Instances {
+		if emInstance.Role == instance && emInstance.Host == hostIp {
+			log.Infof("%s has been installed on host %s in status %s", instance, hostIp, emInstance.Status)
+			if emInstance.Status == string(constants.EMInstanceUP) {
+				return true, nil
+			} else {
+				return false, errors.NewErrorf(errors.TIEM_RESOURCE_BAD_INSTANCE_EXIST, "%s has been installed on host %s but in %s status", instance, hostIp, emInstance.Status)
 			}
 		}
 	}
-	return installed, nil
+	return false, nil
 }
 
 func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {

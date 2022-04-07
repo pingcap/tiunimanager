@@ -111,7 +111,9 @@ func (flow *WorkFlowAggregation) start(ctx context.Context) {
 	start := flow.Define.TaskNodes["start"]
 	result := flow.handle(start)
 	flow.complete(result)
-	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	err := models.Transaction(flow.Context, func(transactionCtx context.Context) error {
+		return models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(transactionCtx, flow.Flow, flow.Nodes)
+	})
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("update workflow detail %+v failed %s", flow, err.Error())
 	}
@@ -145,7 +147,9 @@ func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 		err := errors.NewError(errors.TIEM_TASK_CANCELED, reason)
 		flow.handleTaskError(flow.CurrentNode, nodeDefine, err)
 	}
-	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	err := models.Transaction(flow.Context, func(transactionCtx context.Context) error {
+		return models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(transactionCtx, flow.Flow, flow.Nodes)
+	})
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("update workflow detail %+v failed %s", flow, err.Error())
 	}
@@ -210,7 +214,9 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 		return errors.NewErrorf(errors.TIEM_MARSHAL_ERROR, "%v", err)
 	}
 	flow.Flow.Context = string(data)
-	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+	err = models.Transaction(flow.Context, func(transactionCtx context.Context) error {
+		return models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(transactionCtx, flow.Flow, flow.Nodes)
+	})
 	if err != nil {
 		framework.LogWithContext(flow.Context).Warnf("update workflow %s detail of bizId %s failed %s", flow.Flow.ID, flow.Flow.BizID, err.Error())
 	}

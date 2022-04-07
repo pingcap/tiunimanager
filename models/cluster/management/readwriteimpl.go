@@ -276,20 +276,17 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 }
 
 func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error {
-	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
-		err := g.UpdateClusterInfo(ctx, cluster)
-		if err == nil {
-			err = g.UpdateInstance(ctx, instances...)
-		}
+	err := g.UpdateClusterInfo(ctx, cluster)
+	if err == nil {
+		err = g.UpdateInstance(ctx, instances...)
+	}
 
-		if err != nil {
-			msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
-			framework.LogWithContext(ctx).Error(msg)
-			tx.Rollback()
-			return dbCommon.WrapDBError(err)
-		}
-		return nil
-	})
+	if err != nil {
+		msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
+		framework.LogWithContext(ctx).Error(msg)
+		return dbCommon.WrapDBError(err)
+	}
+	return nil
 }
 
 func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error) {

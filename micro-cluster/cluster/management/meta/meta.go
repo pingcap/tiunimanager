@@ -57,7 +57,9 @@ func (p *ClusterMeta) UpdateMeta(ctx context.Context) error {
 			instances = append(instances, v...)
 		}
 	}
-	return models.GetClusterReaderWriter().UpdateMeta(ctx, p.Cluster, instances)
+	return models.Transaction(ctx, func(transactionCtx context.Context) error {
+		return models.GetClusterReaderWriter().UpdateMeta(transactionCtx, p.Cluster, instances)
+	})
 }
 
 // Delete

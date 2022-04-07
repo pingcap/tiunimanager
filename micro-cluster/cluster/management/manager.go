@@ -765,7 +765,7 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			}
 		}).BreakIf(func() error {
 			// async start flow
-			return workflow.GetWorkFlowService().AsyncStart(ctx, flow)
+			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
 		}).If(func(err error) {
 			framework.LogWithContext(ctx).Errorf(
 				"maintenance cluster %s failed", clusterMeta.Cluster.ID)

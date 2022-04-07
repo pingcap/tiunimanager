@@ -83,7 +83,7 @@ func Open(fw *framework.BaseFramework) error {
 
 	logins := framework.LogForkFile(constants.LogFileSystem)
 
-	db, err := gorm.Open(sqlite.Open(dbFilePath+"?_busy_timeout=60000"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbFilePath+"?_busy_timeout=5000&_txlock=immediate"), &gorm.Config{})
 
 	if err != nil || db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFilePath, err, db.Error)
@@ -248,119 +248,6 @@ func (p *database) initReaderWriters() {
 	defaultDb.systemReaderWriter = system.NewSystemReadWrite(defaultDb.base)
 }
 
-//func (p *database) initSystemConfig() {
-//	// system config
-//	framework.LogWithContext(context.TODO()).Info("begin init system configs to database...")
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupRateLimit, ConfigValue: constants.DefaultBackupRateLimit})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRestoreRateLimit, ConfigValue: constants.DefaultRestoreRateLimit})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupConcurrency, ConfigValue: constants.DefaultBackupConcurrency})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRestoreConcurrency, ConfigValue: constants.DefaultRestoreConcurrency})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDumplingThreadNum, ConfigValue: constants.DefaultDumplingThreadNum})
-//	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRetainedPortRange, ConfigValue: constants.DefaultRetainedPortRange})
-//}
-
-//func (p *database) initSystemData() {
-//	tenant, err := defaultDb.accountReaderWriter.CreateTenant(context.TODO(),
-//		&account.Tenant{
-//			ID:               "admin",
-//			Name:             "EM system administration",
-//			Creator:          "System",
-//			Status:           string(constants.TenantStatusNormal),
-//			OnBoardingStatus: string(constants.TenantOnBoarding)})
-//	if err != nil {
-//		framework.LogWithContext(context.TODO()).Errorf("create 'admin' tenant error: %v", err)
-//		return
-//	}
-//
-//	// todo determine if default data needed
-//	// system admin account
-//	user := &account.User{
-//		DefaultTenantID: tenant.ID,
-//		Name:            "admin",
-//		Creator:         "System",
-//	}
-//	user.GenSaltAndHash("admin")
-//	_, _, _, err = defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin")
-//	if err != nil {
-//		framework.LogWithContext(context.TODO()).Errorf("create 'admin' user error: %v", err)
-//		return
-//	}
-//
-//	// label
-//	for _, v := range structs.DefaultLabelTypes {
-//		labelRecord := new(resourcePool.Label)
-//		labelRecord.ConstructLabelRecord(&v)
-//		if err = defaultDb.base.Create(labelRecord).Error; err != nil {
-//			framework.LogForkFile(constants.LogFileSystem).Errorf("create label error: %s", err.Error())
-//			return
-//		}
-//	}
-//
-//	// batch import parameters & default parameter group sql
-//	parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
-//	err = syscall.Access(parameterSqlFile, syscall.F_OK)
-//	if !os.IsNotExist(err) {
-//		sqls, err := ioutil.ReadFile(parameterSqlFile)
-//		if err != nil {
-//			framework.LogForkFile(constants.LogFileSystem).Errorf("batch import parameters failed, err = %s", err.Error())
-//			return
-//		}
-//		sqlArr := strings.Split(string(sqls), ";")
-//		for _, sql := range sqlArr {
-//			if strings.TrimSpace(sql) == "" {
-//				continue
-//			}
-//			// exec import sql
-//			defaultDb.base.Exec(sql)
-//		}
-//	}
-//
-//	// import TiUP configs
-//	tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-//	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
-//	if !os.IsNotExist(err) {
-//		sqls, err := ioutil.ReadFile(tiUPSqlFile)
-//		if err != nil {
-//			framework.LogForkFile(constants.LogFileSystem).Errorf("import tiupconfigs failed, err = %s", err.Error())
-//			return
-//		}
-//		sqlArr := strings.Split(string(sqls), ";")
-//		for _, sql := range sqlArr {
-//			if strings.TrimSpace(sql) == "" {
-//				continue
-//			}
-//			// exec import sql
-//			defaultDb.base.Exec(sql)
-//		}
-//	}
-//
-//	// import upgrade paths
-//	upgradeSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/upgrades.sql"
-//	err = syscall.Access(tiUPSqlFile, syscall.F_OK)
-//	if !os.IsNotExist(err) {
-//		sqls, err := ioutil.ReadFile(upgradeSqlFile)
-//		if err != nil {
-//			framework.LogForkFile(constants.LogFileSystem).Errorf("import upgrades failed, err = %s", err.Error())
-//			return
-//		}
-//		sqlArr := strings.Split(string(sqls), ";")
-//		for _, sql := range sqlArr {
-//			if strings.TrimSpace(sql) == "" {
-//				continue
-//			}
-//			// exec import sql
-//			defaultDb.base.Exec(sql)
-//		}
-//	}
-//}
-
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
 	return defaultDb.changeFeedReaderWriter
 }
@@ -510,11 +397,12 @@ func SetSystemReaderWriter(rw system.ReaderWriter) {
 // @Parameter ctx
 // @Parameter fc
 // @return error
-func Transaction(ctx context.Context, fc func(transactionCtx context.Context) error) error {
+func Transaction(ctx context.Context, fc func(transactionCtx context.Context) error) (err error){
 	if defaultDb.base == nil {
 		return fc(ctx)
 	}
 	db := defaultDb.base.WithContext(ctx)
+
 	return db.Transaction(func(tx *gorm.DB) error {
 		return fc(common.CtxWithTransaction(ctx, tx))
 	})

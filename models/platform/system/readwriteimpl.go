@@ -99,8 +99,8 @@ func (s *SystemReadWrite) UpdateVersion(ctx context.Context, target string) erro
 		framework.LogWithContext(ctx).Infof("current version %s is equal to target version", info.CurrentVersionID)
 		return nil
 	}
-	err = s.DB(ctx).Model(info).Where("system_name is not null").
-		Update("last_version_id", info.CurrentVersionID).
+	err = s.DB(ctx).Model(&SystemInfo{}).Where("system_name is not null").
+		Update("last_version_id", target).
 		Update("current_version_id", target).
 		Error
 	return dbCommon.WrapDBError(err)

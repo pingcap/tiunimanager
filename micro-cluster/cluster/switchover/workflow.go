@@ -809,6 +809,7 @@ func wfnEndMaintenanceWithClusterIDs(node *workflowModel.WorkFlowNode, ctx *work
 	var errToRet error
 
 	for _, clusterID := range clusterIDs {
+		framework.LogWithContext(ctx).Infof("%s clusterID:%s", funcName, clusterID)
 		metaOfCluster, err := meta.Get(ctx, clusterID)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("%s get meta of cluster %s failed:%s", funcName, clusterID, err.Error())
@@ -879,12 +880,12 @@ func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	return errToRet
 }
 
-func wfnGetSwitchoverMasterSlavesStateFromAFailedWorkflow(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, oldWorkFlowID string) (*switchoverMasterSlavesState, error) {
-	funcName := "wfnGetSwitchoverMasterSlavesStateFromAFailedWorkflow"
+func wfnGetSwitchoverMasterSlavesStateFromASwitchoverWorkflow(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext, oldWorkFlowID string) (*switchoverMasterSlavesState, bool, error) {
+	funcName := "wfnGetSwitchoverMasterSlavesStateFromASwitchoverWorkflow"
 	framework.LogWithContext(ctx).Infof("enter %s", funcName)
 	defer framework.LogWithContext(ctx).Infof("exit %s", funcName)
-	s, err := mgr.getSwitchoverMasterSlavesStateFromAFailedWorkflow(ctx, oldWorkFlowID)
-	return s, err
+	s, flag, err := mgr.getSwitchoverMasterSlavesStateFromASwitchoverWorkflow(ctx, oldWorkFlowID)
+	return s, flag, err
 }
 
 func wfStepRollback(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
@@ -894,7 +895,7 @@ func wfStepRollback(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 
 	req := wfGetReq(ctx)
 	oldWorkflowID := req.RollbackWorkFlowID
-	state, err := wfnGetSwitchoverMasterSlavesStateFromAFailedWorkflow(node, ctx, oldWorkflowID)
+	state, workflowRollbackSucceedFlag, err := wfnGetSwitchoverMasterSlavesStateFromASwitchoverWorkflow(node, ctx, oldWorkflowID)
 	if err != nil {
 		return err
 	}
@@ -906,15 +907,21 @@ func wfStepRollback(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 		}
 		defer wfnEndMaintenanceWithClusterIDs(node, ctx, allClusterIDs)
 	}
+	if workflowRollbackSucceedFlag {
+		node.Record("The previous workflow has already been rollbacked successfully.")
+		return nil
+	}
 	// previous failed switchover: A->B on clusters(A, B, C)
 	// set all cluster readonly
 	err = mgr.clusterSetReadonly(ctx, state.OldMasterClusterID)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("%s master clusterSetReadonly failed, clusterID:%s", funcName, state.OldMasterClusterID)
 		return err
 	}
 	for slaveID := range state.OldSlavesClusterIDMapToSyncTaskID {
 		err = mgr.clusterSetReadonly(ctx, slaveID)
 		if err != nil {
+			framework.LogWithContext(ctx).Errorf("%s slave clusterSetReadonly failed, clusterID:%s", funcName, slaveID)
 			return err
 		}
 	}
@@ -1006,7 +1013,7 @@ func wfStepMarshalSwitchoverMasterSlavesState(node *workflowModel.WorkFlowNode, 
 	if err != nil {
 		return err
 	}
-	node.Record(str)
+	node.Record(fmt.Sprintf("%s\n", str))
 	return nil
 }
 
@@ -1246,7 +1253,7 @@ func wfGenStepWithRollbackCB(fp, rollbackFp wfStepCallback) func(node *workflowM
 			err1 := rollbackFp(node, ctx)
 			framework.LogWithContext(ctx).Infof("%s rollback err:%v", funcName, err1)
 			if err1 == nil {
-				err := fmt.Errorf("err:%v \nRollback Successfully.", err0)
+				err := fmt.Errorf("err:%v \n%s", err0, constants.SwitchoverRollbackSuccessInfoString)
 				return err
 			} else {
 				err := fmt.Errorf("err:%v \nRollback Failed:%v", err0, err1)

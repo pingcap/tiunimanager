@@ -152,6 +152,8 @@ type MasterSlaveClusterSwitchoverReq struct {
 	Force           bool   `json:"force"`
 	// if this field is not empty, that means this is a rollback request
 	RollbackWorkFlowID string `json:"rollbackWorkFlowID"`
+	// clear previous un-cleared "Switching" maintenance state
+	RollbackClearPreviousMaintenanceFlag bool `json:"rollbackClearPreviousMaintenanceFlag"`
 	// only check if this flag is true
 	OnlyCheck               bool `json:"onlyCheck"`
 	CheckSlaveReadOnlyFlag  bool `json:"checkSlaveReadOnlyFlag"`

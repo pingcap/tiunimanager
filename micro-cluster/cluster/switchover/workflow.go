@@ -932,6 +932,16 @@ func wfStepRollback(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 			return err
 		}
 		for _, id := range ids {
+			skipFlag := false
+			for _, previousCDCID := range state.OldSlavesClusterIDMapToCDCIDs[slaveID] {
+				if id == previousCDCID {
+					skipFlag = true
+					break
+				}
+			}
+			if skipFlag {
+				continue
+			}
 			err := mgr.removeChangeFeedTask(ctx, id)
 			if err != nil {
 				return err
@@ -953,6 +963,10 @@ func wfStepRollback(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 			if previousCDCsM[task.ID] != nil {
 				// preserve old cdc
 				alreadyExistCDCs[task.ID] = true
+				err := mgr.resumeChangeFeedTask(ctx, task.ID)
+				if err != nil {
+					return err
+				}
 			} else {
 				// delete unrecognized cdc
 				err := mgr.removeChangeFeedTask(ctx, task.ID)

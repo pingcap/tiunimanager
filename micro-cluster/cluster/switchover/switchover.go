@@ -169,6 +169,11 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		return
 	}
 
+	if req.RollbackClearPreviousMaintenanceFlag {
+		resp, err = p.switchoverEndMaintenance(ctx, req)
+		return
+	}
+
 	flowName := constants.FlowMasterSlaveSwitchoverNormal
 	reqJsonBs, err := json.Marshal(req)
 	if err != nil {
@@ -373,6 +378,59 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 	}, nil
 }
 
+func (p *Manager) switchoverEndMaintenance(ctx context.Context, req *cluster.MasterSlaveClusterSwitchoverReq) (resp *cluster.MasterSlaveClusterSwitchoverResp, err error) {
+	framework.LogWithContext(ctx).Info("Manager.switchoverEndMaintenance")
+
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("req marshal to json failed err:%s", err)
+		return resp, err
+	}
+	funcName := "switchoverEndMaintenance"
+	oldMasterId := req.SourceClusterID
+	framework.LogWithContext(ctx).Infof("%s OldMasterClusterID %s", funcName, oldMasterId)
+
+	slaveRels, err := mgr.clusterGetRelationsByMasterClusterId(ctx, oldMasterId)
+	if err != nil {
+		return resp, err
+	}
+	var slaveIDs []string
+	for _, rel := range slaveRels {
+		slaveIDs = append(slaveIDs, rel.ObjectClusterID)
+	}
+
+	metaOfOldMaster, err := meta.Get(ctx, oldMasterId)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get meta of cluster %s failed:%s", oldMasterId, err.Error())
+		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
+			"get meta of %s failed, %s", oldMasterId, err.Error())
+	}
+	err = metaOfOldMaster.EndMaintenance(ctx, constants.ClusterMaintenanceSwitching)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("rollbackClearPreviousMaintenance end maintenance of cluster %s failed:%s", oldMasterId, err.Error())
+		return resp, err
+	}
+
+	for _, slaveClusterID := range slaveIDs {
+		metaOfSlave, err := meta.Get(ctx, slaveClusterID)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get meta of cluster %s failed:%s", slaveClusterID, err.Error())
+			return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
+				"get meta of cluster %s failed, %s", slaveClusterID, err.Error())
+		}
+		err = metaOfSlave.EndMaintenance(ctx, constants.ClusterMaintenanceSwitching)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("rollbackClearPreviousMaintenance end maintenance of cluster %s failed:%s", slaveClusterID, err.Error())
+			return resp, err
+		}
+	}
+
+	return &cluster.MasterSlaveClusterSwitchoverResp{
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: "",
+		},
+	}, nil
+}
+
 func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSlaveClusterSwitchoverReq) (resp *cluster.MasterSlaveClusterSwitchoverResp, err error) {
 	framework.LogWithContext(ctx).Info("Manager.switchoverRollback")
 
@@ -426,7 +484,13 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
 			"get meta of %s failed, %s", oldMasterId, err.Error())
 	}
-
+	if req.RollbackClearPreviousMaintenanceFlag {
+		err := metaOfOldMaster.EndMaintenance(ctx, constants.ClusterMaintenanceSwitching)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("rollbackClearPreviousMaintenance end maintenance of cluster %s failed:%s", oldMasterId, err.Error())
+			return resp, err
+		}
+	}
 	if err := metaOfOldMaster.StartMaintenance(ctx, constants.ClusterMaintenanceSwitchoverRollback); err != nil {
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
@@ -446,7 +510,13 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 			return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
 				"get meta of cluster %s failed, %s", slaveClusterID, err.Error())
 		}
-
+		if req.RollbackClearPreviousMaintenanceFlag {
+			err := metaOfSlave.EndMaintenance(ctx, constants.ClusterMaintenanceSwitching)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("rollbackClearPreviousMaintenance end maintenance of cluster %s failed:%s", slaveClusterID, err.Error())
+				return resp, err
+			}
+		}
 		if err := metaOfSlave.StartMaintenance(ctx, constants.ClusterMaintenanceSwitchoverRollback); err != nil {
 			framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 			return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
@@ -837,6 +907,7 @@ func (m *Manager) getAllChangeFeedTasksOnCluster(ctx context.Context, clusterId 
 type switchoverMasterSlavesState struct {
 	OldMasterClusterID                string
 	OldSlavesClusterIDMapToSyncTaskID map[string]string
+	OldSlavesClusterIDMapToCDCIDs     map[string][]string
 	CDCsOnMaster                      []*cluster.ChangeFeedTask
 }
 
@@ -847,6 +918,7 @@ func (m *Manager) marshalSwitchoverMasterSlavesState(ctx context.Context, oldMas
 	}
 	var s switchoverMasterSlavesState
 	s.OldSlavesClusterIDMapToSyncTaskID = make(map[string]string)
+	s.OldSlavesClusterIDMapToCDCIDs = make(map[string][]string)
 	s.OldMasterClusterID = oldMasterClusterID
 	uniqM := make(map[string]bool)
 	for _, v := range rels {
@@ -860,6 +932,11 @@ func (m *Manager) marshalSwitchoverMasterSlavesState(ctx context.Context, oldMas
 		if len(v.SyncChangeFeedTaskID) <= 0 {
 			return "", fmt.Errorf("found zero-length v.SyncChangeFeedTaskID, slaveClusterID:%v", slaveClusterID)
 		}
+		ids, err := mgr.getAllChangeFeedTaskIDsOnCluster(ctx, slaveClusterID)
+		if err != nil {
+			return "", err
+		}
+		s.OldSlavesClusterIDMapToCDCIDs[slaveClusterID] = ids
 	}
 	tasks, err := mgr.getAllChangeFeedTasksOnCluster(ctx, s.OldMasterClusterID)
 	if err != nil {

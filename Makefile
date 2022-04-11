@@ -270,7 +270,6 @@ mock:
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksystem/mock_system_interface.go -package mocksystem -source ./models/platform/system/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
-	mockgen -destination ./test/mockmodels/mocktiupconfig/mock_tiupconfig_interface.go -package mocktiupconfig -source ./models/tiup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go

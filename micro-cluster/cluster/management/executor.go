@@ -754,6 +754,11 @@ func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if err != nil {
 		return err
 	}
+	err = clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
+	if err != nil {
+		return err
+	}
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	var sourceClusterMeta meta.ClusterMeta
 	err = context.GetData(ContextSourceClusterMeta, &sourceClusterMeta)
 	if err != nil {
@@ -764,13 +769,9 @@ func endMaintenance(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		if err != nil {
 			return err
 		}
+		context.SetData(ContextSourceClusterMeta, &sourceClusterMeta)
 	}
-	err = clusterMeta.EndMaintenance(context, clusterMeta.Cluster.MaintenanceStatus)
-	if err != nil {
-		return err
-	}
-	context.SetData(ContextClusterMeta, &clusterMeta)
-	context.SetData(ContextSourceClusterMeta, &sourceClusterMeta)
+
 	return nil
 }
 

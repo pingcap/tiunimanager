@@ -65,6 +65,10 @@ func (mgr *WorkFlowManager) watchLoop(ctx context.Context) {
 	ticker := time.NewTicker(mgr.watchInterval)
 	for range ticker.C {
 		framework.LogWithContext(ctx).Infof("begin workflow watchLoop every %+v", mgr.watchInterval)
+		mgr.nodeGoroutineMap.Range(func(key, value interface{}) bool {
+			framework.LogWithContext(ctx).Infof("key %s, value %s", key, value)
+			return true
+		})
 		//handle processing workflow last
 		mgr.handleUnFinishedWorkFlow(ctx, constants.WorkFlowStatusCanceling)
 		mgr.handleUnFinishedWorkFlow(ctx, constants.WorkFlowStatusStopped)

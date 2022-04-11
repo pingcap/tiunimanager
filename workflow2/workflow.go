@@ -102,7 +102,7 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 					go func() {
 						//todo: recover
 						defer func() {
-							mgr.nodeGoroutineMap.Delete(flow.ID) //clean node go routine map whether end or stop
+							mgr.nodeGoroutineMap.Delete(flowMeta.Flow.ID) //clean node go routine map whether end or stop
 							framework.LogWithContext(context.Background()).Infof("delete flow id %s", flow.ID)
 						}()
 

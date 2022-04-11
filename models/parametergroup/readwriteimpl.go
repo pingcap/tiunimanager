@@ -141,25 +141,29 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 	}
 
 	// update parameter_group table, set updated_at
+	tx := m.DB(ctx).Begin()
 	pg.UpdatedAt = time.Now()
-	err = m.DB(ctx).Where("id = ?", pg.ID).Updates(pg).Error
+	err = tx.Where("id = ?", pg.ID).Updates(pg).Error
 	if err != nil {
 		log.Errorf("update param group err: %v, request param: %v", err.Error(), pg)
+		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, err.Error())
 	}
 
 	// range update parameter_group_mapping table
 	for i := range pgm {
 		pgm[i].UpdatedAt = time.Now()
-		err = m.DB(ctx).Where("parameter_group_id = ? and parameter_id = ?", pg.ID, pgm[i].ParameterID).Updates(pgm[i]).Error
+		err = tx.Where("parameter_group_id = ? and parameter_id = ?", pg.ID, pgm[i].ParameterID).Updates(pgm[i]).Error
 		if err != nil {
 			log.Errorf("update param group map err: %v, request param map: %v", err.Error(), pgm)
+			tx.Rollback()
 			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_RELATION_PARAM_ERROR, err.Error())
 		}
 	}
 
 	// Add extended parameters when creating parameter groups
-	if err = m.addParameters(ctx, pg.ID, addParameters); err != nil {
+	if err = m.addParameters(dbCommon.CtxWithTransaction(ctx, tx), pg.ID, addParameters); err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -167,12 +171,14 @@ func (m ParameterGroupReadWrite) UpdateParameterGroup(ctx context.Context, pg *P
 	if len(delParameters) > 0 {
 		for _, parameterId := range delParameters {
 			// delete parameter_group_mapping table
-			err = m.DB(ctx).Where("parameter_group_id = ? and parameter_id = ?", pg.ID, parameterId).Delete(&ParameterGroupMapping{}).Error
+			err = tx.Where("parameter_group_id = ? and parameter_id = ?", pg.ID, parameterId).Delete(&ParameterGroupMapping{}).Error
 			if err != nil {
+				tx.Rollback()
 				return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 			}
 		}
 	}
+	tx.Commit()
 	return
 }
 

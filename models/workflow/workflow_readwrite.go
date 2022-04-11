@@ -106,21 +106,23 @@ func (m *WorkFlowReadWrite) GetWorkFlowNode(ctx context.Context, nodeId string) 
 }
 
 func (m *WorkFlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error) {
-	err = m.UpdateWorkFlow(ctx, flow.ID, flow.Status, flow.Context)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update workflow %+v failed %s", flow, err.Error())
-		return err
-	}
-
-	for _, node := range nodes {
-		err = m.UpdateWorkFlowNode(ctx, node)
+	return m.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		err = m.UpdateWorkFlow(dbCommon.CtxWithTransaction(ctx, tx), flow.ID, flow.Status, flow.Context)
 		if err != nil {
-			framework.LogWithContext(ctx).Errorf("update workflow node %+v failed %s", node, err.Error())
+			framework.LogWithContext(ctx).Errorf("update workflow %+v failed %s", flow, err.Error())
+			tx.Rollback()
 			return err
 		}
-	}
-
-	return nil
+		for _, node := range nodes {
+			err = m.UpdateWorkFlowNode(dbCommon.CtxWithTransaction(ctx, tx), node)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("update workflow node %+v failed %s", node, err.Error())
+				tx.Rollback()
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (m *WorkFlowReadWrite) QueryDetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error) {

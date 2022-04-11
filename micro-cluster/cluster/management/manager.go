@@ -755,7 +755,7 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 				CreateWorkFlow(transactionCtx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
 				flowID = newFlowId
 				for key, value := range data {
-					err = workflow.GetWorkFlowService().InitContext(ctx, flowID, key, value)
+					err = workflow.GetWorkFlowService().InitContext(transactionCtx, flowID, key, value)
 					if err != nil {
 						return err
 					}

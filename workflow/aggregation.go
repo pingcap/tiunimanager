@@ -146,7 +146,7 @@ func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 		err := errors.NewError(errors.TIEM_TASK_CANCELED, reason)
 		flow.handleTaskError(flow.CurrentNode, nodeDefine, err)
 	}
-	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(ctx, flow.Flow, flow.Nodes)
+	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("update workflow detail %+v failed %s", flow, err.Error())
 	}

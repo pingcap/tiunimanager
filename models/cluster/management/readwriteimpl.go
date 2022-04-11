@@ -18,7 +18,6 @@ package management
 import (
 	"context"
 	"fmt"
-
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -276,17 +275,20 @@ func (g *ClusterReadWrite) QueryMetas(ctx context.Context, filters Filters, page
 }
 
 func (g *ClusterReadWrite) UpdateMeta(ctx context.Context, cluster *Cluster, instances []*ClusterInstance) error {
-	err := g.UpdateClusterInfo(ctx, cluster)
-	if err == nil {
-		err = g.UpdateInstance(ctx, instances...)
-	}
+	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		err := g.UpdateClusterInfo(dbCommon.CtxWithTransaction(ctx, tx), cluster)
+		if err == nil {
+			err = g.UpdateInstance(dbCommon.CtxWithTransaction(ctx, tx), instances...)
+		}
 
-	if err != nil {
-		msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
-		framework.LogWithContext(ctx).Error(msg)
-		return dbCommon.WrapDBError(err)
-	}
-	return nil
+		if err != nil {
+			msg := fmt.Sprintf("cluster update meta failed, clusterId = %s", cluster.ID)
+			framework.LogWithContext(ctx).Error(msg)
+			return dbCommon.WrapDBError(err)
+		}
+		return nil
+	})
+
 }
 
 func (g *ClusterReadWrite) QueryInstancesByHost(ctx context.Context, hostId string, typeFilter []string, statusFilter []string) ([]*ClusterInstance, error) {

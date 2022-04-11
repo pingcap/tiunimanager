@@ -153,6 +153,8 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 }
 
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+	framework.LogWithContext(ctx).Infof("begin CreateWorkFlow %s", flowName)
+	defer framework.LogWithContext(ctx).Infof("begin CreateWorkFlow %s", flowName)
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		return "", errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)

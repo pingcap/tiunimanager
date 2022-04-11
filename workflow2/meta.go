@@ -128,6 +128,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		}
 	}
 
+	isNodeFail := false
 	var currentNodeDefine *NodeDefine
 	if latest != nil {
 		latestNodeDefineKey = define.getNodeDefineKeyByName(latest.Name)
@@ -149,7 +150,6 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		currentNodeDefine = define.TaskNodes["start"]
 	}
 
-	isNodeFail := false
 	var current *workflow.WorkFlowNode
 	if currentNodeDefine != nil {
 		isNodeFail = define.isFailNode(currentNodeDefine.Name)
@@ -164,6 +164,8 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 			ReturnType: string(currentNodeDefine.ReturnType),
 			StartTime:  time.Now(),
 		}
+	} else {
+		isNodeFail = define.isFailNode(latest.Name)
 	}
 
 	meta := &WorkFlowMeta{
@@ -225,9 +227,6 @@ func (flow *WorkFlowMeta) Execute() {
 	if flow.CurrentNode != nil {
 		framework.LogWithContext(flow.Context).Infof("begin execute workflow %s, id %s, node name %s", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode.Name)
 		defer framework.LogWithContext(flow.Context).Infof("end execute workflow %s, id %s, node name %s", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode.Name)
-	} else {
-		framework.LogWithContext(flow.Context).Infof("===== begin execute workflow %s, id %s, node name %+v", flow.Flow.Name, flow.Flow.ID, flow.CurrentNode)
-		framework.LogWithContext(flow.Context).Infof("===== flow %+v", flow.Flow)
 	}
 
 	if flow.Flow.Status == constants.WorkFlowStatusInitializing {

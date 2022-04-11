@@ -175,6 +175,7 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bi
 		},
 		Context: NewFlowContext(ctx, dataMap).GetContextString(),
 	})
+	framework.LogWithContext(ctx).Infof("create worfklow result flow %+v, err %+v", flow, err)
 	return flow.ID, err
 }
 

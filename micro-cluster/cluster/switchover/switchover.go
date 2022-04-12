@@ -45,6 +45,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
@@ -800,7 +801,11 @@ func (m *Manager) getSwitchoverMasterSlavesStateFromASwitchoverWorkflow(ctx cont
 		return nil, previousRollbackSuccessFlag, fmt.Errorf("result.NodeInfo[0].Result strings.Split(str, \"\\n\") got zero unit, workflow %v", oldWorkFlowID)
 	}
 	framework.LogWithContext(ctx).Infof("%s units after strings.Split:%q", funcName, units)
-	str = units[0]
+	encryptedStr := units[0]
+	str, err = mgr.decryptMarshaledMasterSlavesStateStr(ctx, encryptedStr)
+	if err != nil {
+		return nil, previousRollbackSuccessFlag, err
+	}
 	var s switchoverMasterSlavesState
 	err = json.Unmarshal([]byte(str), &s)
 	if err != nil {
@@ -961,7 +966,8 @@ func (m *Manager) marshalSwitchoverMasterSlavesState(ctx context.Context, oldMas
 	if err != nil {
 		return "", err
 	}
-	return string(bs), nil
+	encryptedStr, err := mgr.encryptMarshaledMasterSlavesStateStr(ctx, string(bs))
+	return encryptedStr, err
 }
 
 func (m *Manager) getChangeFeedTask(ctx context.Context, changeFeedTaskId string) (*cluster.ChangeFeedTask, error) {
@@ -1165,4 +1171,42 @@ func (m *Manager) checkSyncChangeFeedTaskHealth(ctx context.Context, reqJson, lo
 	} else {
 		return fmt.Errorf("%s secondT is not bigger than firstT, firstT:%v secondT:%v", funcName, firstT, secondT)
 	}
+}
+
+func (m *Manager) encryptStr(ctx context.Context, toEncrypt string) (string, error) {
+	str, err := crypto.AesEncryptCFB(toEncrypt)
+	return str, err
+}
+
+func (m *Manager) decryptStr(ctx context.Context, toDescryptStr string) (string, error) {
+	str, err := crypto.AesDecryptCFB(toDescryptStr)
+	return str, err
+}
+
+type marshalMasterSlavesState struct {
+	MarshaledMasterSlavesState string
+}
+
+func (m *Manager) encryptMarshaledMasterSlavesStateStr(ctx context.Context, toEncrypt string) (string, error) {
+	str, err := crypto.AesEncryptCFB(toEncrypt)
+	if err != nil {
+		return "", err
+	}
+	var ms marshalMasterSlavesState
+	ms.MarshaledMasterSlavesState = str
+	bs, err := json.Marshal(&ms)
+	if err != nil {
+		return "", err
+	}
+	return string(bs), err
+}
+
+func (m *Manager) decryptMarshaledMasterSlavesStateStr(ctx context.Context, toDescryptStr string) (string, error) {
+	var ms marshalMasterSlavesState
+	err := json.Unmarshal([]byte(toDescryptStr), &ms)
+	if err != nil {
+		return "", err
+	}
+	str, err := crypto.AesDecryptCFB(ms.MarshaledMasterSlavesState)
+	return str, err
 }

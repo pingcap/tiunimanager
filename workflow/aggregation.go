@@ -112,6 +112,7 @@ func (flow *WorkFlowAggregation) start(ctx context.Context) {
 	result := flow.handle(start)
 	flow.complete(result)
 	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("update workflow detail %+v failed %s", flow, err.Error())
 	}

@@ -100,7 +100,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 	// batch update cluster_parameter_mapping table
 	for i, param := range params {
 		params[i].UpdatedAt = time.Now()
-		err = m.DB(ctx).Model(&ClusterParameterMapping{}).
+		err = tx.Model(&ClusterParameterMapping{}).
 			Where("cluster_id = ? and parameter_id = ?", clusterId, param.ParameterID).
 			Update("real_value", param.RealValue).Error
 		if err != nil {
@@ -124,7 +124,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	tx := m.DB(ctx).Begin()
 
 	// delete cluster_parameter_mapping table
-	err = m.DB(ctx).Where("cluster_id = ?", clusterId).Delete(&ClusterParameterMapping{}).Error
+	err = tx.Where("cluster_id = ?", clusterId).Delete(&ClusterParameterMapping{}).Error
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
@@ -135,7 +135,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	c := management.Cluster{
 		Entity: dbCommon.Entity{ID: clusterId},
 	}
-	err = m.DB(ctx).Model(&c).Update("parameter_group_id", parameterGroupId).Error
+	err = tx.Model(&c).Update("parameter_group_id", parameterGroupId).Error
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
@@ -148,7 +148,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 		params[i].CreatedAt = time.Now()
 		params[i].UpdatedAt = time.Now()
 	}
-	err = m.DB(ctx).CreateInBatches(params, len(params)).Error
+	err = tx.CreateInBatches(params, len(params)).Error
 	if err != nil {
 		log.Errorf("apply param group map err: %v, request param map: %v", err.Error(), params)
 		tx.Rollback()

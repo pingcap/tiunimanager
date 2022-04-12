@@ -130,7 +130,9 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 			Note:         param.Note,
 		}
 	}
+
 	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm, req.AddParams, req.DelParams)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)

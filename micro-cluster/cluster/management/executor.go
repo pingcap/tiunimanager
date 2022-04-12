@@ -2371,6 +2371,7 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		}
 	}
 	clusterInfo.ParameterGroupID = ""
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	return nil
 }
 

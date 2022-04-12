@@ -320,12 +320,12 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			continue
 		}
 		// If the parameter is modified and is triggered by another workflow and the parameter value is empty, then skip directly
-		if applyParameter && !maintenanceStatusChange && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+		if !applyParameter && !maintenanceStatusChange && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 			continue
 		}
 
 		// If the parameters are modified, read-only parameters are not allowed to be modified
-		if applyParameter && param.ReadOnly == int(ReadOnly) {
+		if !applyParameter && param.ReadOnly == int(ReadOnly) {
 			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s` are not allowed to be modified", DisplayFullParameterName(param.Category, param.Name)))
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)

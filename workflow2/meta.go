@@ -189,9 +189,7 @@ func (flow *WorkFlowMeta) Restore() {
 		//interrupt status update by api, do not overwrite it
 		flow.Flow.Status = current.Status
 	}
-	err = models.Transaction(flow.Context, func(transactionCtx context.Context) error {
-		return models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(transactionCtx, flow.Flow, flow.Nodes)
-	})
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
 		framework.LogWithContext(flow.Context).Warnf("update workflow detail %+v failed %s", flow, err.Error())
 	}

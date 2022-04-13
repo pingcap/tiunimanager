@@ -18,6 +18,7 @@ package management
 import (
 	"context"
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -145,7 +146,7 @@ func (g *ClusterReadWrite) RelationsResetSyncChangeFeedTaskIDs(ctx context.Conte
 	return g.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		slaves, err := g.GetSlaves(ctx, masterClusterID)
 		if err != nil {
-			return nil
+			return err
 		}
 		if len(slaves) != len(slavesClusterIDMapToSyncTaskID) {
 			return fmt.Errorf("len(slaves) != len(slavesClusterIDMapToSyncTaskID): %d != %d", len(slaves), len(slavesClusterIDMapToSyncTaskID))

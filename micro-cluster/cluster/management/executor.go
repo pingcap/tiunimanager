@@ -788,7 +788,7 @@ func persistCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 		framework.LogWithContext(context).Errorf(
 			"persist cluster error, cluster %s, workflow %s", clusterMeta.Cluster.ID, node.ParentID)
 	}
-
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	node.Record(fmt.Sprintf("persist cluster %s ", clusterMeta.Cluster.ID))
 	return err
 }

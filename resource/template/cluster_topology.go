@@ -36,12 +36,24 @@ global:
 monitored:
   node_exporter_port: {{ .NodeExporterPort }}
   blackbox_exporter_port: {{ .BlackboxExporterPort }}
-{{ end }}
-{{ range $key, $instances := .Instances }}
-{{ if and (eq $key "TiDB") (len $instances) }}
 server_configs:
   pd:
     replication.location-labels: ["region", "zone", "rack", "host"]
+  grafana:
+    auth.proxy.auto_sign_up: "true"
+    auth.proxy.enable_login_token: "false"
+    auth.proxy.enabled: "true"
+    auth.proxy.header_name: X-WEBAUTH-USER
+    auth.proxy.header_property: username
+    auth.proxy.ldap_sync_ttl: "60"
+    auth.proxy.sync_ttl: "60"
+    server.enforce_domain: "false"
+    server.protocol: http
+    server.root_url: '%(protocol)s://%(domain)s:%(http_port)s/grafanas-%(domain)s-%(http_port)s/'
+    server.serve_from_sub_path: "true"
+{{ end }}
+{{ range $key, $instances := .Instances }}
+{{ if and (eq $key "TiDB") (len $instances) }}
 tidb_servers:
   {{ range $instances }}
   {{ if eq .Status "Initializing" }}
@@ -103,6 +115,7 @@ grafana_servers:
     anonymous_enable: true
     default_theme: light
     org_name: Main Org.
+    org_role: Viewer
     org_role: Viewer
     config:
       security.allow_embedding: true

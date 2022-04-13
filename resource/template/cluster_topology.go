@@ -116,7 +116,6 @@ grafana_servers:
     default_theme: light
     org_name: Main Org.
     org_role: Viewer
-    org_role: Viewer
     config:
       security.allow_embedding: true
   {{ end }}

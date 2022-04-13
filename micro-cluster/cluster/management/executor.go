@@ -415,7 +415,7 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 			"cluster %s recycle instance %s resource error: %s", clusterMeta.Cluster.ID, instanceID, err.Error())
 		return err
 	}
-
+	context.SetData(ContextClusterMeta, &clusterMeta)
 	node.Record(fmt.Sprintf("cluster %s recycle instance %s ", clusterMeta.Cluster.ID, instanceID))
 	return nil
 }

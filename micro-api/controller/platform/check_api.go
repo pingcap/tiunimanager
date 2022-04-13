@@ -30,7 +30,7 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param checkPlatformReq query message.CheckPlatformReq false "check platform"
+// @Param checkPlatformReq body message.CheckPlatformReq false "check platform"
 // @Success 200 {object} controller.ResultWithPage{data=message.CheckPlatformRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -53,7 +53,7 @@ func Check(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param checkClusterReq query message.CheckClusterReq false "check cluster"
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.ResultWithPage{data=message.CheckClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -76,7 +76,7 @@ func CheckCluster(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param getCheckReportReq query message.GetCheckReportReq false "get check report"
+// @Param checkId path string true "check id"
 // @Success 200 {object} controller.ResultWithPage{data=message.GetCheckReportRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

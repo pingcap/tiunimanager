@@ -24,7 +24,6 @@ const (
 )
 
 const (
-	ContextResourcePoolKey  string = "resourcePool"
 	ContextHostInfoArrayKey string = "hostInfoArray"
 	ContextHostIDArrayKey   string = "hostIDArray"
 	ContextWorkFlowIDKey    string = "resourceWorkFlowID"

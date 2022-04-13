@@ -560,7 +560,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 			}
 		}
 	}
-	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
+	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) || clusterMeta.Cluster.MaintenanceStatus == constants.ClusterMaintenanceUpgrading {
 		// PD cannot be restarted for a minute, or it will encounter "error.keyvisual.service_stopped"
 		time.Sleep(time.Minute)
 	}
@@ -869,7 +869,7 @@ func syncParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if clusterMeta.Cluster.Version == sourceClusterMeta.Cluster.Version {
 		targetParams := make([]structs.ClusterParameterSampleInfo, 0)
 		reboot := false
-		for instanceType, _ := range clusterMeta.Instances {
+		for instanceType := range clusterMeta.Instances {
 			if _, ok := sourceClusterMeta.Instances[instanceType]; ok {
 				sourceResponse, _, err := parameter.NewManager().QueryClusterParameters(context.Context,
 					cluster.QueryClusterParametersReq{ClusterID: sourceClusterMeta.Cluster.ID, InstanceType: instanceType})
@@ -1121,7 +1121,8 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		return err
 	}
 
-	node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), fmt.Sprintf("%s", metaYaml))
+	// todo metaYaml contains password
+	//node.Record(fmt.Sprintf("sync topology config for cluster %s", clusterMeta.Cluster.ID), metaYaml)
 	return models.GetClusterReaderWriter().UpdateTopologySnapshotConfig(context, clusterMeta.Cluster.ID, metaYaml)
 }
 
@@ -1304,38 +1305,43 @@ func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	// create built-in users
-	roleType := []constants.DBUserRoleType{
-		constants.DBUserBackupRestore,
-		constants.DBUserParameterManagement,
-	}
-	cmp, err := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2")
-	if err != nil {
-		return err
-	}
-	if cmp {
+	roleType := []constants.DBUserRoleType{}
+
+	if cmp, e := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.2.2"); e != nil {
+		return e
+	} else if cmp {
 		roleType = append(roleType, constants.DBUserCDCDataSync)
 	}
 
+	if cmp, e := meta.CompareTiDBVersion(clusterMeta.Cluster.Version, "v5.1.0"); e != nil {
+		return e
+	} else if cmp {
+		roleType = append(roleType, constants.DBUserBackupRestore, constants.DBUserParameterManagement)
+	}
+
 	for _, rt := range roleType {
+		if _, ok := clusterMeta.DBUsers[string(rt)]; ok {
+			node.Record(fmt.Sprintf("user %s exists, no need to init", constants.DBUserName[rt]))
+			continue
+		}
+		node.Record(fmt.Sprintf("init database account, type: %s", rt))
 		dbUser := GenerateDBUser(context, rt)
 		err = utilsql.CreateDBUser(context, conn, dbUser, node.ID)
 		if err != nil {
-			framework.LogWithContext(context.Context).Errorf(
-				"cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err)
+			errMessage := fmt.Sprintf("cluster %s create user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err)
+			node.Record(errMessage)
+			framework.LogWithContext(context.Context).Errorf(errMessage)
 			return err
 		}
 		err = models.GetClusterReaderWriter().CreateDBUser(context, dbUser)
 		if err != nil {
-			framework.LogWithContext(context.Context).Errorf(
-				"cluster %s add user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
+			errMessage := fmt.Sprintf("cluster %s add user %s error: %s", clusterMeta.Cluster.ID, dbUser.Name, err.Error())
+			node.Record(errMessage)
+			framework.LogWithContext(context.Context).Errorf(errMessage)
 			return err
 		}
-		node.Record(fmt.Sprintf("init user %s for cluster %s ", dbUser.Name, clusterMeta.Cluster.ID))
+		node.Record(fmt.Sprintf("init user %s succeed", dbUser.Name))
 	}
-	framework.LogWithContext(context.Context).Infof(
-		"cluster %s init database account successfully", clusterMeta.Cluster.ID)
-
-	node.Record(fmt.Sprintf("cluster %s init database account ", clusterMeta.Cluster.ID))
 	return nil
 }
 
@@ -1497,6 +1503,61 @@ func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	return nil
 }
 
+// adjustParametersAfterUpgrade
+// @Description: adjust parameters after upgrade, given user's selection
+func adjustParametersAfterUpgrade(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+	configs := context.GetData(ContextUpgradeConfigs).([]*structs.ClusterUpgradeVersionConfigItem)
+
+	targetParams := make([]structs.ClusterParameterSampleInfo, 0)
+	paramResp, _, err := parameter.NewManager().QueryClusterParameters(context, cluster.QueryClusterParametersReq{
+		ClusterID: clusterMeta.Cluster.ID,
+		ParamName: "max-replicas",
+	})
+	if err != nil {
+		return err
+	}
+	paramId := ""
+	for _, param := range paramResp.Params {
+		if param.Name == "max-replicas" {
+			paramId = param.ParamId
+		}
+	}
+	if len(paramId) == 0 {
+		return errors.NewError(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
+	}
+	targetParams = append(targetParams, structs.ClusterParameterSampleInfo{
+		ParamId: paramId,
+		RealValue: structs.ParameterRealValue{
+			ClusterValue: strconv.Itoa(clusterMeta.Cluster.Copies),
+		},
+	})
+	for _, config := range configs {
+		targetParams = append(targetParams, structs.ClusterParameterSampleInfo{
+			ParamId: config.ParamId,
+			RealValue: structs.ParameterRealValue{
+				ClusterValue: config.Value,
+			},
+		})
+	}
+
+	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
+		ClusterID: clusterMeta.Cluster.ID,
+		Params:    targetParams,
+		Reboot:    true,
+	}, false)
+	if err != nil {
+		return err
+	}
+	if err = meta.WaitWorkflow(context.Context, resp.WorkFlowID, 10*time.Second, 30*24*time.Hour); err != nil {
+		framework.LogWithContext(context).Errorf("update parameter workflow error: %s", err)
+		return err
+	}
+	node.Record(fmt.Sprintf("adjust parameter for cluster %s after upgrade", clusterMeta.Cluster.ID))
+
+	return nil
+}
+
 func fetchTopologyFile(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	req := context.GetData(ContextTakeoverRequest).(cluster.TakeoverClusterReq)
@@ -1610,7 +1671,7 @@ func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.Flow
 				ticker.Stop()
 				return err
 			}
-			break
+			break // nolint
 		default:
 			err := errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "host %s status is %s", ip, hostInfo.Status)
 			framework.LogWithContext(context).Error(err.Error())
@@ -1880,13 +1941,14 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		return errors.NewErrorf(errors.TIEM_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
 	}
 
-	node.Record(fmt.Sprintf("check all regions are healthy"))
+	node.Record("check all regions are healthy")
 	return nil
 }
 
 func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	clusterInfo := clusterMeta.Cluster
+	instances := clusterMeta.Instances
 	version := context.GetData(ContextUpgradeVersion).(string)
 	way := context.GetData(ContextUpgradeWay).(string)
 
@@ -1910,6 +1972,13 @@ func upgradeCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	node.Record(fmt.Sprintf("upgrade cluster %s version to %s from %s", clusterMeta.Cluster.ID, version, clusterInfo.Version))
 	node.OperationID = operationID
 	clusterInfo.Version = version
+	for _, instance := range instances {
+		// each instance like "PD, TiKV" has more than one replica
+		for _, replica := range instance {
+			replica.Version = version
+		}
+	}
+	clusterInfo.ParameterGroupID = ""
 	return nil
 }
 
@@ -1957,14 +2026,23 @@ func checkUpgradeConfig(node *workflowModel.WorkFlowNode, context *workflow.Flow
 	return nil
 }
 
-func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	return nil
-}
+//func checkSystemHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+//	return nil
+//}
 
 func revertConfigAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*meta.ClusterMeta)
 	clusterInfo := clusterMeta.Cluster
+	instances := clusterMeta.Instances
 	originalVersion := context.GetData(ContextOriginalVersion).(string)
 	clusterInfo.Version = originalVersion
+	for _, instance := range instances {
+		// each instance like "PD, TiKV" has more than one replica
+		for _, replica := range instance {
+			replica.Version = originalVersion
+		}
+	}
+	originalParameterGroupId := context.GetData(ContextOriginalParamGroupId).(string)
+	clusterInfo.ParameterGroupID = originalParameterGroupId
 	return nil
 }

@@ -100,12 +100,37 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 	if filter.Stat != "" {
 		db = db.Where("stat = ?", filter.Stat)
 	}
+
+	if filter.HostName != "" {
+		db = db.Where("host_name = ?", filter.HostName)
+	}
+
+	var labels int64
+	if filter.ClusterType != "" {
+		label, err := structs.GetTraitByName(filter.ClusterType)
+		if err != nil {
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid clusterType name %s, %v", filter.ClusterType, err)
+		}
+		labels |= label
+	}
+	if filter.HostDiskType != "" {
+		label, err := structs.GetTraitByName(filter.HostDiskType)
+		if err != nil {
+			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid diskType name %s, %v", filter.HostDiskType, err)
+		}
+		labels |= label
+	}
+
 	if filter.Purpose != "" {
 		label, err := structs.GetTraitByName(filter.Purpose)
 		if err != nil {
 			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
 		}
-		db = db.Where("traits & ? = ?", label, label)
+		labels |= label
+	}
+
+	if labels != 0 {
+		db = db.Where("traits & ? = ?", labels, labels)
 	}
 	return db, nil
 }
@@ -220,13 +245,12 @@ func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Hos
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
 	}
-	patch := originHost
-	err = patch.PrepareForUpdate(&host)
+	updates, err := originHost.PrepareForUpdate(&host)
 	if err != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
 	}
-	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(patch)
+	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(updates)
 	if result.Error != nil {
 		tx.Rollback()
 		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s info failed, %v", originHost.HostName, originHost.IP, result.Error)

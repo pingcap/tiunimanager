@@ -29,7 +29,6 @@ import (
 
 const (
 	ContextCheckID    = "CheckID"
-	ContextReportInfo = "ReportInfo"
 	ContextClusterID  = "ClusterID"
 	DefaultCreator    = "System"
 	DefaultTenantID   = "admin"
@@ -99,7 +98,7 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	}
 
 	// create workflow
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypePlatform, checkDefine.FlowName)
+	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCheckReport, checkDefine.FlowName)
 	if err != nil {
 		log.Errorf("create flow failed, check report %s error: %s", report.ID, err.Error())
 		return resp, err
@@ -152,7 +151,7 @@ func (manager *CheckManager) CheckCluster(ctx context.Context, request message.C
 	}
 
 	// create workflow
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCluster, checkClusterDefine.FlowName)
+	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCheckReport, checkClusterDefine.FlowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create flow failed, check report %s error: %s", report.ID, err.Error())
 		return resp, err

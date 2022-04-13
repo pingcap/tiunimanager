@@ -27,9 +27,7 @@ package deployment
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -417,7 +415,7 @@ func (m *Manager) List(ctx context.Context, componentType TiUPComponentType, hom
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %d %s", componentType, CMDList, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	return m.startSyncOperation(home, tiUPArgs, timeout)
+	return m.startSyncOperation(home, tiUPArgs, timeout, false)
 }
 
 // Display
@@ -437,7 +435,7 @@ func (m *Manager) Display(ctx context.Context, componentType TiUPComponentType, 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDDisplay, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	return m.startSyncOperation(home, tiUPArgs, timeout)
+	return m.startSyncOperation(home, tiUPArgs, timeout, false)
 }
 
 // ShowConfig
@@ -457,7 +455,7 @@ func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentTyp
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDShowConfig, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	return m.startSyncOperation(home, tiUPArgs, timeout)
+	return m.startSyncOperation(home, tiUPArgs, timeout, false)
 }
 
 // Dumpling
@@ -471,11 +469,12 @@ func (m *Manager) ShowConfig(ctx context.Context, componentType TiUPComponentTyp
 // @return ID, operation id to help check the status
 // @return err
 func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	//logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDDumpling, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-	logInFunc.Infof("recv operation req: %s", op)
+	// todo op contains password
+	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDDumpling,
@@ -502,11 +501,12 @@ func (m *Manager) Dumpling(ctx context.Context, home, workFlowID string, args []
 // @return ID, operation id to help check the status
 // @return err
 func (m *Manager) Lightning(ctx context.Context, home, workFlowID string, args []string, timeout int) (ID string, err error) {
-	logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
+	//logInFunc := framework.LogWithContext(ctx).WithField("workFlowID", workFlowID)
 
 	tiUPArgs := fmt.Sprintf("%s %s", CMDLightning, strings.Join(args, " "))
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
-	logInFunc.Infof("recv operation req: %s", op)
+	// todo op contains password
+	//logInFunc.Infof("recv operation req: %s", op)
 
 	id, err := Create(home, Operation{
 		Type:       CMDLightning,
@@ -583,16 +583,12 @@ func (m *Manager) Pull(ctx context.Context, componentType TiUPComponentType, clu
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %s %s %d %s", componentType, CMDPull, clusterID, remotePath, localPath, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	_, err = m.startSyncOperation(home, tiUPArgs, timeout)
+	_, err = m.startSyncOperation(home, tiUPArgs, timeout, false)
 	if err != nil {
 		return
 	}
 
-	data, err := ioutil.ReadFile(localPath)
-	if err != nil {
-		return
-	}
-	return string(data), nil
+	return disk.ReadFileContent(localPath)
 }
 
 // Ctl
@@ -613,7 +609,7 @@ func (m *Manager) Ctl(ctx context.Context, componentType TiUPComponentType, vers
 	tiUPArgs := fmt.Sprintf("%s:%s %s %s", string(componentType), version, component, strings.Join(args, " "))
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	return m.startSyncOperation(home, tiUPArgs, timeout)
+	return m.startSyncOperation(home, tiUPArgs, timeout, false)
 }
 
 // Exec
@@ -671,7 +667,7 @@ func (m *Manager) CheckConfig(ctx context.Context, componentType TiUPComponentTy
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d", componentType, CMDCheck, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	resp, err := m.startSyncOperation(home, tiUPArgs, timeout)
+	resp, err := m.startSyncOperation(home, tiUPArgs, timeout, false)
 	if err != nil {
 		return "", err
 	}
@@ -698,7 +694,7 @@ func (m *Manager) CheckCluster(ctx context.Context, componentType TiUPComponentT
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d", componentType, CMDCheck, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 
-	return m.startSyncOperation(home, tiUPArgs, timeout)
+	return m.startSyncOperation(home, tiUPArgs, timeout, true)
 }
 
 // extract check result from tiup check cluster
@@ -780,7 +776,6 @@ func (m *Manager) startAsyncOperation(ctx context.Context, id, home, tiUPArgs st
 		}
 
 		updateStatus(ctx, id, "operation finished", Finished, t0)
-		return
 	}()
 }
 
@@ -798,7 +793,7 @@ func (m *Manager) ExitStatusZero(err error) bool {
 	return false
 }
 
-func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (result string, err error) {
+func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int, allInfo bool) (result string, err error) {
 	cmd, cancelFunc := genCommand(home, m.TiUPBinPath, tiUPArgs, timeoutS)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -806,7 +801,10 @@ func (m *Manager) startSyncOperation(home, tiUPArgs string, timeoutS int) (resul
 
 	data, err := cmd.Output()
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data)))
+		return "", fmt.Errorf("%s.\ndetail info: %s\n%s", err.Error(), stderr.String(), string(data))
+	}
+	if allInfo {
+		return fmt.Sprintf("%s%s", string(data), stderr.String()), nil
 	}
 	return string(data), nil
 }

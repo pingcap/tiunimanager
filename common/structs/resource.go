@@ -94,7 +94,7 @@ type HostInfo struct {
 	IP                 string              `json:"ip"`
 	SSHPort            int32               `json:"sshPort,omitempty"`
 	UserName           string              `json:"userName,omitempty"`
-	Passwd             string              `json:"passwd,omitempty"`
+	Passwd             SensitiveText       `json:"passwd,omitempty"`
 	HostName           string              `json:"hostName"`
 	Status             string              `json:"status"`   // Host status, Online, Offline, Failed, Deleted, etc
 	Stat               string              `json:"loadStat"` // Host load stat, Loadless, Inused, Exhaust, etc
@@ -254,11 +254,14 @@ type ImportCondition struct {
 }
 
 type HostFilter struct {
-	HostID  string `json:"hostId" form:"hostId"`
-	Purpose string `json:"purpose" form:"purpose"`
-	Status  string `json:"status" form:"status"`
-	Stat    string `json:"loadStat" form:"loadStat"`
-	Arch    string `json:"arch" form:"arch"`
+	HostID       string `json:"hostId" form:"hostId"`
+	Purpose      string `json:"purpose" form:"purpose"`
+	Status       string `json:"status" form:"status"`
+	Stat         string `json:"loadStat" form:"loadStat"`
+	Arch         string `json:"arch" form:"arch"`
+	ClusterType  string `json:"clusterType" form:"clusterType"`
+	HostDiskType string `json:"hostDiskType" form:"hostDiskType"`
+	HostName     string `json:"hostName" form:"hostName"`
 }
 
 type DiskFilter struct {

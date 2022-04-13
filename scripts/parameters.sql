@@ -582,8 +582,6 @@ INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '183', '8', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '185', 'false', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '186', '3', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '187', '1s', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '190', '128MB', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '195', '1000ms', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '197', 'true', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('II7PQbJWTHW2_VdlNRjtrQ', '198', '1KB', null, '1609459200000', '1609459200000');
@@ -945,11 +943,6 @@ INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '183', '8', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '185', 'false', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '186', '3', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '187', '1s', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '188', '512MB', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '189', '512MB', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '190', '128MB', null, '1609459200000', '1609459200000');
-INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '191', '6', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '192', 'true', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '193', '1s', null, '1609459200000', '1609459200000');
 INSERT INTO parameter_group_mappings (parameter_group_id, parameter_id, default_value, note, created_at, updated_at) VALUES ('SqsfgL4tQ7GaBGOxIK1c8A', '194', '2', null, '1609459200000', '1609459200000');

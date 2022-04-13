@@ -212,6 +212,13 @@ func TestManager_ExtractCheckResult(t *testing.T) {
 	}
 }
 
+func TestManager_CheckCluster(t *testing.T) {
+	_, err := manager.CheckCluster(context.TODO(), TiUPComponentTypeCluster, "clusterId", testTiUPHome, []string{}, 360)
+	if err == nil {
+		t.Error("nil err")
+	}
+}
+
 func TestManager_Prune(t *testing.T) {
 	_, err := manager.Prune(context.TODO(), TiUPComponentTypeCluster, TestClusterID, testTiUPHome, TestWorkFlowID, []string{}, 360)
 	if err != nil {
@@ -288,12 +295,12 @@ func TestManager_startSyncOperation(t *testing.T) {
 		m := &Manager{
 			TiUPBinPath: "mock_tiup",
 		}
-		m.startSyncOperation("", "", 0)
+		m.startSyncOperation("", "", 0, false)
 	})
 	t.Run("right cmd", func(t *testing.T) {
 		m := &Manager{
 			TiUPBinPath: "ls",
 		}
-		m.startSyncOperation("", "-lh", 1)
+		m.startSyncOperation("", "-lh", 1, false)
 	})
 }

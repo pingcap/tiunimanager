@@ -146,7 +146,7 @@ func buildCollectorClusterLogConfig(ctx ctx.Context, clusterInfos []*meta.Instan
 	defer framework.LogWithContext(ctx).Info("end collector cluster log config executor method")
 
 	// Construct the structure of multiple clusters corresponding instances
-	clusterInstances := make(map[string][]*meta.InstanceLogInfo, 0)
+	clusterInstances := make(map[string][]*meta.InstanceLogInfo)
 	for _, instance := range clusterInfos {
 		insts := clusterInstances[instance.ClusterID]
 		if insts == nil {
@@ -269,7 +269,7 @@ func buildCollectorModuleDetail(clusterID string, host, logDir string) Collector
 // @Parameter clusterMeta
 // @return map[string]string
 func listClusterHosts(clusterMeta *meta.ClusterMeta) map[string]string {
-	hosts := make(map[string]string, 0)
+	hosts := make(map[string]string)
 	for _, instances := range clusterMeta.Instances {
 		for _, instance := range instances {
 			hosts[instance.HostID] = instance.HostIP[0]

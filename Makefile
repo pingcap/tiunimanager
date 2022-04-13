@@ -247,9 +247,9 @@ failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)
 
-lint:
+lint: mock
 	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
-	-golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+	golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
 
 gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
@@ -270,7 +270,6 @@ mock:
 	mockgen -destination ./test/mockmodels/mockconfig/mock_config_interface.go -package mockconfig -source ./models/platform/config/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksystem/mock_system_interface.go -package mocksystem -source ./models/platform/system/readerwriter.go
 	mockgen -destination ./test/mockmodels/mocksecondparty/mock_secondparty_interface.go -package mocksecondparty -source ./models/workflow/secondparty/readerwriter.go
-	mockgen -destination ./test/mockmodels/mocktiupconfig/mock_tiupconfig_interface.go -package mocktiupconfig -source ./models/tiup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockparametergroup/mock_parametergroup_interface.go -package mockparametergroup -source ./models/parametergroup/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclusterparameter/mock_clusterparameter_interface.go -package mockclusterparameter -source ./models/cluster/parameter/readerwriter.go
 	mockgen -destination ./test/mockmodels/mockclustermanagement/mock_cluster_management_interface.go -package mockclustermanagement -source ./models/cluster/management/readerwriter.go

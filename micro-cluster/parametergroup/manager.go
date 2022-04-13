@@ -130,7 +130,9 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 			Note:         param.Note,
 		}
 	}
+
 	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm, req.AddParams, req.DelParams)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
 		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
@@ -319,6 +321,7 @@ func validateParameterRange(ctx context.Context, reqParams []structs.ParameterGr
 				RangeType:   queryParam.RangeType,
 				Unit:        queryParam.Unit,
 				UnitOptions: unitOptions,
+				HasApply:    queryParam.HasApply,
 				RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
 			}, false) {
 				if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {

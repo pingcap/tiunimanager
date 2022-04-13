@@ -170,13 +170,13 @@ type MasterSlaveClusterSwitchoverResp struct {
 
 // TakeoverClusterReq Requests to take over an existing TiDB cluster, requiring TiDB version >= 4.0 when taking over
 type TakeoverClusterReq struct {
-	TiUPIp           string `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp" validate:"required,ip"`
-	TiUPPort         int    `json:"TiUPPort" example:"22" form:"TiUPPort" validate:"required"`
-	TiUPUserName     string `json:"TiUPUserName" example:"root" form:"TiUPUserName" validate:"required"`
-	TiUPUserPassword string `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
-	TiUPPath         string `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
-	ClusterName      string `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required,min=4,max=64"`
-	DBPassword       string `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
+	TiUPIp           string                `json:"TiUPIp" example:"172.16.4.147" form:"TiUPIp" validate:"required,ip"`
+	TiUPPort         int                   `json:"TiUPPort" example:"22" form:"TiUPPort" validate:"required"`
+	TiUPUserName     string                `json:"TiUPUserName" example:"root" form:"TiUPUserName" validate:"required"`
+	TiUPUserPassword structs.SensitiveText `json:"TiUPUserPassword" example:"password" form:"TiUPUserPassword" validate:"required"`
+	TiUPPath         string                `json:"TiUPPath" example:".tiup/" form:"TiUPPath" validate:"required"`
+	ClusterName      string                `json:"clusterName" example:"myClusterName" form:"clusterName" validate:"required,min=4,max=64"`
+	DBPassword       structs.SensitiveText `json:"dbPassword" example:"myPassword" form:"dbPassword" validate:"required"`
 }
 
 // TakeoverClusterResp Reply message for takeover a cluster
@@ -241,9 +241,9 @@ type GetDashboardInfoReq struct {
 
 // GetDashboardInfoResp Reply message for querying the dashboard address information of the cluster
 type GetDashboardInfoResp struct {
-	ClusterID string `json:"clusterId" example:"abc"`
-	Url       string `json:"url" example:"http://127.0.0.1:9093"`
-	Token     string `json:"token"`
+	ClusterID string                `json:"clusterId" example:"abc"`
+	Url       string                `json:"url" example:"http://127.0.0.1:9093"`
+	Token     structs.SensitiveText `json:"token"`
 }
 
 //QueryClusterLogReq Messages that query cluster log information can be filtered based on query criteria

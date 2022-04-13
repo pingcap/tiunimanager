@@ -49,9 +49,15 @@ func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, s
 		return errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "flow %s not found", flowId)
 	}
 
-	return m.DB(ctx).Model(flow).
-		Update("status", status).
-		Update("context", flowContext).Error
+	db := m.DB(ctx).Model(flow)
+	if "" != status {
+		db.Update("status", status)
+	}
+	if "" != flowContext {
+		db.Update("context", flowContext)
+	}
+
+	return db.Error
 }
 
 func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {
@@ -101,22 +107,20 @@ func (m *WorkFlowReadWrite) GetWorkFlowNode(ctx context.Context, nodeId string) 
 
 func (m *WorkFlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error) {
 	return m.DB(ctx).Transaction(func(tx *gorm.DB) error {
-		err = m.UpdateWorkFlow(ctx, flow.ID, flow.Status, flow.Context)
+		err = m.UpdateWorkFlow(dbCommon.CtxWithTransaction(ctx, tx), flow.ID, flow.Status, flow.Context)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("update workflow %+v failed %s", flow, err.Error())
 			tx.Rollback()
 			return err
 		}
-
 		for _, node := range nodes {
-			err = m.UpdateWorkFlowNode(ctx, node)
+			err = m.UpdateWorkFlowNode(dbCommon.CtxWithTransaction(ctx, tx), node)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("update workflow node %+v failed %s", node, err.Error())
 				tx.Rollback()
 				return err
 			}
 		}
-
 		return nil
 	})
 }

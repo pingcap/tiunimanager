@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	backuprestore2 "github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
 	"strconv"
 
@@ -60,13 +61,12 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/tiup"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mocktiupconfig"
+	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -1673,6 +1673,20 @@ func TestInitDatabaseAccount(t *testing.T) {
 		fmt.Println(err)
 	})
 
+	t.Run("duplicate", func(t *testing.T) {
+		clusterMeta := flowContext.GetData(ContextClusterMeta).(*meta.ClusterMeta)
+		clusterMeta.DBUsers[string(constants.DBUserBackupRestore)] = &management.DBUser{
+			ClusterID: "2145635758",
+			Name:      constants.DBUserName[constants.DBUserBackupRestore],
+			Password:  common.PasswordInExpired{Val: "123455678"},
+			RoleType:  string(constants.DBUserBackupRestore),
+		}
+		flowContext.SetData(ContextClusterMeta, clusterMeta)
+		err := initDatabaseAccount(&workflowModel.WorkFlowNode{}, flowContext)
+		//assert.NoError(t, err)
+		fmt.Println(err)
+	})
+
 	t.Run("init fail", func(t *testing.T) {
 		//	mockTiupManager := mock_deployment.NewMockInterface(ctrl)
 		//	mockTiupManager.EXPECT().SetClusterDbPassword(gomock.Any(),
@@ -2059,9 +2073,9 @@ func Test_syncTopology(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
-	models.SetTiUPConfigReaderWriter(tiupRW)
-	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{TiupHome: "testdata"}, nil).AnyTimes()
+	configRW := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(configRW)
+	configRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "testdata"}, nil).AnyTimes()
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
@@ -2107,9 +2121,9 @@ func Test_syncConnectionKey(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
-	models.SetTiUPConfigReaderWriter(tiupRW)
-	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{TiupHome: "testdata"}, nil).AnyTimes()
+	configRW := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(configRW)
+	configRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "testdata"}, nil).AnyTimes()
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
@@ -2190,11 +2204,9 @@ func Test_rebuildTiupSpaceForCluster(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	tiupRW := mocktiupconfig.NewMockReaderWriter(ctrl)
-	models.SetTiUPConfigReaderWriter(tiupRW)
-	tiupRW.EXPECT().QueryByComponentType(gomock.Any(), gomock.Any()).Return(&tiup.TiupConfig{
-		TiupHome: "testdata",
-	}, nil).AnyTimes()
+	configRW := mockconfig.NewMockReaderWriter(ctrl)
+	models.SetConfigReaderWriter(configRW)
+	configRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "testdata"}, nil).AnyTimes()
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)

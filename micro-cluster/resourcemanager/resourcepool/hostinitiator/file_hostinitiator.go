@@ -22,9 +22,11 @@ import (
 	"strings"
 
 	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiem/models"
 
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -244,19 +246,30 @@ func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hos
 		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
 	}
 	installed = false
-LOOP:
-	for _, instance := range emTopo.Instances {
-		if instance.Role == "filebeat" {
-			for _, host := range hosts {
-				if instance.Host == host.IP {
-					installed = true
-					log.Infof("host %s %s has been install filebeat", host.HostName, host.IP)
-					break LOOP
-				}
+	// []hosts only contains one host since importing each host in a async workflow
+	for _, host := range hosts {
+		installed, err = p.checkInstanceInstalled(ctx, emTopo, host.IP, constants.EMInstanceNameOfFileBeat)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return installed, nil
+}
+
+func (p *FileHostInitiator) checkInstanceInstalled(ctx context.Context, emTopo *structs.EMMetaTopo, hostIp string, instance string) (installed bool, err error) {
+	log := framework.LogWithContext(ctx)
+	for _, emInstance := range emTopo.Instances {
+		if emInstance.Role == instance && emInstance.Host == hostIp {
+			log.Infof("%s has been installed on host %s in status %s", instance, hostIp, emInstance.Status)
+			if emInstance.Status == string(constants.EMInstanceUP) {
+				return true, nil
+			} else {
+				return false, errors.NewErrorf(errors.TIEM_RESOURCE_BAD_INSTANCE_EXIST, "%s has been installed on host %s but in %s status", instance, hostIp, emInstance.Status)
 			}
 		}
 	}
-	return installed, nil
+	return false, nil
 }
 
 func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {
@@ -343,7 +356,8 @@ func (p *FileHostInitiator) passCpuGovernorWarn(ctx context.Context, h *structs.
 func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.HostInfo) (isVM bool, err error) {
 	log := framework.LogWithContext(ctx)
 	log.Infof("begin to check host manufacturer on host %s %s", h.HostName, h.IP)
-	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
+	// TODO: Add extraVMManufacturer []string read from system config table for user specified env.
+	vmManufacturer := []string{"QEMU", "XEN", "KVM", "VMWARE", "VIRTUALBOX", "ALIBABA", "VBOX", "ORACLE", "MICROSOFT", "ZVM", "BOCHS", "PARALLELS", "UML"}
 	dmidecodeCmd := "dmidecode -s system-manufacturer | tr -d '\n'"
 	authenticate := p.getEMAuthenticateToHost(ctx)
 	result, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{dmidecodeCmd})
@@ -358,6 +372,32 @@ func (p *FileHostInitiator) isVirtualMachine(ctx context.Context, h *structs.Hos
 			break
 		}
 	}
+
+	if !isVM {
+		isVM = p.extraVMManufacturerCheck(ctx, result)
+	}
+
 	log.Infof("host %s [%s] manufacturer is %s, should be VM (%v)", h.HostName, h.IP, result, isVM)
 	return isVM, nil
+}
+
+// Try to match the user specified vm facturer, give a warn if failed
+func (p *FileHostInitiator) extraVMManufacturerCheck(ctx context.Context, facturer string) bool {
+	extraConfig, err := models.GetConfigReaderWriter().GetConfig(ctx, constants.ConfigKeyExtraVMFacturer)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get config ConfigKeyExtraVMFacturer failed, %v", err)
+		return false
+	}
+
+	extraConfigVMFacturer := extraConfig.ConfigValue
+	if extraConfigVMFacturer == "" {
+		framework.LogWithContext(ctx).Infoln("extra vm facturer is not specified")
+		return false
+	}
+
+	if strings.Contains(strings.ToLower(facturer), strings.ToLower(extraConfigVMFacturer)) {
+		return true
+	}
+
+	return false
 }

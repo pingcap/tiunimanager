@@ -66,6 +66,16 @@ const (
 	DefaultMetricsPort      int = 4103
 )
 
+//etcd certificate file names
+type EtcdCertFileType [2]string
+
+var (
+	ETCDCAFileName     = "etcd-ca.pem"
+	ETCDServerCertFile = EtcdCertFileType{"etcd-server.pem", "etcd-server-key.pem"}
+	ETCDClientCertFile = EtcdCertFileType{"etcd-server.pem", "etcd-server-key.pem"}
+	ETCDPeerCertFile   = EtcdCertFileType{"etcd-server.pem", "etcd-server-key.pem"}
+)
+
 type EMProductIDType string
 
 //Definition of product ID provided by Enterprise manager

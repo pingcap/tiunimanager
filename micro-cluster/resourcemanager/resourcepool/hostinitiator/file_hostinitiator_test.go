@@ -27,7 +27,10 @@ import (
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
+	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
 	sshclient "github.com/pingcap-inc/tiem/util/ssh"
 	"github.com/stretchr/testify/assert"
@@ -112,7 +115,7 @@ func Test_Verify_ignoreWarings(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, true)
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, true) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	err := fileInitiator.Verify(ctx, &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
 	assert.Nil(t, err)
@@ -144,7 +147,7 @@ func Test_Verify_Warings(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, false)
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextIgnoreWarnings, false) //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	err := fileInitiator.Verify(ctx, &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
 	assert.NotNil(t, err)
@@ -280,9 +283,9 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 		},
 		"instances": [
 		  {
-			"id": "172.16.6.252:4112",
+			"id": "172.16.6.555:4112",
 			"role": "alertmanager",
-			"host": "172.16.6.252",
+			"host": "172.16.6.555",
 			"ports": "4112/4113",
 			"os_arch": "linux/x86_64",
 			"status": "Up",
@@ -293,12 +296,25 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 			"Port": 4112
 		  },
 		  {
-			"id": "172.16.6.252:0",
+			"id": "172.16.6.555:0",
 			"role": "filebeat",
-			"host": "172.16.6.252",
+			"host": "172.16.6.555",
 			"ports": "",
 			"os_arch": "linux/x86_64",
 			"status": "Up",
+			"since": "-",
+			"data_dir": "/em-data/filebeat-0",
+			"deploy_dir": "/em-deploy/filebeat-0",
+			"ComponentName": "filebeat",
+			"Port": 0
+		  },
+		  {
+			"id": "172.16.6.999:0",
+			"role": "filebeat",
+			"host": "172.16.6.999",
+			"ports": "",
+			"os_arch": "linux/x86_64",
+			"status": "Down",
 			"since": "-",
 			"data_dir": "/em-data/filebeat-0",
 			"deploy_dir": "/em-deploy/filebeat-0",
@@ -311,19 +327,23 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockSec := mock_deployment.NewMockInterface(ctrl)
-	mockSec.EXPECT().Display(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil).Times(2)
+	mockSec.EXPECT().Display(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(jsonStr, nil).Times(3)
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	installed, err := fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.252"}})
+	installed, err := fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.555"}})
 	assert.Nil(t, err)
 	assert.True(t, installed)
 
-	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.253"}})
+	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.666"}})
 	assert.Nil(t, err)
 	assert.False(t, installed)
+
+	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.999"}})
+	assert.NotNil(t, err)
+	assert.Equal(t, errors.TIEM_RESOURCE_BAD_INSTANCE_EXIST, err.(errors.EMError).GetCode())
 }
 
 func Test_JoinEMCluster(t *testing.T) {
@@ -336,7 +356,7 @@ func Test_JoinEMCluster(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id") //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	_, err := fileInitiator.JoinEMCluster(ctx, []structs.HostInfo{{Arch: "X86_64", IP: "192.168.177.180"}})
 	assert.Nil(t, err)
@@ -352,7 +372,7 @@ func Test_LeaveEMCluster(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetDeploymentServ(mockSec)
 
-	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id")
+	ctx := context.WithValue(context.TODO(), rp_consts.ContextWorkFlowIDKey, "fake-node-id") //nolint // Use string value to identify each key, so no need to create a new type for the lint
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	_, err := fileInitiator.LeaveEMCluster(ctx, "192.168.177.180:0")
 	assert.Nil(t, err)
@@ -500,9 +520,28 @@ func Test_isVirtualMachine_Contains(t *testing.T) {
 	assert.True(t, isVM)
 }
 
-func Test_isVirtualMachine_False(t *testing.T) {
+func Test_isVirtualMachine_AliBaBa(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("Alibaba Cloud", nil).AnyTimes()
+
+	fileInitiator := NewFileHostInitiator()
+	fileInitiator.SetSSHClient(mockClient)
+	isVM, err := fileInitiator.isVirtualMachine(context.TODO(), &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180"})
+	assert.Nil(t, err)
+	assert.True(t, isVM)
+}
+
+func Test_isVirtualMachine_False(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	models.MockDB()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mock_config.NewMockReaderWriter(ctrl)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "FakeFacturer"}, nil)
+	models.SetConfigReaderWriter(rw)
+
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
 	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("Cisco Systems Inc", nil).AnyTimes()
 
@@ -565,4 +604,29 @@ func Test_skipAuthHost_NotSkip(t *testing.T) {
 	framework.Current.GetClientArgs().LoginPublicKeyPath = ""
 	skip = fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
 	assert.False(t, skip)
+}
+
+func Test_extraVMManufacturerCheck(t *testing.T) {
+	models.MockDB()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	rw := mock_config.NewMockReaderWriter(ctrl)
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "FakeFacturer"}, nil)
+	models.SetConfigReaderWriter(rw)
+
+	fileInitiator := NewFileHostInitiator()
+	isVM := fileInitiator.extraVMManufacturerCheck(context.TODO(), "Facturer1")
+	assert.False(t, isVM)
+
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: ""}, nil)
+	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
+	assert.False(t, isVM)
+
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "Bad Request"))
+	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
+	assert.False(t, isVM)
+
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "FakeFacturer"}, nil)
+	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
+	assert.True(t, isVM)
 }

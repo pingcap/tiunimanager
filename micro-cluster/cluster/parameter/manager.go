@@ -405,7 +405,7 @@ func appendClusterParamMapping(clusterId, paramId string, realValue structs.Para
 	if err != nil {
 		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
 	}
-	pgs = append(pgs, &parameter.ClusterParameterMapping{
+	pgs = append(pgs, &parameter.ClusterParameterMapping{ // nolint
 		ClusterID:   clusterId,
 		ParameterID: paramId,
 		RealValue:   string(b),
@@ -827,7 +827,7 @@ func inspectParameterValue(ctx context.Context, flattenedParams map[string]strin
 
 	// If the value is numeric, inst value if it is with units, then convert the units
 	if param.Type == int(Integer) || param.Type == int(Float) {
-		for srcUnit, _ := range units {
+		for srcUnit := range units {
 			if strings.HasSuffix(instValue, srcUnit) {
 				if cvtInstValue, ok := convertUnitValue([]string{srcUnit}, instValue); ok {
 					instValue = fmt.Sprintf("%d", cvtInstValue)

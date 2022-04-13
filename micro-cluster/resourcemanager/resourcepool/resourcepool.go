@@ -38,17 +38,17 @@ type ResourcePool struct {
 	// cloudHostProvider hostprovider.HostProvider
 }
 
-var resourcePool *ResourcePool
+var globalResourcePool *ResourcePool
 var once sync.Once
 
 func GetResourcePool() *ResourcePool {
 	once.Do(func() {
-		if resourcePool == nil {
-			resourcePool = new(ResourcePool)
-			resourcePool.InitResourcePool()
+		if globalResourcePool == nil {
+			globalResourcePool = new(ResourcePool)
+			globalResourcePool.InitResourcePool()
 		}
 	})
-	return resourcePool
+	return globalResourcePool
 }
 
 func (p *ResourcePool) InitResourcePool() {
@@ -175,7 +175,6 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
-		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		host.SSHPort = int32(hostSSHPort)
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
@@ -235,7 +234,6 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
-		flowManager.AddContext(flow, rp_consts.ContextResourcePoolKey, p)
 		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
 		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, hosts)
 

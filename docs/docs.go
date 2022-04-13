@@ -991,223 +991,6 @@ var doc = `{
                 }
             }
         },
-        "/clusters/:clusterId/upgrade": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "request for upgrade TiDB cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster upgrade"
-                ],
-                "summary": "request for upgrade TiDB cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "upgrade request",
-                        "name": "upgradeReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/cluster.UpgradeClusterReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.UpgradeClusterResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/:clusterId/upgrade/diff": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "query config diff between current cluster and target upgrade version",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster upgrade"
-                ],
-                "summary": "query config diff between current cluster and target upgrade version",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "example": "v5.0.0",
-                        "name": "targetVersion",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.QueryUpgradeVersionDiffInfoResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/:clusterId/upgrade/path": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "query upgrade path for given cluster id",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster upgrade"
-                ],
-                "summary": "query upgrade path for given cluster id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/cluster.QueryUpgradePathRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters/clone": {
             "post": {
                 "security": [
@@ -2989,6 +2772,223 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "request for upgrade TiDB cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "request for upgrade TiDB cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "upgrade request",
+                        "name": "upgradeReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cluster.UpgradeClusterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.UpgradeClusterResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/upgrade/diff": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query config diff between current cluster and target upgrade version",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "query config diff between current cluster and target upgrade version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "v5.0.0",
+                        "name": "targetVersion",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryUpgradeVersionDiffInfoResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/upgrade/path": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query upgrade path for given cluster id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster upgrade"
+                ],
+                "summary": "query upgrade path for given cluster id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cluster.QueryUpgradePathRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/config/": {
             "get": {
                 "security": [
@@ -3849,9 +3849,12 @@ var doc = `{
                 "summary": "platform check",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "displayMode",
-                        "in": "query"
+                        "description": "check platform",
+                        "name": "checkPlatformReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/message.CheckPlatformReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -3915,8 +3918,10 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "cluster id",
                         "name": "clusterId",
-                        "in": "query"
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -4076,8 +4081,10 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "name": "id",
-                        "in": "query"
+                        "description": "check id",
+                        "name": "checkId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -5290,7 +5297,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -5510,12 +5532,27 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -5759,6 +5796,11 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "clusterType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "diskStatus",
                         "in": "query"
                     },
@@ -5769,12 +5811,22 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "name": "hostDiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "hostId",
                         "in": "query"
                     },
                     {
                         "type": "string",
                         "name": "hostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "hostName",
                         "in": "query"
                     },
                     {
@@ -8755,6 +8807,14 @@ var doc = `{
             "properties": {
                 "result": {
                     "type": "boolean"
+                }
+            }
+        },
+        "message.CheckPlatformReq": {
+            "type": "object",
+            "properties": {
+                "displayMode": {
+                    "type": "string"
                 }
             }
         },

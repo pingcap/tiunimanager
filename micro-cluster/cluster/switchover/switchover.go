@@ -223,7 +223,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			} else {
 				// A rw-able & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
-				flowName = "" // end
+				//flowName = "" // end
 				return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
 			}
 		} else {
@@ -236,7 +236,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			} else {
 				// A unavailable & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
-				flowName = "" // end
+				//flowName = "" // end
 				return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
 			}
 		}
@@ -377,6 +377,7 @@ func (p *Manager) CheckSwitchover(ctx context.Context, masterClusterID, slaveClu
 	return &retV, err
 }
 
+/*
 func (p *Manager) checkMasterSalveRelation(ctx context.Context, masterClusterID, slaveClusterID string) error {
 	_, err := p.clusterGetRelationByMasterSlaveClusterId(ctx, masterClusterID, slaveClusterID)
 	return err
@@ -387,7 +388,7 @@ func (p *Manager) checkClusterDetailedHealthStatus(ctx context.Context, clusterI
 	//    pd ctl region / tiup cluster display / tikv store status / tikv region status
 	return p.checkClusterReadWriteHealth(ctx, clusterID)
 }
-
+*/
 func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID string) error {
 	userName, password, err := p.clusterGetCDCUserNameAndPwd(ctx, clusterID)
 	if err != nil {
@@ -471,6 +472,7 @@ func (p *Manager) clusterSetReadWrite(ctx context.Context, clusterID string) err
 	return nil
 }
 
+/*
 func (p *Manager) convertTSOToPhysicalTime(ctx context.Context, tso uint64) time.Time {
 	t, lt := tsoLib.ParseTS(tso)
 	_ = lt
@@ -480,7 +482,7 @@ func (p *Manager) convertTSOToPhysicalTime(ctx context.Context, tso uint64) time
 func (p *Manager) convertPhysicalTimeToTSO(ctx context.Context, t time.Time) (tso uint64) {
 	return tsoLib.GenerateTSO(t, 0)
 }
-
+*/
 func (m *Manager) clusterCheckHasCDCComponent(ctx context.Context, clusterId string, myNotFoundErr error) error {
 	myMeta, err := meta.Get(ctx, clusterId)
 	if err != nil {
@@ -735,8 +737,7 @@ func (m *Manager) queryChangeFeedTaskCheckpointedTime(ctx context.Context, chang
 }
 
 func (m *Manager) dupChangeFeedTaskStructWithTiDBDownStream(ctx context.Context, old *cluster.ChangeFeedTask) (*cluster.ChangeFeedTask, error) {
-	new := cluster.ChangeFeedTask{}
-	new = *old
+	new := *old
 	if old.DownstreamType == string(constants.DownstreamTypeTiDB) {
 		var t changefeedModel.TiDBDownstream
 		orig, ok := old.Downstream.(*changefeedModel.TiDBDownstream)

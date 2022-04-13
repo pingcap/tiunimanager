@@ -42,7 +42,4 @@ const SwitchoverCancelOpRetriesCount = 3
 const SwitchoverCancelOpRetryWait = 500 * time.Millisecond
 const SwitchoverCancelOpRunAllStepsEvenOnFail = false
 
-// should set to false when in production
-const SwitchoverDebugFlag = true
-
 const SwitchoverRollbackSuccessInfoString = "Rollback Successfully."

@@ -77,14 +77,14 @@ func TestWorkFlowMeta_Fail(t *testing.T) {
 			FailEvent: "pause",
 		},
 	}
-	meta.Fail()
+	meta.CheckNeedPause()
 	meta2 := &WorkFlowMeta{
 		Flow: &workflow.WorkFlow{},
 		CurrentNodeDefine: &NodeDefine{
 			FailEvent: "",
 		},
 	}
-	meta2.Fail()
+	meta2.CheckNeedPause()
 }
 
 func TestWorkFlowMeta_Execute_case1(t *testing.T) {

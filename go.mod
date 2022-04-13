@@ -52,6 +52,7 @@ require (
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/unrolled/secure v1.0.9
+	go.etcd.io/etcd/client/pkg/v3 v3.5.2 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.1
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.etcd.io/etcd/server/v3 v3.5.0

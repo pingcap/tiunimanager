@@ -63,12 +63,25 @@ http {
 {{- end}}
 
         location ^~/etcd/ {
-            proxy_pass http://etcdcluster/;
+            proxy_pass https://etcdcluster/;
+            proxy_ssl_trusted_certificate {{.DeployDir}}/cert/etcd-ca.pem;
+            proxy_ssl_certificate         {{.DeployDir}}/cert/etcd-server.pem;
+            proxy_ssl_certificate_key     {{.DeployDir}}/cert/etcd-server-key.pem;
+            proxy_ssl_verify              off;
+            allow 127.0.0.1;
+            allow {{.IP}};
+            deny all;
         }
 
         location /grafana/ {
             proxy_set_header X-WEBAUTH-USER admin;
             proxy_pass http://{{.GrafanaAddress}}/;
+        }
+
+        location ~ /grafanas {
+            rewrite ^/grafanas-([^/]+)-(\d+)/(.*) /$3 break;
+            proxy_set_header X-WEBAUTH-USER admin;
+            proxy_pass http://$1:$2/$3$is_args$args;
         }
 
         location ~ ^/env {

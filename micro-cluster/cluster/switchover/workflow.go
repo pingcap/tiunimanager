@@ -135,8 +135,7 @@ func wfSetExecutingDeferStackFlag(ctx *workflow.FlowContext) {
 }
 
 func myAssert(ctx context.Context, b bool) {
-	if b {
-	} else {
+	if !b {
 		framework.LogWithContext(ctx).Panicf("switchover: assert failed")
 	}
 }
@@ -152,7 +151,6 @@ func wfGetDeferStack(ctx *workflow.FlowContext) []string {
 		if err != nil {
 			framework.Log().Panicf("wfGetDeferStack: unmarshal deferStack failed, s:%s", s)
 		}
-	} else {
 	}
 	return stk
 }

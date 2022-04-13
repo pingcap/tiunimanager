@@ -212,13 +212,13 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
 				if err != nil {
 					framework.LogWithContext(ctx).Errorln(err)
-					continue
+					break
 				}
 				if constants.WorkFlowStatusError == resp.Info.Status {
 					framework.LogWithContext(ctx).Errorln(fmt.Sprintf("%s workflow %s end failed", flowName, flowId))
-					continue
+					break
 				}
-				if constants.WorkFlowStatusError == resp.Info.Status {
+				if constants.WorkFlowStatusFinished == resp.Info.Status {
 					framework.LogWithContext(ctx).Infof("%s workflow %s end success", flowName, flowId)
 					break
 				}
@@ -289,13 +289,13 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
 				if err != nil {
 					framework.LogWithContext(ctx).Errorln(err)
-					continue
+					break
 				}
 				if constants.WorkFlowStatusError == resp.Info.Status {
 					framework.LogWithContext(ctx).Errorln(fmt.Sprintf("deleteHosts workflow %s end failed", flowId))
-					continue
+					break
 				}
-				if constants.WorkFlowStatusError == resp.Info.Status {
+				if constants.WorkFlowStatusFinished == resp.Info.Status {
 					framework.LogWithContext(ctx).Infof("deleteHosts workflow %s end success", flowId)
 					break
 				}

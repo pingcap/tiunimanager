@@ -30,8 +30,9 @@ import (
 
 // EtcdTimeOut etcd time out
 const (
-	etcdTimeOut  = time.Second * 3
-	httpProtocol = "https://"
+	etcdTimeOut      = time.Second * 3
+	etcdV2TlsTimeOut = 10 * time.Second
+	httpProtocol     = "https://"
 )
 
 type EtcdClientV3 struct {
@@ -114,7 +115,7 @@ func InitEtcdClientV2(etcdAddress []string) *EtcdClientV2 {
 		}
 	}
 	tls := EtcdCert.ClientTLSInfo
-	ts, err := transport.NewTransport(tls, 10*time.Second)
+	ts, err := transport.NewTransport(tls, etcdV2TlsTimeOut)
 	if err != nil {
 		panic(err)
 	}

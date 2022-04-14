@@ -202,7 +202,7 @@ func TestBRManager_BackupCluster_case4(t *testing.T) {
 	_, err := service.BackupCluster(context.TODO(), cluster.BackupClusterDataReq{
 		ClusterID:  "test-cls",
 		BackupMode: string(constants.BackupModeManual),
-	}, true)
+	}, false)
 
 	assert.NotNil(t, err)
 }
@@ -225,9 +225,6 @@ func TestBRManager_BackupCluster_case5(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
-	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(errors.New("error")).AnyTimes()
 
 	configService := mockconfig.NewMockReaderWriter(ctrl)
 	configService.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: ""}, nil).AnyTimes()
@@ -236,7 +233,7 @@ func TestBRManager_BackupCluster_case5(t *testing.T) {
 	brService := mockbr.NewMockReaderWriter(ctrl)
 	brService.EXPECT().CreateBackupRecord(gomock.Any(), gomock.Any()).Return(&backuprestore.BackupRecord{Entity: common.Entity{
 		ID: "xxx",
-	}}, nil).AnyTimes()
+	}}, errors.New("error")).AnyTimes()
 	models.SetBRReaderWriter(brService)
 
 	service := GetBRService()

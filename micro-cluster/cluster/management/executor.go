@@ -110,10 +110,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			"cluster %s alloc resource error: %s", clusterMeta.Cluster.ID, err.Error())
 		return err
 	}
-	err = context.SetData(ContextAllocResource, allocResponse)
-	if err != nil {
-		return err
-	}
+	context.SetData(ContextAllocResource, allocResponse)
 
 	for _, resourceResult := range allocResponse.BatchResults {
 		switch resourceResult.RequestId {

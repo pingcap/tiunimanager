@@ -45,8 +45,8 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
 	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 type Manager struct {
@@ -457,18 +457,18 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		framework.LogWithContext(ctx).Infof("%s iterate OldSlavesClusterID %s", funcName, slaveID)
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
+	flowId, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("%s create %s workflow failed, err:%s, req:%s", funcName, flowName, err.Error(), reqJson)
 		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
 			"create %s workflow failed: %s", flowName, err.Error())
 	}
 
-	flowManager.AddContext(flow, wfContextReqKey, req)
+	flowManager.InitContext(ctx, flowId, wfContextReqKey, req)
 
 	var cancelFps []func()
 	cancelFps = append(cancelFps, func() {
-		flowManager.Destroy(ctx, flow, "start maintenance failed")
+		flowManager.Cancel(ctx, flowId, "start maintenance failed")
 	})
 	cancelFlag := true
 	cancel := func() {
@@ -496,7 +496,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfOldMaster.Cluster.MaintenanceStatus))
+	flowManager.InitContext(ctx, flowId, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfOldMaster.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfOldMaster.EndMaintenance(ctx, metaOfOldMaster.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -522,7 +522,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 			framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 			return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 		}
-		flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfSlave.Cluster.MaintenanceStatus))
+		flowManager.InitContext(ctx, flowId, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfSlave.Cluster.MaintenanceStatus))
 		thisSlaveID := slaveClusterID
 		cancelFps = append(cancelFps, func() {
 			err := metaOfSlave.EndMaintenance(ctx, constants.ClusterMaintenanceSwitchoverRollback)
@@ -532,7 +532,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		})
 	}
 
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
 		return nil, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
 			"async start %s workflow failed, %s", flowName, err.Error())
@@ -542,7 +542,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 
 	return &cluster.MasterSlaveClusterSwitchoverResp{
 		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
-			WorkFlowID: flow.Flow.ID,
+			WorkFlowID: flowId,
 		},
 	}, nil
 }

@@ -7940,6 +7940,14 @@ var doc = `{
                     "description": "only check if this flag is true",
                     "type": "boolean"
                 },
+                "rollbackClearPreviousMaintenanceFlag": {
+                    "description": "clear previous un-cleared \"Switching\" maintenance state",
+                    "type": "boolean"
+                },
+                "rollbackWorkFlowID": {
+                    "description": "if this field is not empty, that means this is a rollback request",
+                    "type": "string"
+                },
                 "sourceClusterID": {
                     "description": "old master/new slave",
                     "type": "string"

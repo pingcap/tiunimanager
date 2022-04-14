@@ -50,6 +50,7 @@ const (
 	ClusterMaintenanceScaleOut                     ClusterMaintenanceStatus = "ScaleOut"
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
+	ClusterMaintenanceSwitchoverRollback           ClusterMaintenanceStatus = "SwitchoverRollback"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
 	ClusterMaintenanceTakeover                     ClusterMaintenanceStatus = "Takeover"
 	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
@@ -76,6 +77,7 @@ const (
 	FlowMasterSlaveSwitchoverNormal                     = "SwitchoverNormal"
 	FlowMasterSlaveSwitchoverForce                      = "SwitchoverForce"
 	FlowMasterSlaveSwitchoverForceWithMasterUnavailable = "SwitchoverForceWithMasterUnavailable"
+	FlowMasterSlaveSwitchoverRollback                   = "SwitchoverRollback"
 )
 
 type ClusterInstanceRunningStatus string

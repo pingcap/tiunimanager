@@ -1156,6 +1156,7 @@ func (m *Manager) checkSyncChangeFeedTaskHealth(ctx context.Context, reqJson, lo
 	}
 }
 
+/*
 func (m *Manager) encryptStr(ctx context.Context, toEncrypt string) (string, error) {
 	str, err := crypto.AesEncryptCFB(toEncrypt)
 	return str, err
@@ -1165,6 +1166,7 @@ func (m *Manager) decryptStr(ctx context.Context, toDescryptStr string) (string,
 	str, err := crypto.AesDecryptCFB(toDescryptStr)
 	return str, err
 }
+*/
 
 type marshalMasterSlavesState struct {
 	MarshaledMasterSlavesState string

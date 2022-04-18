@@ -571,6 +571,8 @@ func Test_passCpuGovernorWarn(t *testing.T) {
 
 func Test_skipAuthHost_Skip(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = framework.GetPrivateKeyFilePath("root")
+	framework.Current.GetClientArgs().LoginPublicKeyPath = framework.GetPublicKeyFilePath("root")
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
@@ -585,6 +587,8 @@ func Test_skipAuthHost_Skip(t *testing.T) {
 
 func Test_skipAuthHost_NotSkip(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = framework.GetPrivateKeyFilePath("root")
+	framework.Current.GetClientArgs().LoginPublicKeyPath = framework.GetPublicKeyFilePath("root")
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)

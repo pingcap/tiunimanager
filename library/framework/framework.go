@@ -327,24 +327,16 @@ func GetCurrentSpecifiedPublicKeyPath() string {
 }
 
 func GetPrivateKeyFilePath(userName string) (keyPath string) {
-	useSpecifiedKeyPair := GetBoolWithDefault(UsingSpecifiedKeyPair, false)
-	if useSpecifiedKeyPair {
-		keyPath = GetCurrentSpecifiedPrivateKeyPath()
-	} else {
-		// use default private key under deploy user ssh dir
-		keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
-	}
+	// use default private key under deploy user ssh dir
+	keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
+
 	return
 }
 
 func GetPublicKeyFilePath(userName string) (keyPath string) {
-	useSpecifiedKeyPair := GetBoolWithDefault(UsingSpecifiedKeyPair, false)
-	if useSpecifiedKeyPair {
-		keyPath = GetCurrentSpecifiedPublicKeyPath()
-	} else {
-		// use default public key under deploy user ssh dir
-		keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
-	}
+	// use default public key under deploy user ssh dir
+	keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
+
 	return
 }
 

@@ -61,8 +61,10 @@ func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string,
 	log.Infof("begin to test whether skip auth host %s %s with deploy user %s, with key pair <%s, %s> and specified user %s",
 		h.HostName, h.IP, deployUser, specifiedPublicKey, specifiedPrivateKey, specifiedUser)
 	// try to test connection if user specify key pair and specified username == deployUser
-	if specifiedPrivateKey != "" && specifiedPublicKey != "" {
-		if specifiedUser == deployUser {
+	if specifiedUser == deployUser {
+		defaultPrivateKey := framework.GetPrivateKeyFilePath(deployUser)
+		defaultPublicKey := framework.GetPublicKeyFilePath(deployUser)
+		if specifiedPrivateKey == defaultPrivateKey && specifiedPublicKey == defaultPublicKey {
 			lsCmd := "ls -l"
 			authenticate := sshclient.HostAuthenticate{SshType: sshclient.Key, AuthenticatedUser: deployUser, AuthenticateContent: specifiedPrivateKey}
 			_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{lsCmd})
@@ -73,10 +75,11 @@ func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string,
 			log.Infof("skip auth host %s %s succeed", h.HostName, h.IP)
 			return true
 		}
-		log.Infof("specified user %s is different with deploy user %s", specifiedUser, deployUser)
+		log.Infof("can not skip auth host %s %s because either public key %s or private key %s is not specified as default %s, %s",
+			h.HostName, h.IP, specifiedPublicKey, specifiedPrivateKey, defaultPublicKey, defaultPrivateKey)
 		return false
 	}
-	log.Infof("can not skip auth host %s %s because either public key %s or private key %s is not specified", h.HostName, h.IP, specifiedPublicKey, specifiedPrivateKey)
+	log.Infof("specified user %s is different with deploy user %s", specifiedUser, deployUser)
 	return false
 }
 
@@ -87,7 +90,6 @@ func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup 
 
 	if p.skipAuthHost(ctx, deployUser, h) {
 		log.Infof("skip auth host %s %s@%s:%d with specified private key %s", h.HostName, deployUser, h.IP, h.SSHPort, framework.GetCurrentSpecifiedPrivateKeyPath())
-		framework.SetLocalConfig(framework.UsingSpecifiedKeyPair, true)
 		return nil
 	}
 

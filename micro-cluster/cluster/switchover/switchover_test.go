@@ -34,11 +34,10 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/common"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/test/mockcdcmanager"
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -74,17 +73,14 @@ func TestSwitchover(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	cdcAPI := mockcdcmanager.NewMockCDCManagerAPI(ctrl)
 	cdcAPI.EXPECT().Create(gomock.Any(), gomock.Any()).Return(cluster.CreateChangeFeedTaskResp{}, nil).AnyTimes()
 
-	service := GetManager(cdcAPI)
+	service := GetManager()
 	resp, err := service.Switchover(context.TODO(), &cluster.MasterSlaveClusterSwitchoverReq{
 		// old master
 		SourceClusterID: "1",

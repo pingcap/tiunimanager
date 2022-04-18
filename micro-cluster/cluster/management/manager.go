@@ -43,7 +43,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -102,8 +102,8 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"getTypesDone":     {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":       {"updateClusterParameters", "updateDone", "failAfterScale", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, updateClusterParameters)},
 		"updateDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":             {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
-		"failAfterScale":   {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
+		"failAfterScale":   {"failAfterScale", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -160,7 +160,7 @@ var scaleInDefine = workflow.WorkFlowDefine{
 		"scaleInDone": {"checkInstanceStatus", "checkDone", "fail", workflow.SyncFuncNode, checkInstanceStatus},
 		"checkDone":   {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -238,7 +238,7 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"waitRestoreDone":         {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
 		"syncIncrDataDone":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
+		"failAfterDeploy":         {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -303,8 +303,8 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"testConnectivityDone":    {"initDatabaseData", "initDataDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseData},
 		"initDataDone":            {"waitInitDatabaseData", "success", "failAfterDeploy", workflow.SyncFuncNode, waitInitDatabaseData},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":         {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":         {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -520,7 +520,7 @@ var stopClusterFlow = workflow.WorkFlowDefine{
 		"start":       {"clusterStop", "stopDone", "fail", workflow.PollingNode, stopCluster},
 		"stopDone":    {"setClusterOffline", "offlineDone", "fail", workflow.SyncFuncNode, setClusterOffline},
 		"offlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -556,8 +556,8 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 		"freedResourceDone":  {"clearBackupData", "clearBackupDone", "fail", workflow.SyncFuncNode, clearBackupData},
 		"clearBackupDone":    {"clearCDCLinks", "clearLinkDone", "fail", workflow.SyncFuncNode, clearCDCLinks},
 		"clearLinkDone":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
-		"fail":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":             {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":               {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"revert":             {"revert", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -599,7 +599,7 @@ var startClusterFlow = workflow.WorkFlowDefine{
 		"start":      {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -609,7 +609,7 @@ var restartClusterFlow = workflow.WorkFlowDefine{
 		"start":      {"restartCluster", "startDone", "fail", workflow.PollingNode, restartCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -655,8 +655,8 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "revertWithResource", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
 		"applyParameterGroupDone": {"initDatabaseAccount", "success", "revertWithResource", workflow.SyncFuncNode, initDatabaseAccount},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
-		"revertWithResource":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
+		"revert":                  {"revert", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
+		"revertWithResource":      {"revertWithResource", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
 	},
 }
 
@@ -738,7 +738,6 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (flowID string, err error) {
 
-	var flow *workflow.WorkFlowAggregation
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
 			// update maintenance statue
@@ -752,12 +751,14 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			return clusterMeta.StartMaintenance(transactionCtx, status)
 		}).BreakIf(func() error {
 			// create flow
-			if newFlow, flowError := workflow.GetWorkFlowService().
+			if newFlowId, flowError := workflow.GetWorkFlowService().
 				CreateWorkFlow(transactionCtx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
-				flow = newFlow
-				flowID = newFlow.Flow.ID
+				flowID = newFlowId
 				for key, value := range data {
-					flow.Context.SetData(key, value)
+					err = workflow.GetWorkFlowService().InitContext(transactionCtx, flowID, key, value)
+					if err != nil {
+						return err
+					}
 				}
 				return nil
 			} else {
@@ -765,7 +766,7 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			}
 		}).BreakIf(func() error {
 			// async start flow
-			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
+			return workflow.GetWorkFlowService().Start(transactionCtx, flowID)
 		}).If(func(err error) {
 			framework.LogWithContext(ctx).Errorf(
 				"maintenance cluster %s failed", clusterMeta.Cluster.ID)
@@ -907,8 +908,8 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
 		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
-		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"failAfterUpgrade", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -934,8 +935,8 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
 		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
-		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"failAfterUpgrade", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 

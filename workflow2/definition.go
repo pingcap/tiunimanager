@@ -56,6 +56,15 @@ func (define *WorkFlowDefine) getNodeDefineKeyByName(nodeName string) string {
 	return ""
 }
 
+func (define *WorkFlowDefine) isFailNode(nodeName string) bool {
+	for _, value := range define.TaskNodes {
+		if value.FailEvent == nodeName {
+			return true
+		}
+	}
+	return false
+}
+
 func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
 	return func(node *workflow.WorkFlowNode, context *FlowContext) error {
 		for _, executor := range executors {

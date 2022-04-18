@@ -65,6 +65,10 @@ func (mgr *WorkFlowManager) watchLoop(ctx context.Context) {
 	ticker := time.NewTicker(mgr.watchInterval)
 	for range ticker.C {
 		framework.LogWithContext(ctx).Infof("begin workflow watchLoop every %+v", mgr.watchInterval)
+		mgr.nodeGoroutineMap.Range(func(key, value interface{}) bool {
+			framework.LogWithContext(ctx).Infof("key %s, value %s", key, value)
+			return true
+		})
 		//handle processing workflow last
 		mgr.handleUnFinishedWorkFlow(ctx, constants.WorkFlowStatusCanceling)
 		mgr.handleUnFinishedWorkFlow(ctx, constants.WorkFlowStatusStopped)
@@ -97,7 +101,11 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 					mgr.nodeGoroutineMap.Store(flow.ID, flow.ID)
 					go func() {
 						//todo: recover
-						defer mgr.nodeGoroutineMap.Delete(flow.ID) //clean node go routine map whether end or stop
+						defer func() {
+							mgr.nodeGoroutineMap.Delete(flowMeta.Flow.ID) //clean node go routine map whether end or stop
+							framework.LogWithContext(context.Background()).Infof("delete flow id %s", flow.ID)
+						}()
+
 						//load workflow, call executor and handle polling, restore workflow
 						flowMeta.Execute()
 					}()
@@ -153,6 +161,8 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 }
 
 func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+	framework.LogWithContext(ctx).Infof("begin CreateWorkFlow %s", flowName)
+	defer framework.LogWithContext(ctx).Infof("begin CreateWorkFlow %s", flowName)
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		return "", errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
@@ -173,6 +183,7 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bi
 		},
 		Context: NewFlowContext(ctx, dataMap).GetContextString(),
 	})
+	framework.LogWithContext(ctx).Infof("create worfklow result flow %+v, err %+v", flow, err)
 	return flow.ID, err
 }
 

@@ -29,17 +29,15 @@ import (
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
 	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
 	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/common"
 	config "github.com/pingcap-inc/tiem/models/platform/config"
 	resource_models "github.com/pingcap-inc/tiem/models/resource"
 	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
 	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
 	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
 	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -146,12 +144,9 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(3)
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	var hosts []structs.HostInfo
 	host := genHostInfo("TEST_HOST1")
@@ -199,10 +194,8 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	var hosts []structs.HostInfo
@@ -277,7 +270,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	models.MockDB()
 	clusterRW := mock_cluster.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).Times(2)
+	clusterRW.EXPECT().QueryHostInstances(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
 	file_hostprovider, ok := (hostprovider).(*(host_provider.FileHostProvider))
@@ -289,12 +282,9 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 	workflowService := mock_workflow.NewMockWorkFlowService(ctrl3)
 	workflow.MockWorkFlowService(workflowService)
 	//defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
 	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).Return().Times(4)
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	var hostIds []string
 	hostIds = append(hostIds, fake_hostId1)

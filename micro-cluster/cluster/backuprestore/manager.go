@@ -31,7 +31,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -68,7 +68,7 @@ func NewBRManager() *BRManager {
 			"start":            {"backup", "backupDone", "fail", workflow.SyncFuncNode, backupCluster},
 			"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateBackupRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"end", "", "", workflow.SyncFuncNode, backupFail},
+			"fail":             {"fail", "", "", workflow.SyncFuncNode, backupFail},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreExistCluster, &workflow.WorkFlowDefine{
@@ -76,7 +76,7 @@ func NewBRManager() *BRManager {
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.SyncFuncNode, restoreFromSrcCluster},
 			"restoreDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":        {"end", "", "", workflow.SyncFuncNode, restoreFail},
+			"fail":        {"fail", "", "", workflow.SyncFuncNode, restoreFail},
 		},
 	})
 
@@ -157,21 +157,21 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request cluster.BackupC
 	}()
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowBackupCluster)
+	flowId, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowBackupCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error()), err)
 	}
 
-	flowManager.AddContext(flow, contextBackupRecordKey, recordCreate)
-	flowManager.AddContext(flow, contextClusterMetaKey, meta)
-	flowManager.AddContext(flow, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	flowManager.InitContext(ctx, flowId, contextBackupRecordKey, recordCreate)
+	flowManager.InitContext(ctx, flowId, contextClusterMetaKey, meta)
+	flowManager.InitContext(ctx, flowId, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error()), err)
 	}
 
-	resp.WorkFlowID = flow.Flow.ID
+	resp.WorkFlowID = flowId
 	resp.BackupID = recordCreate.ID
 
 	return resp, nil
@@ -209,21 +209,21 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request cluster.R
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowRestoreExistCluster)
+	flowId, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowRestoreExistCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error()), err)
 	}
 
-	flowManager.AddContext(flow, contextBackupRecordKey, record)
-	flowManager.AddContext(flow, contextClusterMetaKey, meta)
-	flowManager.AddContext(flow, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	flowManager.InitContext(ctx, flowId, contextBackupRecordKey, record)
+	flowManager.InitContext(ctx, flowId, contextClusterMetaKey, meta)
+	flowManager.InitContext(ctx, flowId, contextMaintenanceStatusChangeKey, maintenanceStatusChange)
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error()), err)
 	}
 
-	resp.WorkFlowID = flow.Flow.ID
+	resp.WorkFlowID = flowId
 	return resp, nil
 }
 

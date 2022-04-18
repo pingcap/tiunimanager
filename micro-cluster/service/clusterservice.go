@@ -56,7 +56,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 )

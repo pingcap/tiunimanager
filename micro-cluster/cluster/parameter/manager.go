@@ -52,7 +52,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 
 	"github.com/pingcap-inc/tiem/common/structs"
 
@@ -87,8 +87,8 @@ var modifyParametersDefine = workflow.WorkFlowDefine{
 		"modifyDone":     {"refreshParameter", "refreshDone", "failParameter", workflow.PollingNode, refreshParameter},
 		"refreshDone":    {"persistParameter", "persistDone", "fail", workflow.SyncFuncNode, persistParameter},
 		"persistDone":    {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-		"fail":           {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-		"failParameter":  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(parameterFail, defaultEnd)},
+		"fail":           {"fail", "", "", workflow.SyncFuncNode, defaultEnd},
+		"failParameter":  {"failParameter", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(parameterFail, defaultEnd)},
 	},
 }
 
@@ -213,6 +213,7 @@ func (m *Manager) UpdateClusterParameters(ctx context.Context, req cluster.Updat
 	data := make(map[string]interface{})
 	data[contextModifyParameters] = &ModifyParameter{ClusterID: req.ClusterID, Reboot: req.Reboot, Params: params, Nodes: req.Nodes}
 	data[contextMaintenanceStatusChange] = maintenanceStatusChange
+	data[contextHasApplyParameter] = false
 	workflowID, err := asyncMaintenance(ctx, clusterMeta, data, constants.ClusterMaintenanceModifyParameterAndRestarting, modifyParametersDefine.FlowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("cluster %s update cluster parameters aync maintenance workflow error: %s", req.ClusterID, err.Error())

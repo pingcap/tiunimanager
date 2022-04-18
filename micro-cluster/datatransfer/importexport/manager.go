@@ -27,7 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/models"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,7 +62,7 @@ func NewImportExportManager() *ImportExportManager {
 			"start":            {"exportDataFromCluster", "exportDataDone", "fail", workflow.PollingNode, exportDataFromCluster},
 			"exportDataDone":   {"updateDataExportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataExportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"end", "", "", workflow.SyncFuncNode, exportDataFailed},
+			"fail":             {"fail", "", "", workflow.SyncFuncNode, exportDataFailed},
 		},
 	})
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowImportData, &workflow.WorkFlowDefine{
@@ -72,7 +72,7 @@ func NewImportExportManager() *ImportExportManager {
 			"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", workflow.PollingNode, importDataToCluster},
 			"importDataDone":   {"updateDataImportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataImportRecord},
 			"updateRecordDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
-			"fail":             {"end", "", "", workflow.SyncFuncNode, importDataFailed},
+			"fail":             {"fail", "", "", workflow.SyncFuncNode, importDataFailed},
 		},
 	})
 
@@ -149,20 +149,20 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowExportData)
+	flowId, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowExportData)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowExportData, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
 	}
 	// Start the workflow
-	flowManager.AddContext(flow, contextClusterMetaKey, meta)
-	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
-	if err := flowManager.AsyncStart(ctx, flow); err != nil {
+	flowManager.InitContext(ctx, flowId, contextClusterMetaKey, meta)
+	flowManager.InitContext(ctx, flowId, contextDataTransportRecordKey, info)
+	if err := flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("start %s workflow failed, %s", constants.FlowExportData, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("start %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
 	}
 
-	resp.WorkFlowID = flow.Flow.ID
+	resp.WorkFlowID = flowId
 	resp.RecordID = recordCreate.ID
 	return resp, nil
 }
@@ -277,7 +277,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		info = &importInfo{
 			ClusterId:   request.ClusterID,
 			UserName:    request.UserName,
-			Password: string(request.Password),
+			Password:    string(request.Password),
 			FilePath:    recordGet.FilePath,
 			RecordId:    recordCreate.ID,
 			StorageType: request.StorageType,
@@ -293,20 +293,20 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 	}()
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowImportData)
+	flowId, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowImportData)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowImportData, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
 	}
 	// Start the workflow
-	flowManager.AddContext(flow, contextClusterMetaKey, meta)
-	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	flowManager.InitContext(ctx, flowId, contextClusterMetaKey, meta)
+	flowManager.InitContext(ctx, flowId, contextDataTransportRecordKey, info)
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowImportData, err.Error())
 		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
 	}
 
-	resp.WorkFlowID = flow.Flow.ID
+	resp.WorkFlowID = flowId
 	resp.RecordID = info.RecordId
 	return resp, nil
 }

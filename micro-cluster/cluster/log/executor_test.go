@@ -26,6 +26,7 @@ package log
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/deployment"
+	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -34,7 +35,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 func TestExecutor_collectorClusterLogConfig(t *testing.T) {
@@ -54,10 +55,10 @@ func TestExecutor_collectorClusterLogConfig(t *testing.T) {
 
 		ctx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
 		ctx.SetData(contextClusterMeta, mockClusterMeta())
-		err := collectorClusterLogConfig(mockWorkFlowAggregation().CurrentNode, ctx)
+		err := collectorClusterLogConfig(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 	})
 }
@@ -140,9 +141,9 @@ func TestExecutor_defaultEnd(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctx := &workflow.FlowContext{
 			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
+			FlowData: make(map[string]string),
 		}
-		err := defaultEnd(mockWorkFlowAggregation().CurrentNode, ctx)
+		err := defaultEnd(&workflowModel.WorkFlowNode{}, ctx)
 		assert.NoError(t, err)
 	})
 }

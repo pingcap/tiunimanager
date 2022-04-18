@@ -39,6 +39,7 @@ type WorkFlowMeta struct {
 	CurrentNodeDefine *NodeDefine
 	Nodes             []*workflow.WorkFlowNode
 	Context           *FlowContext
+	IsFailNode        bool
 }
 
 type FlowContext struct {
@@ -59,7 +60,11 @@ func NewFlowContext(ctx context.Context, data map[string]string) *FlowContext {
 func (c *FlowContext) GetData(key string, data interface{}) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	return json.Unmarshal([]byte(c.FlowData[key]), data)
+	if _, ok := c.FlowData[key]; !ok {
+		return nil
+	} else {
+		return json.Unmarshal([]byte(c.FlowData[key]), data)
+	}
 }
 
 func (c *FlowContext) SetData(key string, value interface{}) error {
@@ -123,6 +128,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		}
 	}
 
+	isNodeFail := false
 	var currentNodeDefine *NodeDefine
 	if latest != nil {
 		latestNodeDefineKey = define.getNodeDefineKeyByName(latest.Name)
@@ -146,6 +152,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 
 	var current *workflow.WorkFlowNode
 	if currentNodeDefine != nil {
+		isNodeFail = define.isFailNode(currentNodeDefine.Name)
 		current = &workflow.WorkFlowNode{
 			Entity: dbModel.Entity{
 				TenantId: flow.TenantId,
@@ -157,6 +164,8 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 			ReturnType: string(currentNodeDefine.ReturnType),
 			StartTime:  time.Now(),
 		}
+	} else {
+		isNodeFail = define.isFailNode(latest.Name)
 	}
 
 	meta := &WorkFlowMeta{
@@ -166,6 +175,7 @@ func NewWorkFlowMeta(ctx context.Context, flowId string) (*WorkFlowMeta, error) 
 		CurrentNode:       current,
 		CurrentNodeDefine: currentNodeDefine,
 		Context:           NewFlowContext(ctx, flowData),
+		IsFailNode:        isNodeFail,
 	}
 
 	return meta, nil
@@ -196,12 +206,10 @@ func (flow *WorkFlowMeta) Restore() {
 	//framework.LogWithContext(flow.Context).Infof("restore workflow %+v success", flow.Flow)
 }
 
-func (flow *WorkFlowMeta) Fail() {
+func (flow *WorkFlowMeta) CheckNeedPause() {
 	if flow.CurrentNodeDefine.FailEvent == "pause" {
 		//pause wait for manual handle
 		flow.Flow.Status = constants.WorkFlowStatusStopped
-	} else {
-		flow.Flow.Status = constants.WorkFlowStatusError
 	}
 }
 
@@ -225,7 +233,11 @@ func (flow *WorkFlowMeta) Execute() {
 		flow.Flow.Status = constants.WorkFlowStatusProcessing
 	}
 	if flow.CurrentNodeDefine == nil {
-		flow.Flow.Status = constants.WorkFlowStatusFinished
+		if !flow.IsFailNode {
+			flow.Flow.Status = constants.WorkFlowStatusFinished
+		} else {
+			flow.Flow.Status = constants.WorkFlowStatusError
+		}
 		flow.Restore()
 		return
 	}
@@ -247,7 +259,7 @@ func (flow *WorkFlowMeta) Execute() {
 	if err != nil {
 		framework.LogWithContext(flow.Context).Infof("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
 		node.Fail(err)
-		flow.Fail()
+		flow.CheckNeedPause()
 		flow.Restore()
 		return
 	}
@@ -268,7 +280,7 @@ func (flow *WorkFlowMeta) Execute() {
 			sequence++
 			if sequence > maxPollingSequence {
 				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
-				flow.Fail()
+				flow.CheckNeedPause()
 				flow.Restore()
 				return
 			}
@@ -278,14 +290,14 @@ func (flow *WorkFlowMeta) Execute() {
 			if err != nil {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
-				flow.Fail()
+				flow.CheckNeedPause()
 				flow.Restore()
 				return
 			}
 			if op.Status == deployment.Error {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
-				flow.Fail()
+				flow.CheckNeedPause()
 				flow.Restore()
 				return
 			}

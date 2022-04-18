@@ -23,15 +23,15 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/platform/check"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 	"sync"
 )
 
 const (
-	ContextCheckID    = "CheckID"
-	ContextClusterID  = "ClusterID"
-	DefaultCreator    = "System"
-	DefaultTenantID   = "admin"
+	ContextCheckID   = "CheckID"
+	ContextClusterID = "ClusterID"
+	DefaultCreator   = "System"
+	DefaultTenantID  = "admin"
 )
 
 var checkService CheckService
@@ -67,7 +67,7 @@ var checkDefine = workflow.WorkFlowDefine{
 		"start":            {"checkTenants", "checkTenantsDone", "fail", workflow.SyncFuncNode, checkTenants},
 		"checkTenantsDone": {"checkHosts", "checkHostsDone", "fail", workflow.SyncFuncNode, checkHosts},
 		"checkHostsDone":   {"end", "", "", workflow.SyncFuncNode, endCheck},
-		"fail":             {"end", "", "", workflow.SyncFuncNode, handleFail},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, handleFail},
 	},
 }
 
@@ -98,21 +98,21 @@ func (manager *CheckManager) Check(ctx context.Context, request message.CheckPla
 	}
 
 	// create workflow
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCheckReport, checkDefine.FlowName)
+	flowId, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypePlatform, checkDefine.FlowName)
 	if err != nil {
 		log.Errorf("create flow failed, check report %s error: %s", report.ID, err.Error())
 		return resp, err
 	}
 
-	flow.Context.SetData(ContextCheckID, report.ID)
-	if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
-		log.Errorf("start flow %s failed, check report %s error: %s", flow.Flow.ID, report.ID, err.Error())
+	workflow.GetWorkFlowService().InitContext(ctx, flowId, ContextCheckID, report.ID)
+	if err = workflow.GetWorkFlowService().Start(ctx, flowId); err != nil {
+		log.Errorf("start flow %s failed, check report %s error: %s", flowId, report.ID, err.Error())
 		return resp, err
 	}
-	log.Infof("create flow %s succeed, check report %s", flow.Flow.ID, report.ID)
+	log.Infof("create flow %s succeed, check report %s", flowId, report.ID)
 
 	resp.CheckID = report.ID
-	resp.WorkFlowID = flow.Flow.ID
+	resp.WorkFlowID = flowId
 
 	return resp, nil
 }
@@ -122,7 +122,7 @@ var checkClusterDefine = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":            {"checkCluster", "checkClusterDone", "fail", workflow.SyncFuncNode, checkCluster},
 		"checkClusterDone": {"end", "", "", workflow.SyncFuncNode, endCheck},
-		"fail":             {"end", "", "", workflow.SyncFuncNode, handleFail},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, handleFail},
 	},
 }
 
@@ -151,21 +151,21 @@ func (manager *CheckManager) CheckCluster(ctx context.Context, request message.C
 	}
 
 	// create workflow
-	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCheckReport, checkClusterDefine.FlowName)
+	flowId, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, report.ID, workflow.BizTypeCluster, checkClusterDefine.FlowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create flow failed, check report %s error: %s", report.ID, err.Error())
 		return resp, err
 	}
 
-	flow.Context.SetData(ContextCheckID, report.ID)
-	flow.Context.SetData(ContextClusterID, request.ClusterID)
-	if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
-		framework.LogWithContext(ctx).Errorf("start flow %s failed, check report %s error: %s", flow.Flow.ID, report.ID, err.Error())
+	workflow.GetWorkFlowService().InitContext(ctx, flowId, ContextCheckID, report.ID)
+	workflow.GetWorkFlowService().InitContext(ctx, flowId, ContextClusterID, request.ClusterID)
+	if err = workflow.GetWorkFlowService().Start(ctx, flowId); err != nil {
+		framework.LogWithContext(ctx).Errorf("start flow %s failed, check report %s error: %s", flowId, report.ID, err.Error())
 		return resp, err
 	}
-	framework.LogWithContext(ctx).Infof("create flow %s succeed, check report %s", flow.Flow.ID, report.ID)
+	framework.LogWithContext(ctx).Infof("create flow %s succeed, check report %s", flowId, report.ID)
 	resp.CheckID = report.ID
-	resp.WorkFlowID = flow.Flow.ID
+	resp.WorkFlowID = flowId
 	return resp, nil
 }
 

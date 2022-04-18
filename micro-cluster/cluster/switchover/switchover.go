@@ -46,7 +46,7 @@ import (
 	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
 	crypto "github.com/pingcap-inc/tiem/util/encrypt"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 type Manager struct {
@@ -261,7 +261,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			} else {
 				// A rw-able & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
-				flowName = "" // end
+				//flowName = "" // end
 				return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "slave is unavailable")
 			}
 		} else {
@@ -274,26 +274,26 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 			} else {
 				// A unavailable & B unavailable
 				framework.LogWithContext(ctx).Errorf("checkClusterReadWriteHealth on oldSlaveId %s failed err:%s", oldSlaveId, err)
-				flowName = "" // end
+				//flowName = "" // end
 				return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED, "master/slave switchover failed: %s", "master and slave are both unavailable")
 			}
 		}
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
+	flowId, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", flowName, err.Error())
 		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"create %s workflow failed: %s", flowName, err.Error())
 	}
 
-	flowManager.AddContext(flow, wfContextReqKey, req)
-	flowManager.AddContext(flow, wfContextOldSyncChangeFeedTaskIDKey, oldSyncChangeFeedTaskId)
-	flowManager.AddContext(flow, wfContextOtherSlavesMapToOldSyncCDCTaskKey, otherSlavesMapToOldSyncCDCTaskStr)
+	flowManager.InitContext(ctx, flowId, wfContextReqKey, req)
+	flowManager.InitContext(ctx, flowId, wfContextOldSyncChangeFeedTaskIDKey, oldSyncChangeFeedTaskId)
+	flowManager.InitContext(ctx, flowId, wfContextOtherSlavesMapToOldSyncCDCTaskKey, otherSlavesMapToOldSyncCDCTaskStr)
 
 	var cancelFps []func()
 	cancelFps = append(cancelFps, func() {
-		flowManager.Destroy(ctx, flow, "start maintenance failed")
+		flowManager.Cancel(ctx, flowId, "start maintenance failed")
 	})
 	cancelFlag := true
 	cancel := func() {
@@ -315,7 +315,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfSource.Cluster.MaintenanceStatus))
+	flowManager.InitContext(ctx, flowId, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfSource.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfSource.EndMaintenance(ctx, metaOfSource.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -334,7 +334,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfTarget.Cluster.MaintenanceStatus))
+	flowManager.InitContext(ctx, flowId, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfTarget.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfTarget.EndMaintenance(ctx, metaOfTarget.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -364,7 +364,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 		})
 	}
 
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
 		return nil, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"async start %s workflow failed, %s", flowName, err.Error())
@@ -374,7 +374,7 @@ func (p *Manager) Switchover(ctx context.Context, req *cluster.MasterSlaveCluste
 
 	return &cluster.MasterSlaveClusterSwitchoverResp{
 		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
-			WorkFlowID: flow.Flow.ID,
+			WorkFlowID: flowId,
 		},
 	}, nil
 }
@@ -457,18 +457,18 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		framework.LogWithContext(ctx).Infof("%s iterate OldSlavesClusterID %s", funcName, slaveID)
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
+	flowId, err := flowManager.CreateWorkFlow(ctx, oldMasterId, workflow.BizTypeCluster, flowName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("%s create %s workflow failed, err:%s, req:%s", funcName, flowName, err.Error(), reqJson)
 		return resp, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
 			"create %s workflow failed: %s", flowName, err.Error())
 	}
 
-	flowManager.AddContext(flow, wfContextReqKey, req)
+	flowManager.InitContext(ctx, flowId, wfContextReqKey, req)
 
 	var cancelFps []func()
 	cancelFps = append(cancelFps, func() {
-		flowManager.Destroy(ctx, flow, "start maintenance failed")
+		flowManager.Cancel(ctx, flowId, "start maintenance failed")
 	})
 	cancelFlag := true
 	cancel := func() {
@@ -496,7 +496,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 		return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 	}
-	flowManager.AddContext(flow, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfOldMaster.Cluster.MaintenanceStatus))
+	flowManager.InitContext(ctx, flowId, wfContextOldMasterPreviousMaintenanceStatusKey, string(metaOfOldMaster.Cluster.MaintenanceStatus))
 	cancelFps = append(cancelFps, func() {
 		err := metaOfOldMaster.EndMaintenance(ctx, metaOfOldMaster.Cluster.MaintenanceStatus)
 		if err != nil {
@@ -522,7 +522,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 			framework.LogWithContext(ctx).Errorf("start maintenance failed:%s", err.Error())
 			return resp, errors.WrapError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, fmt.Sprintf("start maintenance failed, %s", err.Error()), err)
 		}
-		flowManager.AddContext(flow, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfSlave.Cluster.MaintenanceStatus))
+		flowManager.InitContext(ctx, flowId, wfContextOldSlavePreviousMaintenanceStatusKey, string(metaOfSlave.Cluster.MaintenanceStatus))
 		thisSlaveID := slaveClusterID
 		cancelFps = append(cancelFps, func() {
 			err := metaOfSlave.EndMaintenance(ctx, constants.ClusterMaintenanceSwitchoverRollback)
@@ -532,7 +532,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 		})
 	}
 
-	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", flowName, err.Error())
 		return nil, emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_ROLLBACK_FAILED,
 			"async start %s workflow failed, %s", flowName, err.Error())
@@ -542,7 +542,7 @@ func (p *Manager) switchoverRollback(ctx context.Context, req *cluster.MasterSla
 
 	return &cluster.MasterSlaveClusterSwitchoverResp{
 		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
-			WorkFlowID: flow.Flow.ID,
+			WorkFlowID: flowId,
 		},
 	}, nil
 }
@@ -583,6 +583,7 @@ func (p *Manager) CheckSwitchover(ctx context.Context, masterClusterID, slaveClu
 	return &retV, err
 }
 
+/*
 func (p *Manager) checkMasterSalveRelation(ctx context.Context, masterClusterID, slaveClusterID string) error {
 	_, err := p.clusterGetRelationByMasterSlaveClusterId(ctx, masterClusterID, slaveClusterID)
 	return err
@@ -593,7 +594,7 @@ func (p *Manager) checkClusterDetailedHealthStatus(ctx context.Context, clusterI
 	//    pd ctl region / tiup cluster display / tikv store status / tikv region status
 	return p.checkClusterReadWriteHealth(ctx, clusterID)
 }
-
+*/
 func (p *Manager) checkClusterReadWriteHealth(ctx context.Context, clusterID string) error {
 	userName, password, err := p.clusterGetCDCUserNameAndPwd(ctx, clusterID)
 	if err != nil {
@@ -677,6 +678,7 @@ func (p *Manager) clusterSetReadWrite(ctx context.Context, clusterID string) err
 	return nil
 }
 
+/*
 func (p *Manager) convertTSOToPhysicalTime(ctx context.Context, tso uint64) time.Time {
 	t, lt := tsoLib.ParseTS(tso)
 	_ = lt
@@ -686,7 +688,7 @@ func (p *Manager) convertTSOToPhysicalTime(ctx context.Context, tso uint64) time
 func (p *Manager) convertPhysicalTimeToTSO(ctx context.Context, t time.Time) (tso uint64) {
 	return tsoLib.GenerateTSO(t, 0)
 }
-
+*/
 func (m *Manager) clusterCheckHasCDCComponent(ctx context.Context, clusterId string, myNotFoundErr error) error {
 	myMeta, err := meta.Get(ctx, clusterId)
 	if err != nil {
@@ -1066,8 +1068,7 @@ func (m *Manager) queryChangeFeedTaskCheckpointedTime(ctx context.Context, chang
 }
 
 func (m *Manager) dupChangeFeedTaskStructWithTiDBDownStream(ctx context.Context, old *cluster.ChangeFeedTask) (*cluster.ChangeFeedTask, error) {
-	new := cluster.ChangeFeedTask{}
-	new = *old
+	new := *old
 	if old.DownstreamType == string(constants.DownstreamTypeTiDB) {
 		var t changefeedModel.TiDBDownstream
 		orig, ok := old.Downstream.(*changefeedModel.TiDBDownstream)
@@ -1155,6 +1156,7 @@ func (m *Manager) checkSyncChangeFeedTaskHealth(ctx context.Context, reqJson, lo
 	}
 }
 
+/*
 func (m *Manager) encryptStr(ctx context.Context, toEncrypt string) (string, error) {
 	str, err := crypto.AesEncryptCFB(toEncrypt)
 	return str, err
@@ -1164,6 +1166,7 @@ func (m *Manager) decryptStr(ctx context.Context, toDescryptStr string) (string,
 	str, err := crypto.AesDecryptCFB(toDescryptStr)
 	return str, err
 }
+*/
 
 type marshalMasterSlavesState struct {
 	MarshaledMasterSlavesState string

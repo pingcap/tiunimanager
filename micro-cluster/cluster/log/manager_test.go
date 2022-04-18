@@ -31,7 +31,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
 	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
@@ -64,10 +64,11 @@ func TestManager_BuildClusterLogConfig(t *testing.T) {
 			return mockCluster(), mockClusterInstances(), mockDBUsers(), nil
 		})
 	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-			return mockWorkFlowAggregation(), nil
+		DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+			return "flowId", nil
 		})
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 	configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
 	_, err := mockManager.BuildClusterLogConfig(context.TODO(), "123")

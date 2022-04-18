@@ -26,7 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	workflow "github.com/pingcap-inc/tiem/workflow2"
 )
 
 func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
@@ -315,9 +315,8 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 }
 
 func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (hosts []structs.HostInfo, err error) {
-	var ok bool
-	hosts, ok = ctx.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
-	if !ok {
+	err = ctx.GetData(rp_consts.ContextHostInfoArrayKey, &hosts)
+	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostInfoArrayKey)
 		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
@@ -325,9 +324,8 @@ func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (hosts []structs
 }
 
 func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (hostIds []string, err error) {
-	var ok bool
-	hostIds, ok = ctx.GetData(rp_consts.ContextHostIDArrayKey).([]string)
-	if !ok {
+	err = ctx.GetData(rp_consts.ContextHostIDArrayKey, &hostIds)
+	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostIDArrayKey)
 		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
@@ -335,9 +333,8 @@ func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (hostIds []string,
 }
 
 func getIgnoreWarningsFromFlowContext(ctx *workflow.FlowContext) (ignoreWarnings bool, err error) {
-	var ok bool
-	ignoreWarnings, ok = ctx.GetData(rp_consts.ContextIgnoreWarnings).(bool)
-	if !ok {
+	err = ctx.GetData(rp_consts.ContextIgnoreWarnings, &ignoreWarnings)
+	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextIgnoreWarnings)
 		return ignoreWarnings, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}

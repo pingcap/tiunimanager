@@ -60,10 +60,18 @@ func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string,
 	specifiedPublicKey := framework.GetCurrentSpecifiedPublicKeyPath()
 	log.Infof("begin to test whether skip auth host %s %s with deploy user %s, with key pair <%s, %s> and specified user %s",
 		h.HostName, h.IP, deployUser, specifiedPublicKey, specifiedPrivateKey, specifiedUser)
-	// try to test connection if user specify key pair and specified username == deployUser
+	// try to test connection if user specified loginUserName == deployUser
 	if specifiedUser == deployUser {
 		defaultPrivateKey := framework.GetPrivateKeyFilePath(deployUser)
 		defaultPublicKey := framework.GetPublicKeyFilePath(deployUser)
+		if specifiedPrivateKey == "" {
+			specifiedPrivateKey = defaultPrivateKey
+		}
+		if specifiedPublicKey == "" {
+			specifiedPublicKey = defaultPublicKey
+		}
+		// do the auth check only in the case when using the default deployUser key pair, because the only way we get the private key
+		// for calling tiup commands is to call `GetPrivateKeyFilePath()`, which returns back the deployUser's default private key.
 		if specifiedPrivateKey == defaultPrivateKey && specifiedPublicKey == defaultPublicKey {
 			lsCmd := "ls -l"
 			authenticate := sshclient.HostAuthenticate{SshType: sshclient.Key, AuthenticatedUser: deployUser, AuthenticateContent: specifiedPrivateKey}

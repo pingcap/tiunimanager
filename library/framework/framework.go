@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -37,6 +38,7 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	transport2 "go.etcd.io/etcd/client/pkg/v3/transport"
@@ -89,12 +91,13 @@ type ServiceHandler func(service micro.Service) error
 type ClientHandler func(service micro.Service) error
 
 type BaseFramework struct {
-	args          *ClientArgs
-	configuration *Configuration
-	log           *RootLogger
-	trace         *Tracer
-	etcdClient    *EtcdClientV3
-	certificate   *CertificateInfo
+	args           *ClientArgs
+	configuration  *Configuration
+	log            *RootLogger
+	trace          *Tracer
+	etcdClient     *EtcdClientV3
+	certificate    *CertificateInfo
+	aesKeyFilePath string
 
 	elasticsearchClient *ElasticSearchClient
 
@@ -158,6 +161,7 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 	f.initEtcdClient()
 	f.initElasticsearchClient()
 	f.initMetrics()
+	f.initAes()
 	// listen prometheus metrics
 	go f.prometheusBoot()
 	return f
@@ -196,6 +200,7 @@ func (b *BaseFramework) parseArgs(serviceName ServiceNameEnum) {
 	b.serviceMeta = NewServiceMetaFromArgs(serviceName, b.args)
 	b.log = NewLogRecordFromArgs(serviceName, b.args)
 	b.certificate = NewCertificateFromArgs(b.args)
+	b.aesKeyFilePath = NewAesKeyFilePathFromArgs(b.args)
 	b.trace = NewTracerFromArgs(b.args)
 	// now empty
 	b.configuration = &Configuration{}
@@ -272,6 +277,17 @@ func (b *BaseFramework) initElasticsearchClient() {
 
 func (b *BaseFramework) initMetrics() {
 	b.metrics = metrics.GetMetrics()
+}
+
+func (b *BaseFramework) initAes() {
+	keyBs, err := ioutil.ReadFile(b.aesKeyFilePath)
+	if err == nil {
+		err = crypto.InitKey(keyBs)
+	}
+	if err != nil {
+		Log().Errorf("init aes failed: %v", err)
+		panic("init aes failed:" + err.Error())
+	}
 }
 
 func (b *BaseFramework) GetDeployDir() string {

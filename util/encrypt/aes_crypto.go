@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -21,6 +20,7 @@ import (
 	"crypto/aes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 
 	"github.com/pingcap/errors"
@@ -32,7 +32,19 @@ import (
 var key []byte
 
 func init() {
-	key = []byte(">]t1emf0rp1nGcap$t!Em@p!ngcap;[<")
+	// left the key blank and wait user call `InitKey` to init
+	key = []byte("")
+}
+
+func InitKey(key []byte) error {
+	l := len(key)
+	switch l {
+	case 16, 24, 32:
+		break
+	default:
+		return fmt.Errorf("invalid key size %d", l)
+	}
+	return nil
 }
 
 func aesEncryptCFB(plain []byte) (encrypted []byte, err error) {

@@ -52,9 +52,10 @@ const (
 
 // Enterprise Manager Certificates constants
 const (
-	CertDirPrefix string = "/cert/"
-	CertFileName  string = "server.crt"
-	KeyFileName   string = "server.key"
+	CertDirPrefix  string = "/cert/"
+	CertFileName   string = "server.crt"
+	KeyFileName    string = "server.key"
+	AesKeyFileName string = "aes.key"
 )
 
 // micro service default port

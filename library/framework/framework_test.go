@@ -55,7 +55,7 @@ func TestBaseFramework_loadCert(t *testing.T) {
 			"./../../bin/cert/server.key",
 		},
 	}
-	got := b.loadCert()
+	got := b.loadCert("grpc")
 	assert.NotNil(t, got)
 }
 

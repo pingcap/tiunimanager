@@ -36,8 +36,7 @@ type Instance struct {
 type Key string
 
 const (
-	UsingSpecifiedKeyPair Key = "UsingSpecifiedKeyPair"
-	DuringEMTiupProcess   Key = "DuringEMTiupProcess" // In process which will call em tiup
+	DuringEMTiupProcess Key = "DuringEMTiupProcess" // In process which will call em tiup
 )
 
 func CheckAndSetInEMTiupProcess() bool {

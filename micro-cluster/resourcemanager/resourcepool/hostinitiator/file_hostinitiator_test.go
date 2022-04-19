@@ -571,20 +571,34 @@ func Test_passCpuGovernorWarn(t *testing.T) {
 
 func Test_skipAuthHost_Skip(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = framework.GetPrivateKeyFilePath("root")
+	framework.Current.GetClientArgs().LoginPublicKeyPath = framework.GetPublicKeyFilePath("root")
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(host string, port int, authenticate sshclient.HostAuthenticate, sudo bool, timeoutS int, commands []string) (string, error) {
+		if authenticate.AuthenticatedUser == "root" && authenticate.AuthenticateContent == framework.GetPrivateKeyFilePath("root") {
+			return "", nil
+		}
+		return "", errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host")
+	}).Times(2)
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
 	skip := fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
 	assert.True(t, skip)
+
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = ""
+	framework.Current.GetClientArgs().LoginPublicKeyPath = ""
+	skip = fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
+	assert.True(t, skip)
 }
 
 func Test_skipAuthHost_NotSkip(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = framework.GetPrivateKeyFilePath("root")
+	framework.Current.GetClientArgs().LoginPublicKeyPath = framework.GetPublicKeyFilePath("root")
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
@@ -600,8 +614,8 @@ func Test_skipAuthHost_NotSkip(t *testing.T) {
 	skip = fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
 	assert.False(t, skip)
 
-	framework.Current.GetClientArgs().LoginPrivateKeyPath = ""
-	framework.Current.GetClientArgs().LoginPublicKeyPath = ""
+	framework.Current.GetClientArgs().LoginPrivateKeyPath = "/fake/private/key/path2"
+	framework.Current.GetClientArgs().LoginPublicKeyPath = "/fake/public/key/path2"
 	skip = fileInitiator.skipAuthHost(context.TODO(), "root", &structs.HostInfo{IP: "666.666.66.66"})
 	assert.False(t, skip)
 }

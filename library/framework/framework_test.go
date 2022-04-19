@@ -63,18 +63,10 @@ func Test_GetPrivateKeyFilePath(t *testing.T) {
 	InitBaseFrameworkForUt(ClusterService)
 	privPath := GetPrivateKeyFilePath("test_tiem")
 	assert.Equal(t, "/home/test_tiem/.ssh/tiup_rsa", privPath)
-
-	SetLocalConfig(UsingSpecifiedKeyPair, true)
-	privPath = GetPrivateKeyFilePath("test_tiem")
-	assert.Equal(t, "/fake/private/key/path", privPath)
 }
 
 func Test_GetPublicKeyFilePath(t *testing.T) {
 	InitBaseFrameworkForUt(ClusterService)
 	publicPath := GetPublicKeyFilePath("test_tiem")
 	assert.Equal(t, "/home/test_tiem/.ssh/id_rsa.pub", publicPath)
-
-	SetLocalConfig(UsingSpecifiedKeyPair, true)
-	publicPath = GetPublicKeyFilePath("test_tiem")
-	assert.Equal(t, "/fake/public/key/path", publicPath)
 }

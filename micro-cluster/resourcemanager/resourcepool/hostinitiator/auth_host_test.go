@@ -192,10 +192,4 @@ func Test_getEMAuthenticateToHost(t *testing.T) {
 	assert.Equal(t, sshclient.Key, authenticate.SshType)
 	assert.Equal(t, "test-user", authenticate.AuthenticatedUser)
 	assert.Equal(t, "/home/test-user/.ssh/tiup_rsa", authenticate.AuthenticateContent)
-
-	framework.SetLocalConfig(framework.UsingSpecifiedKeyPair, true)
-	authenticate = fileInitiator.getEMAuthenticateToHost(context.TODO())
-	assert.Equal(t, sshclient.Key, authenticate.SshType)
-	assert.Equal(t, "test-user", authenticate.AuthenticatedUser)
-	assert.Equal(t, "/fake/private/key/path", authenticate.AuthenticateContent)
 }

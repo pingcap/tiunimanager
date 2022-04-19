@@ -420,14 +420,15 @@ func (b *BaseFramework) prometheusBoot() {
 		With(prom.Labels{metrics.ServiceLabel: b.GetServiceMeta().ServiceName.ServerName()}).
 		SetToCurrentTime()
 
-	http.Handle("/metrics", promhttp.Handler())
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {
 			metricsPort = constants.DefaultMetricsPort
 		}
 		LogForkFile(constants.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
-		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), nil)
+		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), mux)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())

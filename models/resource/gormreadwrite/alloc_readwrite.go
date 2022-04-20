@@ -260,7 +260,7 @@ func (rw *GormResourceReadWrite) allocResourceInHost(ctx context.Context, tx *go
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
 	totalRequireCores := reqCores * require.Count
-	totalRequireMemory := reqCores * require.Count
+	totalRequireMemory := reqMem * require.Count
 	exclusive := require.Require.Exclusive
 	isTakeOver := applicant.TakeoverOperation
 

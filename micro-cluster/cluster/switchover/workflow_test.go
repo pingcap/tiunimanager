@@ -56,8 +56,56 @@ func TestWorkFlowToDO(t *testing.T) {
 			ID:       "id-xxxx",
 			TenantId: "tid-xxx",
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+	},
+		[]*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					ID:     "111111",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "TiDB",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+			{
+				Entity: common.Entity{
+					ID:     "222222",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "TiDB",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+			{
+				Entity: common.Entity{
+					ID:     "333333",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "TiKV",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+			{
+				Entity: common.Entity{
+					ID:     "333333",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "CDC",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+		}, make([]*management.DBUser, 0), nil).AnyTimes()
 	clusterRW.EXPECT().GetRelations(gomock.Any(), gomock.Eq("2")).Return(
+		[]*clusterMgr.ClusterRelation{
+			{
+				RelationType:         constants.ClusterRelationStandBy,
+				SubjectClusterID:     "1",
+				ObjectClusterID:      "2",
+				SyncChangeFeedTaskID: "1",
+			},
+		}, nil,
+	).AnyTimes()
+	clusterRW.EXPECT().GetSlaves(gomock.Any(), gomock.Eq("1")).Return(
 		[]*clusterMgr.ClusterRelation{
 			{
 				RelationType:         constants.ClusterRelationStandBy,

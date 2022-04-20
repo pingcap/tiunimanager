@@ -994,7 +994,7 @@ func (c *ClusterServiceHandler) StopFlow(ctx context.Context, request *clusterse
 	stopReq := message.StartWorkFlowReq{}
 	if handleRequest(ctx, request, resp, &stopReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceWorkflow), Action: string(constants.RbacActionUpdate)}}) {
 		manager := workflow.GetWorkFlowService()
-		err := manager.Start(framework.NewBackgroundMicroCtx(ctx, false), stopReq.WorkFlowID)
+		err := manager.Stop(framework.NewBackgroundMicroCtx(ctx, false), stopReq.WorkFlowID)
 		handleResponse(ctx, resp, err, message.StopWorkFlowResp{}, nil)
 	}
 

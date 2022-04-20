@@ -778,7 +778,7 @@ func (m *Manager) getSwitchoverMasterSlavesStateFromASwitchoverWorkflow(ctx cont
 				previousRollbackSuccessFlag = true
 			}
 		}
-		framework.LogWithContext(ctx).Infof("%s previousRollbackSuccessFlag:%s", funcName, previousRollbackSuccessFlag)
+		framework.LogWithContext(ctx).Infof("%s previousRollbackSuccessFlag:%t", funcName, previousRollbackSuccessFlag)
 	}
 	framework.LogWithContext(ctx).Infof("%s result.NodeInfo[0].Result:%s", funcName, str)
 	units := strings.Split(str, "\n")

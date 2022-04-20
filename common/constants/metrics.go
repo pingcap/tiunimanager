@@ -54,7 +54,7 @@ const (
 	MetricsClusterUpgradePath           MetricsType = "cluster/upgrade_path"
 	MetricsClusterUpgradeDiff           MetricsType = "cluster/upgrade_diff"
 
-	MetricsMetadataDeletePhysically     MetricsType = "metadata/delete"
+	MetricsMetadataDeletePhysically MetricsType = "metadata/delete"
 
 	MetricsPlatformCheck     MetricsType = "platform/check"
 	MetricsClusterCheck      MetricsType = "platform/check/cluster"
@@ -131,6 +131,8 @@ const (
 	// MetricsWorkFlowQuery define workflow metrics
 	MetricsWorkFlowQuery  MetricsType = "workflow/query"
 	MetricsWorkFlowDetail MetricsType = "workflow/detail"
+	MetricsWorkFlowStart  MetricsType = "workflow/start"
+	MetricsWorkFlowStop   MetricsType = "workflow/stop"
 
 	// MetricsResourceQueryHierarchy define resource metrics
 	MetricsResourceQueryHierarchy           MetricsType = "resource/query_hierarchy"

@@ -971,6 +971,36 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	return nil
 }
 
+func (c *ClusterServiceHandler) StartFlow(ctx context.Context, request *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "StartFlow", int(resp.GetCode()))
+	defer handlePanic(ctx, "StartFlow", resp)
+
+	startReq := message.StartWorkFlowReq{}
+	if handleRequest(ctx, request, resp, &startReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceWorkflow), Action: string(constants.RbacActionUpdate)}}) {
+		manager := workflow.GetWorkFlowService()
+		err := manager.Start(framework.NewBackgroundMicroCtx(ctx, false), startReq.WorkFlowID)
+		handleResponse(ctx, resp, err, message.StartWorkFlowResp{}, nil)
+	}
+
+	return nil
+}
+
+func (c *ClusterServiceHandler) StopFlow(ctx context.Context, request *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "StopFlow", int(resp.GetCode()))
+	defer handlePanic(ctx, "StopFlow", resp)
+
+	stopReq := message.StartWorkFlowReq{}
+	if handleRequest(ctx, request, resp, &stopReq, []structs.RbacPermission{{Resource: string(constants.RbacResourceWorkflow), Action: string(constants.RbacActionUpdate)}}) {
+		manager := workflow.GetWorkFlowService()
+		err := manager.Start(framework.NewBackgroundMicroCtx(ctx, false), stopReq.WorkFlowID)
+		handleResponse(ctx, resp, err, message.StopWorkFlowResp{}, nil)
+	}
+
+	return nil
+}
+
 func (c *ClusterServiceHandler) Login(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "Login", int(resp.GetCode()))

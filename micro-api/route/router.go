@@ -226,6 +226,8 @@ func Route(g *gin.Engine) {
 			flowworks.Use(interceptor.AuditLog)
 			flowworks.GET("/", metrics.HandleMetrics(constants.MetricsWorkFlowQuery), flowtaskApi.Query)
 			flowworks.GET("/:workFlowId", metrics.HandleMetrics(constants.MetricsWorkFlowDetail), flowtaskApi.Detail)
+			flowworks.POST("/start", metrics.HandleMetrics(constants.MetricsWorkFlowStart), flowtaskApi.Start)
+			flowworks.POST("/stop", metrics.HandleMetrics(constants.MetricsWorkFlowStop), flowtaskApi.Stop)
 		}
 
 		host := apiV1.Group("/resources")

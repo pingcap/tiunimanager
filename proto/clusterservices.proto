@@ -71,6 +71,8 @@ service ClusterService {
     // workflow
     rpc ListFlows(RpcRequest) returns (RpcResponse);
     rpc DetailFlow(RpcRequest) returns (RpcResponse);
+    rpc StartFlow(RpcRequest) returns (RpcResponse);
+    rpc StopFlow(RpcRequest) returns (RpcResponse);
 
     // Parameter Group & Cluster Parameters
     rpc CreateParameterGroup(RpcRequest) returns (RpcResponse);

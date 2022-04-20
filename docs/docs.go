@@ -7196,6 +7196,144 @@ var doc = `{
                 }
             }
         },
+        "/workflow/start": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "start workflow",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "start workflow"
+                ],
+                "summary": "start workflow",
+                "parameters": [
+                    {
+                        "description": "start workflow",
+                        "name": "startReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.StartWorkFlowReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.StartWorkFlowResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/workflow/stop": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "stop workflow",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stop workflow"
+                ],
+                "summary": "stop workflow",
+                "parameters": [
+                    {
+                        "description": "stop workflow",
+                        "name": "stopReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.StopWorkFlowReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.StopWorkFlowResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/workflow/{workFlowId}": {
             "get": {
                 "security": [
@@ -9839,6 +9977,28 @@ var doc = `{
                     }
                 }
             }
+        },
+        "message.StartWorkFlowReq": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.StartWorkFlowResp": {
+            "type": "object"
+        },
+        "message.StopWorkFlowReq": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.StopWorkFlowResp": {
+            "type": "object"
         },
         "message.UnbindRoleForUserReq": {
             "type": "object",

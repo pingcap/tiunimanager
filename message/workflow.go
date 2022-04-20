@@ -48,3 +48,17 @@ type QueryWorkFlowsReq struct {
 type QueryWorkFlowsResp struct {
 	WorkFlows []*structs.WorkFlowInfo `json:"workFlows" form:"workFlows"`
 }
+
+type StartWorkFlowReq struct {
+	WorkFlowID string `json:"workFlowId"`
+}
+
+type StartWorkFlowResp struct {
+}
+
+type StopWorkFlowReq struct {
+	WorkFlowID string `json:"workFlowId"`
+}
+
+type StopWorkFlowResp struct {
+}

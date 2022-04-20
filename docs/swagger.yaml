@@ -1794,6 +1794,20 @@ definitions:
           $ref: '#/definitions/structs.WorkFlowInfo'
         type: array
     type: object
+  message.StartWorkFlowReq:
+    properties:
+      workFlowId:
+        type: string
+    type: object
+  message.StartWorkFlowResp:
+    type: object
+  message.StopWorkFlowReq:
+    properties:
+      workFlowId:
+        type: string
+    type: object
+  message.StopWorkFlowResp:
+    type: object
   message.UnbindRoleForUserReq:
     properties:
       role:
@@ -7547,6 +7561,88 @@ paths:
       summary: show details of a flow work
       tags:
       - task
+  /workflow/start:
+    post:
+      consumes:
+      - application/json
+      description: start workflow
+      parameters:
+      - description: start workflow
+        in: body
+        name: startReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.StartWorkFlowReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.StartWorkFlowResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: start workflow
+      tags:
+      - start workflow
+  /workflow/stop:
+    post:
+      consumes:
+      - application/json
+      description: stop workflow
+      parameters:
+      - description: stop workflow
+        in: body
+        name: stopReq
+        required: true
+        schema:
+          $ref: '#/definitions/message.StopWorkFlowReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.StopWorkFlowResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: stop workflow
+      tags:
+      - stop workflow
 securityDefinitions:
   ApiKeyAuth:
     in: header

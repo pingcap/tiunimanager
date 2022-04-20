@@ -115,6 +115,7 @@ type BaseFramework struct {
 
 func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
+	f.initAesForUT()
 
 	Current = f
 	f.args = &ClientArgs{
@@ -140,7 +141,6 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 	f.initOpts = opts
 	f.Init()
-	f.initAesForUT()
 	f.shutdownOpts = []Opt{
 		func(d *BaseFramework) error {
 			return os.RemoveAll(d.GetDataDir())
@@ -156,13 +156,13 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 
 	f.acceptArgs()
 	f.parseArgs(serviceName)
+	f.initAes()
 	f.setEtcdCertConfig()
 	f.initOpts = opts
 	f.Init()
 	f.initEtcdClient()
 	f.initElasticsearchClient()
 	f.initMetrics()
-	f.initAes()
 	// listen prometheus metrics
 	go f.prometheusBoot()
 	return f

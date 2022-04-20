@@ -17,6 +17,7 @@
 package resourcepool
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -25,10 +26,20 @@ import (
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
+	crypto "github.com/pingcap-inc/tiem/util/encrypt"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+func TestMain(m *testing.M) {
+	log.Println("init aes key")
+	err := crypto.InitKey([]byte(constants.AesKeyOnlyForUT))
+	if err != nil {
+		log.Panic("unexpteced err:", err)
+	}
+	os.Exit(m.Run())
+}
 
 func Test_BuildDefaultTraits(t *testing.T) {
 	type want struct {

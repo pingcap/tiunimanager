@@ -17,6 +17,7 @@
 package framework
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -139,7 +140,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 	f.initOpts = opts
 	f.Init()
-
+	f.initAesForUT()
 	f.shutdownOpts = []Opt{
 		func(d *BaseFramework) error {
 			return os.RemoveAll(d.GetDataDir())
@@ -279,9 +280,18 @@ func (b *BaseFramework) initMetrics() {
 	b.metrics = metrics.GetMetrics()
 }
 
+func (b *BaseFramework) initAesForUT() {
+	err := crypto.InitKey([]byte(constants.AesKeyOnlyForUT))
+	if err != nil {
+		Log().Errorf("init aes for ut failed: %v", err)
+		panic("init aes for ut failed:" + err.Error())
+	}
+}
+
 func (b *BaseFramework) initAes() {
 	keyBs, err := ioutil.ReadFile(b.aesKeyFilePath)
 	if err == nil {
+		keyBs = bytes.TrimSuffix(keyBs, []byte("\n"))
 		err = crypto.InitKey(keyBs)
 	}
 	if err != nil {

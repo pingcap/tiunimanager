@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/pingcap/errors"
 	"google.golang.org/grpc/codes"
@@ -29,21 +30,21 @@ import (
 )
 
 // key should be 16、24 or 32 length [] byte, conresponding to AES-128, AES-192 或 AES-256.
-var key []byte
+// left the key blank and wait user call `InitKey` to reset it
+var key = []byte("")
+var keyLock sync.Mutex
 
-func init() {
-	// left the key blank and wait user call `InitKey` to init
-	key = []byte("")
-}
-
-func InitKey(key []byte) error {
-	l := len(key)
+func InitKey(k []byte) error {
+	l := len(k)
 	switch l {
 	case 16, 24, 32:
 		break
 	default:
 		return fmt.Errorf("invalid key size %d", l)
 	}
+	keyLock.Lock()
+	key = k
+	keyLock.Unlock()
 	return nil
 }
 

@@ -56,6 +56,8 @@ const (
 	CertFileName   string = "server.crt"
 	KeyFileName    string = "server.key"
 	AesKeyFileName string = "aes.key"
+	// AesKeyOnlyForUT should only be used in unit testing and NEVER in production!
+	AesKeyOnlyForUT string = ">]t1emf0rp1nGcap$t!Em@p!ngcap;[<"
 )
 
 // micro service default port

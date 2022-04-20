@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,10 +17,22 @@
 package encrypt
 
 import (
+	"log"
+	"os"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	log.Println("init aes key")
+	err := InitKey([]byte(constants.AesKeyOnlyForUT))
+	if err != nil {
+		log.Panic("unexpteced err:", err)
+	}
+	os.Exit(m.Run())
+}
 
 func Test_EnCrypt_DeCrypt_Succeed(t *testing.T) {
 	t.Parallel()

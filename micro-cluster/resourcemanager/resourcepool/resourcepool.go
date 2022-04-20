@@ -18,10 +18,11 @@ package resourcepool
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/message"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/pingcap-inc/tiem/message"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -202,11 +203,11 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 			} else {
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP)
 			}
-			ticker := time.NewTicker(5 * time.Second)
-			sequence := int32(0)
+			ticker := time.NewTicker(rp_consts.BackGroundTaskCheckInterval * time.Second)
+			sequence := 0
 			for range ticker.C {
 				sequence++
-				if sequence > 1000 {
+				if sequence > rp_consts.BackGroundTaskMaxTries {
 					break
 				}
 				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
@@ -279,11 +280,11 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 			} else {
 				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flowId, hostIds[i])
 			}
-			ticker := time.NewTicker(5 * time.Second)
-			sequence := int32(0)
+			ticker := time.NewTicker(rp_consts.BackGroundTaskCheckInterval * time.Second)
+			sequence := 0
 			for range ticker.C {
 				sequence++
-				if sequence > 1000 {
+				if sequence > rp_consts.BackGroundTaskMaxTries {
 					break
 				}
 				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})

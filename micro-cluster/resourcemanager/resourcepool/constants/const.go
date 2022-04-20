@@ -38,6 +38,8 @@ const (
 )
 
 const (
-	DefaultTiupTimeOut      = 360
-	DefaultCopySshIDTimeOut = 10
+	DefaultTiupTimeOut          = 360
+	DefaultCopySshIDTimeOut     = 10
+	BackGroundTaskCheckInterval = 5 // unit: Second
+	BackGroundTaskMaxTries      = 1000
 )

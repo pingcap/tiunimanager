@@ -63,18 +63,18 @@
 		}
 ```
 可以跟踪每条route后的HandleFunc进入每个API的入口，其中，
-- resourceApi.ImportHosts 是批量导入主机的入口，该接口接受一个用户导入的主机模板文件，一次导入每行主机的信息到资源模块中；
-- resourceApi.QueryHosts 是查询主机的入口，该接口接受查询的筛选条件，返回一个主机列表作为查询结果；
-- resourceApi.RemoveHosts 是批量删除主机的入口，改接口接受一个HostID数组，在资源模块中将这些主机批量删除；
-- resourceApi.DownloadHostTemplateFile 是下载主机模板文件的入口，该接口将预置路径下的模板文件返回给客户；
-- warehouseApi.GetHierarchy 是查询资源层级结构的入口，该接口接受一个筛选条件和层级深度（Level, Depth），返回条件下的资源层级信息。其中，Level代表起始层级[1:Region, 2:Zone, 3:Rack, 4:Host]，Depth代表向下展示的深度，比如， Level = 1, Depth = 2，表示从Region开始，到Rack（1+2=3）的层级树结构；
-- warehouseApi.GetStocks 查询资源库存的入口，该接口接受一个范围筛选条件，返回该条件下的库存信息；
-- resourceApi.UpdateHostReserved 是修改主机“预留”标记位的接口，用来修改主机的“Reserved”标记 - 作为被接管集群的主机，导入时的主机“Reserved” = true，这时，这种主机不参与分配；仅当“Reserved” 被修改为false之后，主机可以参与分配；
-- resourceApi.UpdateHostStatus 是修改主机状态的接口，用来修改主机的Status - Online/Offline/Deleted/Failed;
-- resourceApi.UpdateHost 是修改主机信息的接口， 可以修改的主机信息包括：HostName, UserName, Passwd, CpuCores, Memory, OS, Kernel, Nic, Purposes；不可修改的主机字段包括：IP, DiskType, Arch, ClusterType, Vendor, Region, AZ, Rack, Reserved, Status(由专门的API修改)，Stat;
-- resourceApi.CreateDisks 为主机新增磁盘的入口；
-- resourceApi.RemoveDisks 删除主机的磁盘（不可删除已被分配出去的磁盘）；
-- resourceApi.UpdateDisk 修改磁盘信息的入口，可以修改的磁盘信息包括：DiskName, Capacity, Status(仅能把磁盘设置为Error，标记为坏盘)；不可修改的磁盘信息：HostID,  Path, Type；
+- `resourceApi.ImportHosts` 是批量导入主机的入口，该接口接受一个用户导入的主机模板文件，一次导入每行主机的信息到资源模块中；
+- `resourceApi.QueryHosts` 是查询主机的入口，该接口接受查询的筛选条件，返回一个主机列表作为查询结果；
+- `resourceApi.RemoveHosts` 是批量删除主机的入口，改接口接受一个HostID数组，在资源模块中将这些主机批量删除；
+- `resourceApi.DownloadHostTemplateFile` 是下载主机模板文件的入口，该接口将预置路径下的模板文件返回给客户；
+- `warehouseApi.GetHierarchy` 是查询资源层级结构的入口，该接口接受一个筛选条件和层级深度（Level, Depth），返回条件下的资源层级信息。其中，Level代表起始层级[1:Region, 2:Zone, 3:Rack, 4:Host]，Depth代表向下展示的深度，比如， Level = 1, Depth = 2，表示从Region开始，到Rack（1+2=3）的层级树结构；
+- `warehouseApi.GetStocks` 查询资源库存的入口，该接口接受一个范围筛选条件，返回该条件下的库存信息；
+- `resourceApi.UpdateHostReserved` 是修改主机“预留”标记位的接口，用来修改主机的“Reserved”标记 - 作为被接管集群的主机，导入时的主机“Reserved” = true，这时，这种主机不参与分配；仅当“Reserved” 被修改为false之后，主机可以参与分配；
+- `resourceApi.UpdateHostStatus` 是修改主机状态的接口，用来修改主机的Status - Online/Offline/Deleted/Failed;
+- `resourceApi.UpdateHost` 是修改主机信息的接口， 可以修改的主机信息包括：HostName, UserName, Passwd, CpuCores, Memory, OS, Kernel, Nic, Purposes；不可修改的主机字段包括：IP, DiskType, Arch, ClusterType, Vendor, Region, AZ, Rack, Reserved, Status(由专门的API修改)，Stat;
+- `resourceApi.CreateDisks` 为主机新增磁盘的入口；
+- `resourceApi.RemoveDisks` 删除主机的磁盘（不可删除已被分配出去的磁盘）；
+- `resourceApi.UpdateDisk` 修改磁盘信息的入口，可以修改的磁盘信息包括：DiskName, Capacity, Status(仅能把磁盘设置为Error，标记为坏盘)；不可修改的磁盘信息：HostID,  Path, Type；
 
 ## 资源模块类图
 ![UML of ResourceManager](./images/resource_manager/Resource_UML_Diagram.drawio.png)
@@ -138,7 +138,7 @@ Micro-Api层主要从Form中获取导入主机的一些条件参数，
 - skipHostInit: 跳过导入主机的初始化流程，主要使用场景是用户已经完全初始化好主机（比如做好中控机到资源机免密，安装Filebeat等）的场景，可直接跳过初始化流程导入主机；
 - ignoreWarns: 在初始化主机时会调用tiup cluster check命令对主机做校验，如果该项为True，可以跳过校验的告警；
 并从Form中获取到用户输入的导入文件，并解析导入文件的主机列表，通过grpc调用Micro-cluster的ImportHosts接口开启导入主机的工作流进行主机的初始化和导入；
-在Micro-cluster中，会根据传入的ImportCondition进行判断，来确定具体使用那种工作流来导入主机，流程图如下；
+在Micro-cluster中，会根据传入的ImportCondition进行判断，来确定具体使用哪种工作流来导入主机，流程图如下；
 
 ![Import Hosts WorkFlow](./images/resource_manager/chinese/import_hosts_workflow.png)
 

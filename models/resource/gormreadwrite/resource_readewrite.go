@@ -92,9 +92,9 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 
 	if filter.Status != "" {
 		if filter.Status != string(constants.HostDeleted) {
-			db = db.Where("status = ?", filter.Status)
+			db = db.Where("hosts.status = ?", filter.Status)
 		} else {
-			db = db.Unscoped().Where("status = ?", filter.Status)
+			db = db.Unscoped().Where("hosts.status = ?", filter.Status)
 		}
 	}
 	if filter.Stat != "" {

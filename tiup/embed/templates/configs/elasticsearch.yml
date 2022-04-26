@@ -8,7 +8,7 @@ path:
 
 discovery.type: single-node
 
-ingest.geoip.downloader.enabled: false
+#ingest.geoip.downloader.enabled: false
 
 #xpack.security.enabled: true
 

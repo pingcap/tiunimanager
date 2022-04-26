@@ -10,9 +10,9 @@ setup.template.append_fields:
   - name: msg
     type: text
 
-processors:
-  - rate_limit:
-      limit: "200/s"
+#processors:
+#  - rate_limit:
+#      limit: "200/s"
 
 logging.level: info
 logging.to_files: true

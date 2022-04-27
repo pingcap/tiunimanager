@@ -20,6 +20,7 @@ LimitCORE={{.LimitCORE}}
 {{- end}}
 LimitNOFILE=1000000
 LimitSTACK=10485760
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 
 {{- if .GrantCapNetRaw}}
 AmbientCapabilities=CAP_NET_RAW

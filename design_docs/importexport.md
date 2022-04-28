@@ -4,14 +4,14 @@
 
 ## table of Contents
 
-- [TiEM improt and export design](#TiEM improt and export design)
-  - [table of Contents](#table of Contents)
-  - [import export API](#import export API)
+- [TiEM improt and export design](#TiEM-improt-and-export-design)
+  - [table of Contents](#table-of-Contents)
+  - [import export API](#import-export-API)
   - [design](#design)
     - [interface](#interface)
     - [workflow](#workflow)
-    - [import process](#import process)
-    - [export process](#export process)
+    - [import process](#import-process)
+    - [export process](#export-process)
     - [errors](#errors)
 
 ## import export API

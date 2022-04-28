@@ -4,12 +4,12 @@
 
 ## table of Contents
 
-- [TiEM workflow design doc](#TiEM workflow design doc)
-  - [table of Contents](#table of Contents)
-  - [workflow API](#workflow API)
+- [TiEMworkflow design doc](#TiEM-workflow-design-doc)
+  - [table of Contents](#table-of-Contents)
+  - [workflow API](#workflow-API)
   - [design](#design)
     - [interface](#interface)
-    - [workflow implement](#workflow implement)
+    - [workflow implement](#workflow-implement)
     - [errors](#errors)
 
 ## workflow API

@@ -4,14 +4,14 @@
 
 ## table of Contents
 
-- [TiEM backup and restore design doc](#TiEM backup and restore design doc)
-  - [table of Contents](#Table of Contents)
-  - [backup and restore API](#backup and restore API)
+- [TiEM backup and restore design doc](#TiEM-backup-and-restore-design-doc)
+  - [table of Contents](#table-f-Contents)
+  - [backup and restore API](#backup-and-restore-API)
   - [design](#design)
     - [interface](#interface)
     - [workflow](#workflow)
-    - [backup process](#backup process)
-    - [restore process](#restore process)
+    - [backup process](#backup-process)
+    - [restore process](#restore-process)
     - [errors](#errors)
 
 ## backup and restore API

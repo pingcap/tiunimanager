@@ -116,7 +116,7 @@
 Download the host template file for importing.
 
 ### Request URI
-``` http 
+```
 GET resources/hosts-template
 ```
 
@@ -157,7 +157,7 @@ curl -X 'GET' \
 Import hosts to the TiEM platform with a hosts xlsx file. 
 
 ### Request URI
-``` http 
+```
 POST resources/hosts
 ```
 
@@ -233,7 +233,7 @@ curl -X 'POST' \
 Query host(s) by filter conditions. 
 
 ### Request URI 
-``` http
+```
 Get resources/hosts
 ```
 
@@ -399,7 +399,7 @@ curl -X 'GET' \
 Update host information. 
 
 ### Request URI 
-``` http
+```
 PUT resources/host
 ```
 
@@ -476,7 +476,7 @@ curl -X 'PUT' \
 Update Host Status by hostIDs. 
 
 ### Request URI 
-``` http
+```
 PUT resources/host-status
 ```
 
@@ -542,7 +542,7 @@ curl -X 'PUT' \
 Update Host's Reserved field by hostIDs. 
 
 ### Request URI 
-``` http
+```
 PUT resources/host-reserved
 ```
 
@@ -608,7 +608,7 @@ curl -X 'PUT' \
 Delete a batch of hosts by hostIDs. 
 
 ### Request URI 
-``` http
+```
 DELETE resources/hosts
 ```
 
@@ -680,7 +680,7 @@ curl -X 'DELETE' \
 Add disks for a specified host. 
 
 ### Request URI 
-``` http
+```
 POST resources/disks
 ```
 
@@ -757,7 +757,7 @@ curl -X 'POST' \
 Update disk info by DiskID. 
 
 ### Request URI 
-``` http
+```
 PUT resources/disk
 ```
 
@@ -826,7 +826,7 @@ curl -X 'PUT' \
 Delete disks by DiskIDs.
 
 ### Request URI 
-``` http
+```
 DELETE resources/disks
 ```
 
@@ -889,7 +889,7 @@ curl -X 'DELETE' \
 Get the hierarchy tree of  resources. 
 
 ### Request URI 
-``` http
+```
 GET resources/hierarchy
 ```
 
@@ -976,7 +976,7 @@ curl -X 'GET' \
 Get the stocks of resources after filtering. 
 
 ### Request URI 
-``` http
+```
 GET resources/stocks
 ```
 

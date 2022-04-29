@@ -97,7 +97,7 @@ curl -vX 'POST' \
 
 
 
-![master-slave-switchover-workflow-diagram](master-slave-switchover-workflow-diagram.png)
+![master-slave-switchover-workflow-diagram](./images/switchover/master-slave-switchover-workflow-diagram.png)
 
 
 
@@ -121,7 +121,7 @@ curl -vX 'POST' \
 
 
 
-![switchover-demo](switchover-demo.png)
+![switchover-demo](./images/switchover/switchover-demo.png)
 
 
 
@@ -194,7 +194,7 @@ end
 
 在主备切换过程中会包含很多步骤，如果某一个步骤在操作过程中遇到错误（比如可能因为网络不可达或者某些组件故障），主备切换会尽可能地进行自动回滚，努力回退到主备切换之前的状态。在少数情况下，如果在回滚过程中某一步遇到了错误，切换流程会直接结束，那么此时系统可能会处于主备切换的中间异常状态，这时就需要进行手工触发异常回滚流程。
 
-![switchover-rollback-successfully](switchover-rollback-successfully.png)
+![switchover-rollback-successfully](./images/switchover/switchover-rollback-successfully.png)
 
 比如在上述情景中，主备切换在执行过程中遇到故障，执行自动回滚操作，错误信息中显示 ”Rollback Successfully“ 即为回滚成功，那么此时虽然主备切换失败，但是由于自动回滚过程中没有遇到错误，集群将会顺利回退到主备切换之前的状态，所以无需执行异常恢复相关的操作。但如果错误信息中显示 ”Rollback Failed“，即为回滚失败，就意味着集群很可能正处于异常状态，此时需要进行手工触发异常回滚流程。
 
@@ -317,5 +317,5 @@ curl -vX 'POST' \
 
 # FT 设计
 
-![switchover-ft](switchover-ft.png)
+![switchover-ft](./images/switchover/switchover-ft.png)
 

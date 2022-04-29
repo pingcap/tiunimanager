@@ -95,7 +95,7 @@ For more information about this interface, please refer to the detailed OpenAPI 
 
 The flow chart:
 
-![master-slave-switchover-workflow-diagram](master-slave-switchover-workflow-diagram-en.png)
+![master-slave-switchover-workflow-diagram](./images/switchover/master-slave-switchover-workflow-diagram-en.png)
 
 
 
@@ -117,7 +117,7 @@ Because the current implementation of workflow component in TiEM does not suppor
 
 Suppose that the current master cluster is A and the slave cluster is B and C respectively. After a successful switchover A to B, the master cluster becomes B and the slave cluster is A and C respectively, as shown in the following figures:
 
-![switchover-demo](switchover-demo.png)
+![switchover-demo](./images/switchover/switchover-demo.png)
 
 
 
@@ -311,5 +311,5 @@ In addition to pre-check whether the master cluster is writable and the slave cl
 
 # FT Design
 
-![switchover-ft](switchover-ft-en.png)
+![switchover-ft](./images/switchover/switchover-ft-en.png)
 

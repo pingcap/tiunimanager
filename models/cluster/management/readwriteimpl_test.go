@@ -941,7 +941,7 @@ func TestClusterReadWrite_CreateDBUser(t *testing.T) {
 			} else {
 				got, _ := testRW.GetDBUser(context.TODO(), "clusterid")
 				fmt.Println(got[0].Password.UpdateTime)
-				assert.NotEmpty(t, got[0].Password.UpdateTime)
+				assert.Empty(t, got[0].Password.UpdateTime)
 				assert.NotEmpty(t, user.ID)
 				assert.NotEmpty(t, user.CreatedAt)
 			}

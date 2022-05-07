@@ -93,7 +93,7 @@ func Route(g *gin.Engine) {
 
 		user := apiV1.Group("/users")
 		{
-			user.Use(interceptor.VerifyIdentity)
+			user.Use(interceptor.VerifyIdentityForUserModule)
 			user.Use(interceptor.AuditLog)
 			user.POST("/", metrics.HandleMetrics(constants.MetricsUserCreate), userApi.CreateUser)
 			user.DELETE("/:userId", metrics.HandleMetrics(constants.MetricsUserDelete), userApi.DeleteUser)

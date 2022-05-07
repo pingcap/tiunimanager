@@ -219,6 +219,20 @@ func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*U
 	}
 	return user, nil
 }
+func (arw *AccountReadWrite) GetUserByID(ctx context.Context, id string) (*User, error) {
+	if "" == id {
+		framework.LogWithContext(ctx).Errorf("get user by id %s, parameter invalid", id)
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"get user by id %s, parameter invalid", id)
+	}
+
+	user := &User{}
+	err := arw.DB(ctx).First(user, "id = ?", id).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, errors.NewErrorf(errors.UserNotExist, "query user %s profile not found", id)
+	}
+	return user, nil
+}
 
 func (arw *AccountReadWrite) CreateTenant(ctx context.Context, tenant *Tenant) (*structs.TenantInfo, error) {
 	if "" == tenant.ID || "" == tenant.Name {

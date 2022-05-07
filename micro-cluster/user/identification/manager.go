@@ -95,6 +95,16 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 		return resp, errors.Error(errors.TIEM_ACCESS_TOKEN_EXPIRED)
 	}
 
+	user, err := models.GetAccountReaderWriter().GetUserByID(ctx, token.UserID)
+	if err != nil {
+		return resp, errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
+	}
+
+	passwordExpired, err := user.FinalHash.CheckUpdateTimeExpired()
+	if err != nil || passwordExpired {
+		return resp, errors.WrapError(errors.TIEM_USER_PASSWORD_EXPIRED, "password expired", err)
+	}
+
 	resp.UserID = token.UserID
 	resp.TenantID = token.TenantID
 

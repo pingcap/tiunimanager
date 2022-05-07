@@ -25,12 +25,11 @@ package models
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/models/platform/product"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
-
-	"github.com/pingcap-inc/tiem/models/platform/product"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"

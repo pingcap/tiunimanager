@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"time"
 )
 
 type AccountReadWrite struct {
@@ -194,7 +195,10 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 	}
 
 	//value := dbCommon.Password{Val: finalHash, UpdateTime: time.Now()}
-	value := dbCommon.PasswordInExpired{Val: finalHash}
+	value := dbCommon.PasswordInExpired{
+		Val: finalHash,
+		UpdateTime: time.Now(),
+	}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?",
 		userID).Update("salt", salt).Update("final_hash", value).Error
 }

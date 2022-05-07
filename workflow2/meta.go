@@ -23,6 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/deployment"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/metrics"
 	"github.com/pingcap-inc/tiem/models"
 	dbModel "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
@@ -76,6 +77,23 @@ func (c *FlowContext) SetData(key string, value interface{}) error {
 	defer c.mutex.Unlock()
 	c.FlowData[key] = string(data)
 	return nil
+}
+
+func handleWorkFlowMetrics(flow *workflow.WorkFlow) {
+	metrics.HandleWorkFlowMetrics(metrics.WorkFlowLabel{
+		BizType: flow.BizType,
+		Name:    flow.Name,
+		Status:  flow.Status,
+	})
+}
+
+func handleWorkFlowNodeMetrics(flow *workflow.WorkFlow, node *workflow.WorkFlowNode) {
+	metrics.HandleWorkFlowNodeMetrics(metrics.WorkFlowNodeLabel{
+		BizType:  flow.BizType,
+		FlowName: flow.Name,
+		Node:     node.Name,
+		Status:   node.Status,
+	})
 }
 
 func (c *FlowContext) InitFlowContext() *FlowContext {

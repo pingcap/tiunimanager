@@ -183,6 +183,8 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bi
 		},
 		Context: NewFlowContext(ctx, dataMap).GetContextString(),
 	})
+	handleWorkFlowMetrics(flow)
+
 	framework.LogWithContext(ctx).Infof("create worfklow result flow %+v, err %+v", flow, err)
 	return flow.ID, err
 }
@@ -285,6 +287,7 @@ func (mgr *WorkFlowManager) Start(ctx context.Context, flowId string) error {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_START_FAILED, "workflow Id %s is finished", flowId)
 	}
+	handleWorkFlowMetrics(flow)
 	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
 }
 
@@ -299,6 +302,7 @@ func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_STOP_FAILED, "workflow Id %s is finished", flowId)
 	}
+	handleWorkFlowMetrics(flow)
 	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
 }
 
@@ -313,5 +317,6 @@ func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason st
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_CANCEL_FAILED, "workflow Id %s is finished", flowId)
 	}
+	handleWorkFlowMetrics(flow)
 	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")
 }

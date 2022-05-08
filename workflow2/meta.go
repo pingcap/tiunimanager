@@ -256,6 +256,7 @@ func (flow *WorkFlowMeta) Execute() {
 		} else {
 			flow.Flow.Status = constants.WorkFlowStatusError
 		}
+		handleWorkFlowMetrics(flow.Flow)
 		flow.Restore()
 		return
 	}

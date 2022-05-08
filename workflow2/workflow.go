@@ -287,8 +287,14 @@ func (mgr *WorkFlowManager) Start(ctx context.Context, flowId string) error {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_START_FAILED, "workflow Id %s is finished", flowId)
 	}
+
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
+	if err != nil {
+		return err
+	}
+	flow.Status = constants.WorkFlowStatusProcessing
 	handleWorkFlowMetrics(flow)
-	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
+	return err
 }
 
 func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
@@ -302,8 +308,14 @@ func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_STOP_FAILED, "workflow Id %s is finished", flowId)
 	}
+
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
+	if err != nil {
+		return err
+	}
+	flow.Status = constants.WorkFlowStatusStopped
 	handleWorkFlowMetrics(flow)
-	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
+	return err
 }
 
 func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason string) error {
@@ -317,6 +329,12 @@ func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason st
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_CANCEL_FAILED, "workflow Id %s is finished", flowId)
 	}
+
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")
+	if err != nil {
+		return err
+	}
+	flow.Status = constants.WorkFlowStatusCanceling
 	handleWorkFlowMetrics(flow)
-	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")
+	return err
 }

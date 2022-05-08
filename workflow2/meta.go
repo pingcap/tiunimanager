@@ -87,10 +87,10 @@ func handleWorkFlowMetrics(flow *workflow.WorkFlow) {
 	})
 }
 
-func handleWorkFlowNodeMetrics(flow *workflow.WorkFlow, node *workflow.WorkFlowNode) {
+func handleWorkFlowNodeMetrics(flow *WorkFlowMeta, node *workflow.WorkFlowNode) {
 	metrics.HandleWorkFlowNodeMetrics(metrics.WorkFlowNodeLabel{
-		BizType:  flow.BizType,
-		FlowName: flow.Name,
+		BizType:  flow.Flow.BizType,
+		FlowName: flow.Flow.Name,
 		Node:     node.Name,
 		Status:   node.Status,
 	})
@@ -263,6 +263,7 @@ func (flow *WorkFlowMeta) Execute() {
 	node := flow.CurrentNode
 	nodeDefine := flow.CurrentNodeDefine
 
+	handleWorkFlowNodeMetrics(flow, node)
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	if err != nil {
 		framework.LogWithContext(flow.Context).Warnf("create workflow node, node %s failed %s", node.Name, err.Error())
@@ -271,12 +272,14 @@ func (flow *WorkFlowMeta) Execute() {
 
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()
+	handleWorkFlowNodeMetrics(flow, node)
 	flow.Restore()
 
 	err = nodeDefine.Executor(node, flow.Context)
 	if err != nil {
 		framework.LogWithContext(flow.Context).Infof("workflow %s of bizId %s do node %s failed, %s", flow.Flow.ID, flow.Flow.BizID, node.Name, err.Error())
 		node.Fail(err)
+		handleWorkFlowNodeMetrics(flow, node)
 		flow.CheckNeedPause()
 		flow.Restore()
 		return
@@ -285,6 +288,7 @@ func (flow *WorkFlowMeta) Execute() {
 	switch nodeDefine.ReturnType {
 	case SyncFuncNode:
 		node.Success()
+		handleWorkFlowNodeMetrics(flow, node)
 		flow.Restore()
 		return
 	case PollingNode:
@@ -298,6 +302,7 @@ func (flow *WorkFlowMeta) Execute() {
 			sequence++
 			if sequence > maxPollingSequence {
 				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
+				handleWorkFlowNodeMetrics(flow, node)
 				flow.CheckNeedPause()
 				flow.Restore()
 				return
@@ -308,6 +313,7 @@ func (flow *WorkFlowMeta) Execute() {
 			if err != nil {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
+				handleWorkFlowNodeMetrics(flow, node)
 				flow.CheckNeedPause()
 				flow.Restore()
 				return
@@ -315,6 +321,7 @@ func (flow *WorkFlowMeta) Execute() {
 			if op.Status == deployment.Error {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
 				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
+				handleWorkFlowNodeMetrics(flow, node)
 				flow.CheckNeedPause()
 				flow.Restore()
 				return
@@ -325,6 +332,7 @@ func (flow *WorkFlowMeta) Execute() {
 				} else {
 					node.Success(nil)
 				}
+				handleWorkFlowNodeMetrics(flow, node)
 				flow.Restore()
 				return
 			}

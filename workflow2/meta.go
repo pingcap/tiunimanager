@@ -216,6 +216,7 @@ func (flow *WorkFlowMeta) Restore() {
 		constants.WorkFlowStatusCanceled == current.Status) && constants.WorkFlowStatusCanceled != flow.Flow.Status {
 		//interrupt status update by api, do not overwrite it
 		flow.Flow.Status = current.Status
+		handleWorkFlowMetrics(flow.Flow)
 	}
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	if err != nil {
@@ -251,6 +252,7 @@ func (flow *WorkFlowMeta) Execute() {
 
 	if flow.Flow.Status == constants.WorkFlowStatusInitializing {
 		flow.Flow.Status = constants.WorkFlowStatusProcessing
+		handleWorkFlowMetrics(flow.Flow)
 	}
 	if flow.CurrentNodeDefine == nil {
 		if !flow.IsFailNode {

@@ -238,6 +238,7 @@ func (flow *WorkFlowMeta) Execute() {
 			execErr := errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
 			if flow.CurrentNode != nil {
 				flow.CurrentNode.Fail(execErr)
+				handleWorkFlowNodeMetrics(flow, flow.CurrentNode)
 			}
 		}
 	}()

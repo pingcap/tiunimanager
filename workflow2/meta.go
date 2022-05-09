@@ -228,6 +228,7 @@ func (flow *WorkFlowMeta) CheckNeedPause() {
 	if flow.CurrentNodeDefine.FailEvent == "pause" {
 		//pause wait for manual handle
 		flow.Flow.Status = constants.WorkFlowStatusStopped
+		handleWorkFlowMetrics(flow.Flow)
 	}
 }
 

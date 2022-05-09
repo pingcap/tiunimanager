@@ -295,6 +295,7 @@ func (flow *WorkFlowMeta) Execute() {
 	case PollingNode:
 		if node.Status == constants.WorkFlowStatusFinished {
 			flow.Restore()
+			handleWorkFlowNodeMetrics(flow, node)
 			return
 		}
 		ticker := time.NewTicker(3 * time.Second)

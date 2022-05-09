@@ -137,8 +137,10 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 				}
 				if flowMeta.CurrentNode != nil {
 					flowMeta.CurrentNode.Status = constants.WorkFlowStatusCanceled
+					handleWorkFlowNodeMetrics(flowMeta, flowMeta.CurrentNode)
 				}
 				flowMeta.Flow.Status = constants.WorkFlowStatusCanceled
+				handleWorkFlowMetrics(flowMeta.Flow)
 				flowMeta.Restore()
 				framework.LogWithContext(ctx).Infof("cancel workflow id %s, name %s success", flow.ID, flow.Name)
 			}

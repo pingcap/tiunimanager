@@ -151,9 +151,9 @@ func Start(
 			}
 			// init grafana index patterns
 			if comp.Name() == spec.ComponentGrafana {
-				//if len(cluster.BaseTopo().WebServers) <= 0 {
-				//	return fmt.Errorf("Component web_servers can not empty ")
-				//}
+				if len(cluster.BaseTopo().WebServers) <= 0 {
+					return fmt.Errorf("Component web_servers can not empty ")
+				}
 				if err = initGrafana(ctx, tlsCfg, inst, cluster.BaseTopo().WebServers[0]); err != nil {
 					return err
 				}

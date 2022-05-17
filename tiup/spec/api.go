@@ -208,7 +208,7 @@ func (i *APIServerInstance) InitConfig(
 			i.topo.GlobalOptions.CertDir)
 	}
 	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s %s/",
+		fmt.Sprintf("cp -r %s %s/cert",
 			i.topo.GlobalOptions.CertDir, paths.Deploy),
 		false); err != nil {
 		return err

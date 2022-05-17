@@ -200,10 +200,9 @@ func (i *ClusterServerInstance) InitConfig(
 		return err
 	}
 
-	// TODO: support user specified certificates
 	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/cert %s/bin/template %s/bin/sqls %s/",
-			paths.Deploy, paths.Deploy, paths.Deploy, paths.Deploy),
+		fmt.Sprintf("cp -r %s/bin/sqls %s/",
+			paths.Deploy, paths.Deploy),
 		false); err != nil {
 		return err
 	}
@@ -219,6 +218,18 @@ func (i *ClusterServerInstance) InitConfig(
 			false); err != nil {
 			return err
 		}
+	}
+
+	// Copy dynamic generated cert
+	if !FileExist(i.topo.GlobalOptions.CertDir) {
+		return errors.Errorf("CertDir %s directory does not exist",
+			i.topo.GlobalOptions.CertDir)
+	}
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s %s/",
+			i.topo.GlobalOptions.CertDir, paths.Deploy),
+		false); err != nil {
+		return err
 	}
 	return nil
 }

@@ -17,6 +17,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/pingcap/errors"
 	"path/filepath"
 	"time"
 
@@ -201,12 +202,18 @@ func (i *APIServerInstance) InitConfig(
 		return err
 	}
 
-	// TODO: support user specified certificates
+	// Copy dynamic generated cert
+	if !FileExist(i.topo.GlobalOptions.CertDir) {
+		return errors.Errorf("CertDir %s directory does not exist",
+			i.topo.GlobalOptions.CertDir)
+	}
 	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
+		fmt.Sprintf("cp -r %s %s/",
+			i.topo.GlobalOptions.CertDir, paths.Deploy),
 		false); err != nil {
 		return err
 	}
+
 	if _, _, err := e.Execute(ctx,
 		fmt.Sprintf("cp -r %s/bin/resource %s/", paths.Deploy, paths.Deploy),
 		false); err != nil {

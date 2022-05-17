@@ -220,13 +220,14 @@ func (i *WebServerInstance) InitConfig(
 		return err
 	}
 	// Copy dynamic generated cert
-	if !FileExist(i.topo.GlobalOptions.CertDir) {
+	certDir := Abs(i.topo.GlobalOptions.User, i.topo.GlobalOptions.CertDir)
+	if !FileExist(certDir) {
 		return errors.Errorf("CertDir %s directory does not exist",
-			i.topo.GlobalOptions.CertDir)
+			certDir)
 	}
 	if _, _, err := e.Execute(ctx,
 		fmt.Sprintf("cp -r %s %s/cert",
-			i.topo.GlobalOptions.CertDir, paths.Deploy),
+			certDir, paths.Deploy),
 		false); err != nil {
 		return err
 	}

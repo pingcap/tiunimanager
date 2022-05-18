@@ -29,6 +29,6 @@ exec env GODEBUG=madvdontneed=1 bin/cluster-server \
     --login-private-key-path="{{.LoginPrivateKeyPath}}" \
     --login-public-key-path="{{.LoginPublicKeyPath}}" \
     --deploy-group="{{.DeployGroup}}" \
-    --deploy-dir="{{.DeployDir}}/bin" \
+    --deploy-dir="{{.DeployDir}}" \
     --data-dir="{{.DataDir}}" \
     --log-level="{{.LogLevel}}"

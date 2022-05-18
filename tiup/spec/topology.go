@@ -81,6 +81,7 @@ type GlobalOptions struct {
 	DeployDir                string               `yaml:"deploy_dir,omitempty" default:"deploy"`
 	DataDir                  string               `yaml:"data_dir,omitempty" default:"data"`
 	LogDir                   string               `yaml:"log_dir,omitempty"`
+	CertDir                  string               `yaml:"cert_dir,omitempty" default:"em-cert"`
 	LogLevel                 string               `yaml:"log_level,omitempty"`
 	ExternalElasticsearchUrl string               `yaml:"external_elasticsearch_url" validate:"external_elasticsearch_url:editable"`
 	ResourceControl          meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`

@@ -158,7 +158,7 @@ curl -X 'GET' \
 
 ## Request upgrade TiDB cluster
 
-request for upgrade TiDB cluster
+request for upgrading TiDB cluster
 
 ### Request URI
 

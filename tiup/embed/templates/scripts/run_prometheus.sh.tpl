@@ -14,7 +14,6 @@ exec bin/prometheus \
     --config.file="{{.DeployDir}}/conf/prometheus.yml" \
     --web.listen-address=":{{.Port}}" \
     --web.external-url="http://{{.IP}}:{{.Port}}/" \
-    --web.enable-admin-api \
     --log.level="info" \
     --storage.tsdb.path="{{.DataDir}}" \
     --storage.tsdb.retention="{{.Retention}}"

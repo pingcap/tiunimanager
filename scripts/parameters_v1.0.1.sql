@@ -1,6 +1,7 @@
 update parameters set unit_options = '["KB", "MB", "GB"]', range = '["1KB", "3GB"]' where id = '105';
 update parameters set range = '["1", "10240"]' where id = '143';
 update parameters set range = '["1", "10240"]' where id = '145';
+update parameters set update_source = 0 where id = '107';
 INSERT INTO parameter_groups (id, name, parent_id, cluster_spec, has_default, db_type, group_type, cluster_version, note, created_at, updated_at) VALUES ('16QwutFwTRe845nv_za0dw', 'v6.0_8C16G_default', null, '8C16G', 1, 1, 1, 'v6.0', 'v6.0 8C16G default parameter group', '1609459200000', '1609459200000');
 INSERT INTO parameters (id, category, name, instance_type, system_variable, type, unit, unit_options, range, range_type, has_reboot, has_apply, update_source, read_only, description, created_at, updated_at) VALUES ('408', 'pessimistic-txn', 'pessimistic-auto-commit', 'TiDB', null, 2, null, null, '["true", "false"]', 2, 1, 1, 0, 0, 'Determines the transaction mode that the auto-commit transaction uses when the pessimistic transaction mode is globally enabled (tidb_txn_mode=pessimistic).', '1609459200000', '1609459200000');
 INSERT INTO parameters (id, category, name, instance_type, system_variable, type, unit, unit_options, range, range_type, has_reboot, has_apply, update_source, read_only, description, created_at, updated_at) VALUES ('409', 'pessimistic-txn', 'in-memory', 'TiKV', null, 2, null, null, '["true", "false"]', 2, 1, 1, 0, 0, 'Enables the in-memory pessimistic lock feature.', '1609459200000', '1609459200000');

@@ -137,6 +137,16 @@ var allVersionInitializers = []system.VersionInitializer{
 			}).BreakIf(func() error {
 				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.1.sql"
 				return initBySql(tx, parameterSqlFile, "parameters")
+			}).BreakIf(func() error {
+				framework.LogForkFile(constants.LogFileSystem).Info("init default account")
+				user := &account.User{
+					DefaultTenantID: "admin",
+					Name:            "admin",
+					Creator:         "System",
+				}
+				user.GenSaltAndHash("admin")
+				_, _, _, err := defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin")
+				return err
 			}).Present()
 		})
 	}},

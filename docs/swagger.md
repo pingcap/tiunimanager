@@ -149,231 +149,6 @@ cancel backup
 | --- | --- |
 | ApiKeyAuth | |
 
-### /changefeeds/
-
-#### GET
-##### Summary
-
-query change feed tasks of a cluster
-
-##### Description
-
-query change feed tasks of a cluster
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| clusterId | query |  | Yes | string |
-| page | query | Current page location | No | integer |
-| pageSize | query | Number of this request | No | integer |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.ResultWithPage](#controllerresultwithpage) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-#### POST
-##### Summary
-
-create a change feed task
-
-##### Description
-
-create a change feed task
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| changeFeedTask | body | change feed task request | Yes | [cluster.CreateChangeFeedTaskReq](#clustercreatechangefeedtaskreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /changefeeds/{changeFeedTaskId}
-
-#### DELETE
-##### Summary
-
-delete a change feed task
-
-##### Description
-
-delete a change feed task
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| changeFeedTaskId | path | changeFeedTaskId | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /changefeeds/{changeFeedTaskId}/
-
-#### GET
-##### Summary
-
-get change feed detail
-
-##### Description
-
-get change feed detail
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| changeFeedTaskId | path | changeFeedTaskId | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /changefeeds/{changeFeedTaskId}/pause
-
-#### POST
-##### Summary
-
-pause a change feed task
-
-##### Description
-
-pause a change feed task
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| changeFeedTaskId | path | changeFeedTaskId | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /changefeeds/{changeFeedTaskId}/resume
-
-#### POST
-##### Summary
-
-resume a change feed task
-
-##### Description
-
-resume a change feed task
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| changeFeedTaskId | path | changeFeedTaskId | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /changefeeds/{changeFeedTaskId}/update
-
-#### POST
-##### Summary
-
-resume a change feed
-
-##### Description
-
-resume a change feed
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| changeFeedTaskId | path | changeFeedTaskId | Yes | string |
-| task | body | change feed task | Yes | [cluster.UpdateChangeFeedTaskReq](#clusterupdatechangefeedtaskreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
 ### /clusters/
 
 #### GET
@@ -1899,7 +1674,7 @@ update products
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
-| UpdateProductsInfoReq | body | update products info request parameter | Yes | [message.UpdateProductsInfoReq](#messageupdateproductsinforeq) |
+| UpdateProductsInfoReq | body | update products info request parameter | Yes | [message.f``UpdateProductsInfoReq](#messageupdateproductsinforeq) |
 
 ##### Responses
 
@@ -2865,334 +2640,6 @@ update tenant profile
 | --- | --- |
 | ApiKeyAuth | |
 
-### /user/login
-
-#### POST
-##### Summary
-
-login
-
-##### Description
-
-login
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| loginInfo | body | login info | Yes | [message.LoginReq](#messageloginreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-### /user/logout
-
-#### POST
-##### Summary
-
-logout
-
-##### Description
-
-logout
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /users/
-
-#### GET
-##### Summary
-
-queries all user profile
-
-##### Description
-
-query all user profile
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| queryUserRequest | body | query user profile request parameter | Yes | [message.QueryUserReq](#messagequeryuserreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.ResultWithPage](#controllerresultwithpage) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-#### POST
-##### Summary
-
-created  user
-
-##### Description
-
-created user
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| createUserReq | body | create user request parameter | Yes | [message.CreateUserReq](#messagecreateuserreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /users/{userId}
-
-#### DELETE
-##### Summary
-
-delete user
-
-##### Description
-
-delete user
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| userId | path | user id | Yes | string |
-| deleteUserReq | body | delete user request parameter | Yes | [message.DeleteUserReq](#messagedeleteuserreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-#### GET
-##### Summary
-
-get user profile
-
-##### Description
-
-get user profile
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| userId | path | user id | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /users/{userId}/password
-
-#### POST
-##### Summary
-
-update user password
-
-##### Description
-
-update user password
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| userId | path | user id | Yes | string |
-| UpdateUserPasswordRequest | body | query user password request parameter | Yes | [message.UpdateUserPasswordReq](#messageupdateuserpasswordreq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /users/{userId}/update_profile
-
-#### POST
-##### Summary
-
-update user profile
-
-##### Description
-
-update user profile
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| userId | path | user id | Yes | string |
-| updateUserProfileRequest | body | query user profile request parameter | Yes | [message.UpdateUserProfileReq](#messageupdateuserprofilereq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /vendors/
-
-#### GET
-##### Summary
-
-query vendors
-
-##### Description
-
-query vendors
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| vendorIDs | query | vendor id collection | No | [ string ] |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-#### POST
-##### Summary
-
-update vendors
-
-##### Description
-
-update vendors
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| UpdateVendorInfoReq | body | update vendor info request parameter | Yes | [message.UpdateVendorInfoReq](#messageupdatevendorinforeq) |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-### /vendors/available
-
-#### GET
-##### Summary
-
-query available vendors and regions
-
-##### Description
-
-query available vendors and regions
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & object |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-##### Security
-
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
 
 ### /workflow/
 
@@ -3321,22 +2768,6 @@ show details of a flow work
 | clusterId | string |  | No |
 | workFlowId | string | Asynchronous task workflow ID | No |
 
-#### cluster.CreateChangeFeedTaskReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | Yes |
-| downstream | object |  | No |
-| downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | Yes |
-| name | string | _Example:_ `"my_sync_name"` | Yes |
-| rules | [ string ] | _Example:_ `["*.*"]` | No |
-| startTS | string | _Example:_ `"415241823337054209"` | No |
-
-#### cluster.CreateChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| id | string | _Example:_ `"TASK_ID_IN_TIEM____22"` | No |
 
 #### cluster.CreateClusterReq
 
@@ -3371,18 +2802,6 @@ show details of a flow work
 | backupMode | string |  | No |
 | clusterId | string |  | No |
 
-#### cluster.DeleteBackupDataResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| cluster.DeleteBackupDataResp | object |  |  |
-
-#### cluster.DeleteChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| id | string | _Example:_ `"TASK_ID_IN_TIEM____22"` | No |
-| status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
 
 #### cluster.DeleteClusterReq
 
@@ -3411,35 +2830,6 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | cluster.DeleteMetadataPhysicallyResp | object |  |  |
 
-#### cluster.DetailChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
-| createTime | string |  | No |
-| downstream | object |  | No |
-| downstreamFetchTs | string | _Example:_ `"415241823337054209"` | No |
-| downstreamFetchUnix | integer | _Example:_ `1642402879000` | No |
-| downstreamSyncTs | string | _Example:_ `"415241823337054209"` | No |
-| downstreamSyncUnix | integer | _Example:_ `1642402879000` | No |
-| downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | No |
-| id | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
-| name | string | _Example:_ `"my_sync_name"` | No |
-| rules | [ string ] | _Example:_ `["*.*"]` | No |
-| startTS | string | _Example:_ `"415241823337054209"` | No |
-| startUnix | integer | _Example:_ `1642402879000` | No |
-| status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
-| unsteady | boolean | _Example:_ `false` | No |
-| updateTime | string |  | No |
-| upstreamUpdateTs | string | _Example:_ `"415241823337054209"` | No |
-| upstreamUpdateUnix | integer | _Example:_ `1642402879000` | No |
-
-#### cluster.Dispatcher
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| dispatcher | string | _Example:_ `"ts"` | No |
-| matcher | string | _Example:_ `"test1.*"` | No |
 
 #### cluster.GetBackupStrategyResp
 
@@ -3495,22 +2885,6 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | params | [ [cluster.InspectParameters](#clusterinspectparameters) ] |  | No |
 
-#### cluster.KafkaDownstream
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clientId | string | _Example:_ `"213"` | No |
-| dispatchers | [ [cluster.Dispatcher](#clusterdispatcher) ] |  | No |
-| ip | string | _Example:_ `"127.0.0.1"` | No |
-| maxBatchSize | integer | _Example:_ `5` | No |
-| maxMessageBytes | integer | _Example:_ `16` | No |
-| partitions | integer | _Example:_ `1` | No |
-| port | integer | _Example:_ `9001` | No |
-| protocol | string | _Enum:_ `"default"`, `"canal"`, `"avro"`, `"maxwell"`<br>_Example:_ `"default"` | No |
-| replicationFactor | integer | _Example:_ `1` | No |
-| tls | boolean | _Example:_ `false` | No |
-| topicName | string | _Example:_ `"my_topic"` | No |
-| version | string | _Example:_ `"2.4.0"` | No |
 
 #### cluster.MasterSlaveClusterSwitchoverReq
 
@@ -3543,12 +2917,6 @@ show details of a flow work
 | username | string | _Example:_ `"root"` | No |
 | workerCount | integer | _Example:_ `2` | No |
 
-#### cluster.PauseChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
-
 #### cluster.PreviewClusterResp
 
 | Name | Type | Description | Required |
@@ -3567,28 +2935,6 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | backupRecords | [ [structs.BackupRecord](#structsbackuprecord) ] |  | No |
 
-#### cluster.QueryChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
-| createTime | string |  | No |
-| downstream | object |  | No |
-| downstreamFetchTs | string | _Example:_ `"415241823337054209"` | No |
-| downstreamFetchUnix | integer | _Example:_ `1642402879000` | No |
-| downstreamSyncTs | string | _Example:_ `"415241823337054209"` | No |
-| downstreamSyncUnix | integer | _Example:_ `1642402879000` | No |
-| downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | No |
-| id | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
-| name | string | _Example:_ `"my_sync_name"` | No |
-| rules | [ string ] | _Example:_ `["*.*"]` | No |
-| startTS | string | _Example:_ `"415241823337054209"` | No |
-| startUnix | integer | _Example:_ `1642402879000` | No |
-| status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
-| unsteady | boolean | _Example:_ `false` | No |
-| updateTime | string |  | No |
-| upstreamUpdateTs | string | _Example:_ `"415241823337054209"` | No |
-| upstreamUpdateUnix | integer | _Example:_ `1642402879000` | No |
 
 #### cluster.QueryClusterDetailResp
 
@@ -3673,11 +3019,6 @@ show details of a flow work
 | clusterID | string |  | No |
 | workFlowId | string | Asynchronous task workflow ID | No |
 
-#### cluster.ResumeChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
 
 #### cluster.SaveBackupStrategyReq
 
@@ -3744,34 +3085,6 @@ show details of a flow work
 | clusterId | string |  | No |
 | workFlowId | string | Asynchronous task workflow ID | No |
 
-#### cluster.TiDBDownstream
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| concurrentThreads | integer | _Example:_ `5` | No |
-| ip | string | _Example:_ `"127.0.0.1"` | No |
-| maxTxnRow | integer | _Example:_ `4` | No |
-| password | string | _Example:_ `"my_password"` | No |
-| port | integer | _Example:_ `4534` | No |
-| targetClusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
-| tls | boolean | _Example:_ `false` | No |
-| username | string | _Example:_ `"tidb"` | No |
-| workerCount | integer | _Example:_ `2` | No |
-
-#### cluster.UpdateChangeFeedTaskReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| downstream | object |  | No |
-| downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | No |
-| name | string | _Example:_ `"my_sync_name"` | Yes |
-| rules | [ string ] | _Example:_ `["*.*"]` | No |
-
-#### cluster.UpdateChangeFeedTaskResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
 
 #### cluster.UpdateClusterParametersReq
 
@@ -3978,23 +3291,6 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | message.CreateTenantResp | object |  |  |
 
-#### message.CreateUserReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| email | string |  | Yes |
-| name | string |  | Yes |
-| nickname | string |  | No |
-| password | string |  | Yes |
-| phone | string |  | No |
-| tenantId | string |  | No |
-
-#### message.CreateUserResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| message.CreateUserResp | object |  |  |
-
 #### message.DataExportReq
 
 | Name | Type | Description | Required |
@@ -4116,18 +3412,6 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | message.DeleteTenantResp | object |  |  |
 
-#### message.DeleteUserReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| message.DeleteUserReq | object |  |  |
-
-#### message.DeleteUserResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| message.DeleteUserResp | object |  |  |
-
 #### message.DetailParameterGroupResp
 
 | Name | Type | Description | Required |
@@ -4143,6 +3427,12 @@ show details of a flow work
 | paramGroupId | string | _Example:_ `"1"` | No |
 | params | [ [structs.ParameterGroupParameterInfo](#structsparametergroupparameterinfo) ] |  | No |
 | updateTime | integer | _Example:_ `1636698675` | No |
+
+#### cluster.DeleteBackupDataResp
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| cluster.DeleteBackupDataResp | object |  |  |
 
 #### message.GetCheckReportRsp
 
@@ -4189,40 +3479,12 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | info | [structs.TenantInfo](#structstenantinfo) |  | No |
 
-#### message.GetUserResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| user | [structs.UserInfo](#structsuserinfo) |  | No |
-
 #### message.ImportHostsResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | flowInfo | [ [structs.AsyncTaskWorkFlowInfo](#structsasynctaskworkflowinfo) ] |  | No |
 | hostIds | [ string ] |  | No |
-
-#### message.LoginReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| userName | string |  | Yes |
-| userPassword | string |  | Yes |
-
-#### message.LoginResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| passwordExpired | boolean |  | No |
-| tenantId | string |  | No |
-| token | string |  | No |
-| userId | string |  | No |
-
-#### message.LogoutResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| userId | string |  | No |
 
 #### message.ParameterInfo
 
@@ -4256,18 +3518,6 @@ show details of a flow work
 | microMethod | string | _Example:_ `"em.cluster.ClusterService.GetSystemInfo"` | No |
 | timestamp | string | _Example:_ `"2021-09-23 14:23:10"` | No |
 | traceId | string | _Example:_ `"UNe7K1uERa-2fwSxGJ6CFQ"` | No |
-
-#### message.QueryAvailableProductsResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| products | object | arch version | No |
-
-#### message.QueryAvailableVendorsResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| vendors | object |  | No |
 
 #### message.QueryCheckReportsRsp
 
@@ -4317,18 +3567,6 @@ show details of a flow work
 | results | [ [message.PlatformLogItem](#messageplatformlogitem) ] |  | No |
 | took | integer | _Example:_ `10` | No |
 
-#### message.QueryProductDetailResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| products | object |  | No |
-
-#### message.QueryProductsInfoResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| products | [ [structs.ProductConfigInfo](#structsproductconfiginfo) ] |  | No |
-
 #### message.QueryRolesResp
 
 | Name | Type | Description | Required |
@@ -4347,25 +3585,6 @@ show details of a flow work
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | tenants | object |  | No |
-
-#### message.QueryUserReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| page | integer | Current page location | No |
-| pageSize | integer | Number of this request | No |
-
-#### message.QueryUserResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| users | object |  | No |
-
-#### message.QueryVendorInfoResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| vendors | [ [structs.VendorConfigInfo](#structsvendorconfiginfo) ] |  | No |
 
 #### message.QueryWorkFlowDetailResp
 
@@ -4462,18 +3681,6 @@ show details of a flow work
 | ---- | ---- | ----------- | -------- |
 | paramGroupId | string | _Example:_ `"1"` | No |
 
-#### message.UpdateProductsInfoReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| products | [ [structs.ProductConfigInfo](#structsproductconfiginfo) ] |  | Yes |
-
-#### message.UpdateProductsInfoResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| message.UpdateProductsInfoResp | object |  |  |
-
 #### message.UpdateSystemConfigReq
 
 | Name | Type | Description | Required |
@@ -4516,33 +3723,6 @@ show details of a flow work
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | message.UpdateTenantProfileResp | object |  |  |
-
-#### message.UpdateUserPasswordReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| id | string |  | No |
-| password | string |  | Yes |
-
-#### message.UpdateUserPasswordResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| message.UpdateUserPasswordResp | object |  |  |
-
-#### message.UpdateUserProfileReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| email | string |  | No |
-| nickname | string |  | No |
-| phone | string |  | No |
-
-#### message.UpdateUserProfileResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| message.UpdateUserProfileResp | object |  |  |
 
 #### message.UpdateVendorInfoReq
 
@@ -4919,23 +4099,6 @@ show details of a flow work
 | startPort | integer |  | No |
 | suggestedInstancesCount | [ integer ] |  | No |
 
-#### structs.ProductConfigInfo
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| components | [ [structs.ProductComponentPropertyWithZones](#structsproductcomponentpropertywithzones) ] |  | No |
-| productId | string |  | No |
-| productName | string |  | No |
-| versions | [ [structs.SpecificVersionProduct](#structsspecificversionproduct) ] |  | No |
-
-#### structs.ProductDetail
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| id | string | The ID of the product consists of the product ID | No |
-| name | string | The name of the product consists of the product name and the version | No |
-| versions | object | Organize product information by version | No |
-
 #### structs.ProductSpecInfo
 
 | Name | Type | Description | Required |
@@ -5098,21 +4261,6 @@ show details of a flow work
 | usageRate | number |  | No |
 | used | number |  | No |
 
-#### structs.UserInfo
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| createAt | string |  | No |
-| creator | string |  | No |
-| defaultTenantId | string |  | No |
-| email | string |  | No |
-| id | string |  | No |
-| names | [ string ] |  | No |
-| nickname | string |  | No |
-| phone | string |  | No |
-| status | string |  | No |
-| tenantIds | [ string ] |  | No |
-| updateAt | string |  | No |
 
 #### structs.VendorConfigInfo
 

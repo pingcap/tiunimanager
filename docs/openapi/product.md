@@ -24,13 +24,13 @@ query products by ids
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.QueryProductsInfoResp
+##### message.QueryProductsInfoResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | products | [ [structs.ProductConfigInfo](#structsproductconfiginfo) ] |  | No |
 
-#### structs.ProductConfigInfo
+##### structs.ProductConfigInfo
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -38,6 +38,69 @@ query products by ids
 | productId | string |  | No |
 | productName | string |  | No |
 | versions | [ [structs.SpecificVersionProduct](#structsspecificversionproduct) ] |  | No |
+
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/products/?productIDs=TiDB' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "products": [
+      {
+        "components": [
+          {
+            "availableZones": [
+              {
+                "specs": [
+                  {
+                    "cpu": 0,
+                    "diskType": "string",
+                    "id": "string",
+                    "memory": 0,
+                    "name": "string",
+                    "zoneId": "string",
+                    "zoneName": "string"
+                  }
+                ],
+                "zoneId": "string",
+                "zoneName": "string"
+              }
+            ],
+            "endPort": 0,
+            "id": "string",
+            "maxInstance": 0,
+            "maxPort": 0,
+            "minInstance": 0,
+            "name": "string",
+            "purposeType": "string",
+            "startPort": 0,
+            "suggestedInstancesCount": [
+              0
+            ]
+          }
+        ],
+        "productId": "string",
+        "productName": "string",
+        "versions": [
+          {
+            "arch": "string",
+            "productId": "string",
+            "version": "string"
+          }
+        ]
+      }
+    ]
+  },
+  "message": "string"
+}
+```
 
 ### POST
 #### Summary
@@ -54,13 +117,13 @@ update products
 | ---- | ---------- | ----------- | -------- | ---- |
 | UpdateProductsInfoReq | body | update products info request parameter | Yes | [message.UpdateProductsInfoReq](#messageupdateproductsinforeq) |
 
-#### message.UpdateProductsInfoReq
+##### message.UpdateProductsInfoReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | products | [ [structs.ProductConfigInfo](#structsproductconfiginfo) ] |  | Yes |
 
-#### structs.ProductConfigInfo
+##### structs.ProductConfigInfo
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -78,11 +141,76 @@ update products
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.UpdateProductsInfoResp
+##### message.UpdateProductsInfoResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | message.UpdateProductsInfoResp | object |  |  |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/products/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "products": [
+    {
+      "components": [
+        {
+          "availableZones": [
+            {
+              "specs": [
+                {
+                  "cpu": 0,
+                  "diskType": "string",
+                  "id": "string",
+                  "memory": 0,
+                  "name": "string",
+                  "zoneId": "string",
+                  "zoneName": "string"
+                }
+              ],
+              "zoneId": "string",
+              "zoneName": "string"
+            }
+          ],
+          "endPort": 0,
+          "id": "string",
+          "maxInstance": 0,
+          "maxPort": 0,
+          "minInstance": 0,
+          "name": "string",
+          "purposeType": "string",
+          "startPort": 0,
+          "suggestedInstancesCount": [
+            0
+          ]
+        }
+      ],
+      "productId": "string",
+      "productName": "string",
+      "versions": [
+        {
+          "arch": "string",
+          "productId": "string",
+          "version": "string"
+        }
+      ]
+    }
+  ]
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {},
+  "message": "string"
+}
+```
 
 ## /products/available
 
@@ -112,12 +240,20 @@ queries all products' information
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-
-#### message.QueryAvailableProductsResp
+##### message.QueryAvailableProductsResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | products | object | arch version | No |
+
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/products/available?vendorId=Local' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
 
 ## /products/detail
 
@@ -149,7 +285,7 @@ query all product detail
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.QueryProductDetailResp
+##### message.QueryProductDetailResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -163,24 +299,33 @@ query all product detail
 | name | string | The name of the product consists of the product name and the version | No |
 | versions | object | Organize product information by version | No |
 
-### /vendors/
+#### Example
+request
+```
+curl -X 'GET' \
+'http://localhost:4116/api/v1/products/detail?internalProduct=0&productId=TiDB&regionId=region1&vendorId=Local' \
+-H 'accept: application/json' \
+-H 'Authorization: Bearer mytoken'
+```
 
-#### GET
-##### Summary
+## /vendors/
+
+### GET
+#### Summary
 
 query vendors
 
-##### Description
+#### Description
 
 query vendors
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | vendorIDs | query | vendor id collection | No | [ string ] |
 
-##### Responses
+#### Responses
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
@@ -189,28 +334,69 @@ query vendors
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-##### Security
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/vendors/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "vendors": [
+      {
+        "id": "string",
+        "name": "string",
+        "regions": [
+          {
+            "id": "string",
+            "name": "string",
+            "zones": [
+              {
+                "comment": "string",
+                "zoneId": "string",
+                "zoneName": "string"
+              }
+            ]
+          }
+        ],
+        "specs": [
+          {
+            "cpu": 0,
+            "diskType": "string",
+            "id": "string",
+            "memory": 0,
+            "name": "string",
+            "purposeType": "string"
+          }
+        ]
+      }
+    ]
+  },
+  "message": "string"
+}
+```
 
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
-
-#### POST
-##### Summary
+### POST
+#### Summary
 
 update vendors
 
-##### Description
+#### Description
 
 update vendors
 
-##### Parameters
+#### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
 | UpdateVendorInfoReq | body | update vendor info request parameter | Yes | [message.UpdateVendorInfoReq](#messageupdatevendorinforeq) |
 
-##### Responses
+#### Responses
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
@@ -219,24 +405,97 @@ update vendors
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-##### Security
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/vendors/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "vendors": [
+    {
+      "id": "Local",
+      "name": "string",
+      "regions": [
+        {
+          "id": "region1",
+          "name": "string",
+          "zones": [
+            {
+              "comment": "string",
+              "zoneId": "zone1",
+              "zoneName": "zone1"
+            }
+          ]
+        }
+      ],
+      "specs": [
+        {
+          "cpu": 4,
+          "diskType": "string",
+          "id": "large",
+          "memory": 8,
+          "name": "string",
+          "purposeType": "string"
+        }
+      ]
+    }
+  ]
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "vendors": [
+      {
+        "id": "string",
+        "name": "string",
+        "regions": [
+          {
+            "id": "string",
+            "name": "string",
+            "zones": [
+              {
+                "comment": "string",
+                "zoneId": "string",
+                "zoneName": "string"
+              }
+            ]
+          }
+        ],
+        "specs": [
+          {
+            "cpu": 0,
+            "diskType": "string",
+            "id": "string",
+            "memory": 0,
+            "name": "string",
+            "purposeType": "string"
+          }
+        ]
+      }
+    ]
+  },
+  "message": "string"
+}
+```
 
-| Security Schema | Scopes |
-| --- | --- |
-| ApiKeyAuth | |
+## /vendors/available
 
-### /vendors/available
-
-#### GET
-##### Summary
+### GET
+#### Summary
 
 query available vendors and regions
 
-##### Description
+#### Description
 
 query available vendors and regions
 
-##### Responses
+#### Responses
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
@@ -256,6 +515,66 @@ query available vendors and regions
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | vendors | [ [structs.VendorConfigInfo](#structsvendorconfiginfo) ] |  | No |
+
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/vendors/available' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "vendors": {
+      "vendor1": {
+        "id": "vendor1",
+        "name": "string",
+        "regions": {
+          "region1": {
+            "id": "string",
+            "name": "string"
+          },
+          "region2": {
+            "id": "string",
+            "name": "string"
+          },
+          "region3": {
+            "id": "string",
+            "name": "string"
+          }
+        }
+      },
+      "vendor2": {
+        "id": "vendor2",
+        "name": "string",
+        "regions": {
+          "region4": {
+            "id": "string",
+            "name": "string"
+          },
+          "region6": {
+            "id": "string",
+            "name": "string"
+          },
+          "region5": {
+            "id": "string",
+            "name": "string"
+          }
+        }
+      }
+    }
+  },
+  "message": "string"
+}
+```
+curl -X 'GET' \
+'http://localhost:4116/api/v1/vendors/available' \
+-H 'accept: application/json' \
+-H 'Authorization: Bearer mytoken'
 
 ## CommonModel
 

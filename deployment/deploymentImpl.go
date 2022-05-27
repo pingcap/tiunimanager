@@ -171,6 +171,7 @@ func (m *Manager) Restart(ctx context.Context, componentType TiUPComponentType, 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d %s", componentType, CMDRestart, clusterID, strings.Join(args, " "), FlagWaitTimeout, timeout, CMDYes)
 	op := fmt.Sprintf("TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
 	logInFunc.Infof("recv operation req: %s", op)
+	logInFunc.Infof("env PATH: %s", os.Getenv("PATH"))
 
 	id, err := Create(home, Operation{
 		Type:       CMDRestart,
@@ -666,6 +667,7 @@ func (m *Manager) CheckConfig(ctx context.Context, componentType TiUPComponentTy
 
 	tiUPArgs := fmt.Sprintf("%s %s %s %s %s %d", componentType, CMDCheck, configYamlFilePath, strings.Join(args, " "), FlagWaitTimeout, timeout)
 	logInFunc.Infof("recv operation req: TIUP_HOME=%s %s %s", home, m.TiUPBinPath, tiUPArgs)
+	logInFunc.Infof("env PATH: %s", os.Getenv("PATH"))
 
 	resp, err := m.startSyncOperation(home, tiUPArgs, timeout, false)
 	if err != nil {

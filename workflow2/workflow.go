@@ -137,8 +137,10 @@ func (mgr *WorkFlowManager) handleUnFinishedWorkFlow(ctx context.Context, status
 				}
 				if flowMeta.CurrentNode != nil {
 					flowMeta.CurrentNode.Status = constants.WorkFlowStatusCanceled
+					handleWorkFlowNodeMetrics(flowMeta, flowMeta.CurrentNode)
 				}
 				flowMeta.Flow.Status = constants.WorkFlowStatusCanceled
+				handleWorkFlowMetrics(flowMeta.Flow)
 				flowMeta.Restore()
 				framework.LogWithContext(ctx).Infof("cancel workflow id %s, name %s success", flow.ID, flow.Name)
 			}
@@ -183,6 +185,8 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bi
 		},
 		Context: NewFlowContext(ctx, dataMap).GetContextString(),
 	})
+	handleWorkFlowMetrics(flow)
+
 	framework.LogWithContext(ctx).Infof("create worfklow result flow %+v, err %+v", flow, err)
 	return flow.ID, err
 }
@@ -285,7 +289,14 @@ func (mgr *WorkFlowManager) Start(ctx context.Context, flowId string) error {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_START_FAILED, "workflow Id %s is finished", flowId)
 	}
-	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
+
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
+	if err != nil {
+		return err
+	}
+	flow.Status = constants.WorkFlowStatusProcessing
+	handleWorkFlowMetrics(flow)
+	return err
 }
 
 func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
@@ -299,7 +310,14 @@ func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_STOP_FAILED, "workflow Id %s is finished", flowId)
 	}
-	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
+
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
+	if err != nil {
+		return err
+	}
+	flow.Status = constants.WorkFlowStatusStopped
+	handleWorkFlowMetrics(flow)
+	return err
 }
 
 func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason string) error {
@@ -313,5 +331,12 @@ func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason st
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
 		return errors.NewErrorf(errors.TIEM_WORKFLOW_CANCEL_FAILED, "workflow Id %s is finished", flowId)
 	}
-	return models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")
+
+	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")
+	if err != nil {
+		return err
+	}
+	flow.Status = constants.WorkFlowStatusCanceling
+	handleWorkFlowMetrics(flow)
+	return err
 }

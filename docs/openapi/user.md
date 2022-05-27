@@ -15,7 +15,7 @@ login
 | ---- | ---------- | ----------- | -------- | ---- |
 | loginInfo | body | login info | Yes | [message.LoginReq](#messageloginreq) |
 
-#### message.LoginReq
+##### message.LoginReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -30,7 +30,7 @@ login
 | 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.LoginResp
+##### message.LoginResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -38,6 +38,32 @@ login
 | tenantId | string |  | No |
 | token | string |  | No |
 | userId | string |  | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/user/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "userName": "admin",
+  "userPassword": "admin"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "passwordExpired": false,
+    "tenantId": "1111",
+    "token": "mytoken",
+    "userId": "22222"
+  },
+  "message": "string"
+}
+```
 
 ## /user/logout
 
@@ -58,11 +84,31 @@ logout
 | 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.LogoutResp
+##### message.LogoutResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | userId | string |  | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/user/logout' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -d ''
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "userId": "string"
+  },
+  "message": "string"
+}
+```
 
 ## /users/
 
@@ -81,7 +127,7 @@ query all user profile
 | ---- | ---------- | ----------- | -------- | ---- |
 | queryUserRequest | body | query user profile request parameter | Yes | [message.QueryUserReq](#messagequeryuserreq) |
 
-#### message.QueryUserReq
+##### message.QueryUserReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -97,11 +143,92 @@ query all user profile
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.QueryUserResp
+##### message.QueryUserResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | users | [][structs.UserInfo](#structsuserinfo) |  | No |
+
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/users/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "page": 1,
+  "pageSize": 10
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "users": {
+      "additionalProp1": {
+        "createAt": "string",
+        "creator": "string",
+        "defaultTenantId": "string",
+        "email": "string",
+        "id": "string",
+        "names": [
+          "string"
+        ],
+        "nickname": "string",
+        "phone": "string",
+        "status": "string",
+        "tenantIds": [
+          "string"
+        ],
+        "updateAt": "string"
+      },
+      "additionalProp2": {
+        "createAt": "string",
+        "creator": "string",
+        "defaultTenantId": "string",
+        "email": "string",
+        "id": "string",
+        "names": [
+          "string"
+        ],
+        "nickname": "string",
+        "phone": "string",
+        "status": "string",
+        "tenantIds": [
+          "string"
+        ],
+        "updateAt": "string"
+      },
+      "additionalProp3": {
+        "createAt": "string",
+        "creator": "string",
+        "defaultTenantId": "string",
+        "email": "string",
+        "id": "string",
+        "names": [
+          "string"
+        ],
+        "nickname": "string",
+        "phone": "string",
+        "status": "string",
+        "tenantIds": [
+          "string"
+        ],
+        "updateAt": "string"
+      }
+    }
+  },
+  "message": "string",
+  "page": {
+    "page": 0,
+    "pageSize": 0,
+    "total": 0
+  }
+}
+```
 
 ### POST
 #### Summary
@@ -138,6 +265,32 @@ create user
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/users/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "string",
+  "name": "me",
+  "nickname": "string",
+  "password": "12121212",
+  "phone": "string",
+  "tenantId": "string"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {},
+  "message": "string"
+}
+```
+
 ## /users/{userId}
 
 ### DELETE
@@ -164,6 +317,25 @@ delete user
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
+#### Example
+request
+```
+curl -X 'DELETE' \
+  'http://localhost:4116/api/v1/users/121212' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {},
+  "message": "string"
+}
+```
+
 ### GET
 #### Summary
 
@@ -188,13 +360,13 @@ get user profile
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### message.GetUserResp
+##### message.GetUserResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | user | [structs.UserInfo](#structsuserinfo) |  | No |
 
-#### structs.UserInfo
+##### structs.UserInfo
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -209,6 +381,41 @@ get user profile
 | status | string |  | No |
 | tenantIds | [ string ] |  | No |
 | updateAt | string |  | No |
+
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/users/121212' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "user": {
+      "createAt": "string",
+      "creator": "string",
+      "defaultTenantId": "string",
+      "email": "string",
+      "id": "string",
+      "names": [
+        "string"
+      ],
+      "nickname": "string",
+      "phone": "string",
+      "status": "string",
+      "tenantIds": [
+        "string"
+      ],
+      "updateAt": "string"
+    }
+  },
+  "message": "string"
+}
+```
 
 ## /users/{userId}/password
 
@@ -228,7 +435,7 @@ update user password
 | userId | path | user id | Yes | string |
 | UpdateUserPasswordRequest | body | query user password request parameter | Yes | [message.UpdateUserPasswordReq](#messageupdateuserpasswordreq) |
 
-#### message.UpdateUserPasswordReq
+##### message.UpdateUserPasswordReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -243,6 +450,28 @@ update user password
 | 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/users/121212/password' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "id": "121212",
+  "password": "newpassword"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {},
+  "message": "string"
+}
+```
 
 ## /users/{userId}/update_profile
 
@@ -262,7 +491,7 @@ update user profile
 | userId | path | user id | Yes | string |
 | updateUserProfileRequest | body | query user profile request parameter | Yes | [message.UpdateUserProfileReq](#messageupdateuserprofilereq) |
 
-#### message.UpdateUserProfileReq
+##### message.UpdateUserProfileReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -278,6 +507,29 @@ update user profile
 | 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/users/121212/update_profile' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "string",
+  "nickname": "newNick",
+  "phone": "string"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {},
+  "message": "string"
+}
+```
 
 ## commonModel
 

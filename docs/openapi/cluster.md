@@ -30,11 +30,97 @@ query clusters
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.QueryClusterResp
+##### cluster.QueryClusterResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | clusters | [ [structs.ClusterInfo](#structsclusterinfo) ] |  | No |
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/clusters/?page=1&pageSize=10' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusters": [
+      {
+        "alertUrl": "http://127.0.0.1:9093",
+        "backupFileUsage": {
+          "total": 0,
+          "usageRate": 0,
+          "used": 0
+        },
+        "clusterId": "string",
+        "clusterName": "string",
+        "clusterType": "string",
+        "clusterVersion": "string",
+        "copies": 0,
+        "cpuArchitecture": "string",
+        "cpuUsage": {
+          "total": 0,
+          "usageRate": 0,
+          "used": 0
+        },
+        "createTime": "string",
+        "deleteTime": "string",
+        "exclusive": true,
+        "extranetConnectAddresses": [
+          "string"
+        ],
+        "grafanaUrl": "http://127.0.0.1:3000",
+        "intranetConnectAddresses": [
+          "string"
+        ],
+        "maintainStatus": "string",
+        "maintainWindow": "string",
+        "memoryUsage": {
+          "total": 0,
+          "usageRate": 0,
+          "used": 0
+        },
+        "region": "string",
+        "relations": {
+          "masters": [
+            "string"
+          ],
+          "slaves": [
+            "string"
+          ]
+        },
+        "role": "string",
+        "status": "string",
+        "storageUsage": {
+          "total": 0,
+          "usageRate": 0,
+          "used": 0
+        },
+        "tags": [
+          "string"
+        ],
+        "tls": true,
+        "updateTime": "string",
+        "userId": "string",
+        "vendor": "string",
+        "whitelist": [
+          "string"
+        ]
+      }
+    ]
+  },
+  "message": "string",
+  "page": {
+    "page": 0,
+    "pageSize": 0,
+    "total": 0
+  }
+}
+```
 
 ### POST
 #### Summary
@@ -60,12 +146,69 @@ create a cluster
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.CreateClusterResp
+##### cluster.CreateClusterResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | clusterId | string |  | No |
 | workFlowId | string | Asynchronous task workflow ID | No |
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/clusters/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "clusterName": "string",
+  "clusterType": "string",
+  "clusterVersion": "string",
+  "copies": 0,
+  "cpuArchitecture": "string",
+  "dbPassword": "string",
+  "dbUser": "string",
+  "exclusive": true,
+  "parameterGroupID": "string",
+  "region": "string",
+  "resourceParameters": {
+    "instanceResource": [
+      {
+        "componentType": "string",
+        "resource": [
+          {
+            "count": 0,
+            "diskCapacity": 0,
+            "diskId": "string",
+            "diskType": "string",
+            "hostIp": "string",
+            "specCode": "string",
+            "zoneCode": "string"
+          }
+        ],
+        "totalNodeCount": 0
+      }
+    ],
+    "requestResourceMode": "SpecificZone"
+  },
+  "tags": [
+    "string"
+  ],
+  "tls": true,
+  "vendor": "string"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusterId": "string",
+    "workFlowId": "string"
+  },
+  "message": "string"
+}
+```
 
 ### /clusters/{clusterId}
 
@@ -102,12 +245,38 @@ delete cluster
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.DeleteClusterResp
+##### cluster.DeleteClusterResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | clusterID | string |  | No |
 | workFlowId | string | Asynchronous task workflow ID | No |
+
+#### Example
+request
+```
+curl -X 'DELETE' \
+  'http://localhost:4116/api/v1/clusters/121212' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "autoBackup": true,
+  "force": true,
+  "keepHistoryBackupRecords": true
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusterID": "string",
+    "workFlowId": "string"
+  },
+  "message": "string"
+}
+```
 
 ### GET
 #### Summary
@@ -133,7 +302,7 @@ show details of a cluster
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.QueryClusterDetailResp
+##### cluster.QueryClusterDetailResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -142,7 +311,7 @@ show details of a cluster
 | requestResourceMode | string | _Enum:_ `"SpecificZone"`, `"SpecificHost"` | No |
 | topology | [ [structs.ClusterInstanceInfo](#structsclusterinstanceinfo) ] |  | No |
 
-#### structs.ClusterInstanceInfo
+##### structs.ClusterInstanceInfo
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -163,7 +332,7 @@ show details of a cluster
 | version | string |  | No |
 | zone | [structs.ZoneFullInfo](#structszonefullinfo) | ?? | No |
 
-#### structs.ClusterResourceParameterCompute
+##### structs.ClusterResourceParameterCompute
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -171,7 +340,7 @@ show details of a cluster
 | resource | [ [structs.ClusterResourceParameterComputeResource](#structsclusterresourceparametercomputeresource) ] |  | No |
 | totalNodeCount | integer |  | No |
 
-#### structs.ClusterResourceParameterComputeResource
+##### structs.ClusterResourceParameterComputeResource
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -182,121 +351,7 @@ show details of a cluster
 | hostIp | string |  | No |
 | specCode | string | 4C8G/8C16G ? | No |
 | zoneCode | string |  | No |
-
-### /clusters/{clusterId}/stop
-
-#### POST
-##### Summary
-
-stop a cluster
-
-##### Description
-
-stop a cluster
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| clusterId | path | cluster id | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & [cluster.StopClusterResp](#clusterstopclusterresp) |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-#### cluster.StopClusterResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clusterId | string |  | No |
-| workFlowId | string | Asynchronous task workflow ID | No |
-
-### /clusters/{clusterId}/restart
-
-#### POST
-##### Summary
-
-restart a cluster
-
-##### Description
-
-restart a cluster
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| clusterId | path | cluster id | Yes | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & [cluster.RestartClusterResp](#clusterrestartclusterresp) |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-#### cluster.RestartClusterResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clusterId | string |  | No |
-| workFlowId | string | Asynchronous task workflow ID | No |
-
-### /clusters/takeover
-
-#### POST
-##### Summary
-
-takeover a cluster
-
-##### Description
-
-takeover a cluster
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| takeoverReq | body | takeover request | Yes | [cluster.TakeoverClusterReq](#clustertakeoverclusterreq) |
-
-#### cluster.TakeoverClusterReq
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| TiUPIp | string | _Example:_ `"172.16.4.147"` | Yes |
-| TiUPPath | string | _Example:_ `".tiup/"` | Yes |
-| TiUPPort | integer | _Example:_ `22` | Yes |
-| TiUPUserName | string | _Example:_ `"root"` | Yes |
-| TiUPUserPassword | string | _Example:_ `"password"` | Yes |
-| clusterName | string | _Example:_ `"myClusterName"` | Yes |
-| dbPassword | string | _Example:_ `"myPassword"` | Yes |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | OK | [controller.CommonResult](#controllercommonresult) & [cluster.TakeoverClusterResp](#clustertakeoverclusterresp) |
-| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
-| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
-| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
-
-#### cluster.TakeoverClusterResp
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| clusterId | string |  | No |
-| workFlowId | string | Asynchronous task workflow ID | No |
-
-## CommonModels
-
-### structs.ClusterInfo
+##### structs.ClusterInfo
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -326,12 +381,312 @@ takeover a cluster
 | vendor | string | DBUser                   string    `json:"dbUser"` //The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters | No |
 | whitelist | [ string ] |  | No |
 
-### structs.ClusterRelations
+##### structs.ClusterRelations
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | masters | [ string ] |  | No |
 | slaves | [ string ] |  | No |
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/clusters/121212' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "info": {
+      "alertUrl": "http://127.0.0.1:9093",
+      "backupFileUsage": {
+        "total": 0,
+        "usageRate": 0,
+        "used": 0
+      },
+      "clusterId": "string",
+      "clusterName": "string",
+      "clusterType": "string",
+      "clusterVersion": "string",
+      "copies": 0,
+      "cpuArchitecture": "string",
+      "createTime": "string",
+      "deleteTime": "string",
+      "exclusive": true,
+      "extranetConnectAddresses": [
+        "string"
+      ],
+      "grafanaUrl": "http://127.0.0.1:3000",
+      "intranetConnectAddresses": [
+        "string"
+      ],
+      "maintainStatus": "string",
+      "maintainWindow": "string",
+      "region": "string",
+      "relations": {
+        "masters": [
+          "string"
+        ],
+        "slaves": [
+          "string"
+        ]
+      },
+      "role": "string",
+      "status": "string",
+      "tags": [
+        "string"
+      ],
+      "tls": true,
+      "updateTime": "string",
+      "userId": "string",
+      "vendor": "string",
+      "whitelist": [
+        "string"
+      ]
+    },
+    "instanceResource": [
+      {
+        "componentType": "string",
+        "resource": [
+          {
+            "count": 0,
+            "diskCapacity": 0,
+            "diskId": "string",
+            "diskType": "string",
+            "hostIp": "string",
+            "specCode": "string",
+            "zoneCode": "string"
+          }
+        ],
+        "totalNodeCount": 0
+      }
+    ],
+    "requestResourceMode": "SpecificZone",
+    "topology": [
+      {
+        "addresses": [
+          "string"
+        ],
+        "diskId": "string",
+        "hostID": "string",
+        "id": "string",
+        "ioUtil": 0,
+        "iops": [
+          0
+        ],
+        "ports": [
+          0
+        ],
+        "role": "string",
+        "spec": {
+          "id": "string",
+          "name": "string"
+        },
+        "status": "string",
+        "type": "string",
+        "version": "string",
+        "zone": {
+          "comment": "string",
+          "regionId": "string",
+          "regionName": "string",
+          "vendorId": "string",
+          "vendorName": "string",
+          "zoneId": "string",
+          "zoneName": "string"
+        }
+      }
+    ]
+  },
+  "message": "string"
+}
+```
+
+## /clusters/{clusterId}/stop
+
+### POST
+#### Summary
+
+stop a cluster
+
+#### Description
+
+stop a cluster
+
+#### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| clusterId | path | cluster id | Yes | string |
+
+#### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | OK | [controller.CommonResult](#controllercommonresult) & [cluster.StopClusterResp](#clusterstopclusterresp) |
+| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
+| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
+| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
+
+##### cluster.StopClusterResp
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| clusterId | string |  | No |
+| workFlowId | string | Asynchronous task workflow ID | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/clusters/121212/stop' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -d ''
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusterId": "string",
+    "workFlowId": "string"
+  },
+  "message": "string"
+}
+```
+
+## /clusters/{clusterId}/restart
+
+### POST
+#### Summary
+
+restart a cluster
+
+#### Description
+
+restart a cluster
+
+#### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| clusterId | path | cluster id | Yes | string |
+
+#### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | OK | [controller.CommonResult](#controllercommonresult) & [cluster.RestartClusterResp](#clusterrestartclusterresp) |
+| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
+| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
+| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
+
+##### cluster.RestartClusterResp
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| clusterId | string |  | No |
+| workFlowId | string | Asynchronous task workflow ID | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/clusters/121212/restart' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -d ''
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusterId": "string",
+    "workFlowId": "string"
+  },
+  "message": "string"
+}
+```
+
+## /clusters/takeover
+
+### POST
+#### Summary
+
+takeover a cluster
+
+#### Description
+
+takeover a cluster
+
+#### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| takeoverReq | body | takeover request | Yes | [cluster.TakeoverClusterReq](#clustertakeoverclusterreq) |
+
+##### cluster.TakeoverClusterReq
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| TiUPIp | string | _Example:_ `"172.16.4.147"` | Yes |
+| TiUPPath | string | _Example:_ `".tiup/"` | Yes |
+| TiUPPort | integer | _Example:_ `22` | Yes |
+| TiUPUserName | string | _Example:_ `"root"` | Yes |
+| TiUPUserPassword | string | _Example:_ `"password"` | Yes |
+| clusterName | string | _Example:_ `"myClusterName"` | Yes |
+| dbPassword | string | _Example:_ `"myPassword"` | Yes |
+
+#### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | OK | [controller.CommonResult](#controllercommonresult) & [cluster.TakeoverClusterResp](#clustertakeoverclusterresp) |
+| 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
+| 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
+| 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
+
+##### cluster.TakeoverClusterResp
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| clusterId | string |  | No |
+| workFlowId | string | Asynchronous task workflow ID | No |
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/clusters/takeover' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "TiUPIp": "172.16.4.147",
+  "TiUPPath": ".tiup/",
+  "TiUPPort": 22,
+  "TiUPUserName": "root",
+  "TiUPUserPassword": "password",
+  "clusterName": "myClusterName",
+  "dbPassword": "myPassword"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusterId": "string",
+    "workFlowId": "string"
+  },
+  "message": "string"
+}
+```
+
+## CommonModel
 
 ### controller.CommonResult
 

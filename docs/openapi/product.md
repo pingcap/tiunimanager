@@ -257,7 +257,9 @@ query available vendors and regions
 | ---- | ---- | ----------- | -------- |
 | vendors | [ [structs.VendorConfigInfo](#structsvendorconfiginfo) ] |  | No |
 
-#### controller.CommonResult
+## CommonModel
+
+### controller.CommonResult
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -265,7 +267,7 @@ query available vendors and regions
 | data | object |  | No |
 | message | string |  | No |
 
-#### controller.Page
+### controller.Page
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -273,7 +275,7 @@ query available vendors and regions
 | pageSize | integer |  | No |
 | total | integer |  | No |
 
-#### controller.ResultWithPage
+### controller.ResultWithPage
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |

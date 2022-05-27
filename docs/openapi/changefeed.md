@@ -1,3 +1,4 @@
+
 ## /changefeeds/
 
 ### GET
@@ -21,7 +22,7 @@ query change feed tasks of a cluster
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
-| 200 | OK | [controller.ResultWithPage](#controllerresultwithpage) & [cluster.QueryChangeFeedTaskResp](#querychangefeedtaskresp) |
+| 200 | OK | [controller.ResultWithPage](#controllerresultwithpage) & [cluster.QueryChangeFeedTaskResp](#clusterquerychangefeedtaskresp) |
 | 401 | Unauthorized | [controller.CommonResult](#controllercommonresult) |
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
@@ -32,7 +33,7 @@ query change feed tasks of a cluster
 | ---- | ---- | ----------- | -------- |
 | clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
 | createTime | string |  | No |
-| downstream | object |  | No |
+| downstream | [cluster.TiDBDownstream](#clustertidbdownstream) OR [cluster.MysqlDownstream](#clustermysqldownstream) OR [cluster.KafkaDownstream](#clusterkafkadownstream) |  | No |
 | downstreamFetchTs | string | _Example:_ `"415241823337054209"` | No |
 | downstreamFetchUnix | integer | _Example:_ `1642402879000` | No |
 | downstreamSyncTs | string | _Example:_ `"415241823337054209"` | No |
@@ -49,6 +50,51 @@ query change feed tasks of a cluster
 | upstreamUpdateTs | string | _Example:_ `"415241823337054209"` | No |
 | upstreamUpdateUnix | integer | _Example:_ `1642402879000` | No |
 
+#### Example
+
+```
+curl -X 'GET' \
+'http://localhost:4116/api/v1/changefeeds/?clusterId=%24%7BclusterID%7D&page=1&pageSize=10' \
+-H 'accept: application/json' \
+-H 'Authorization: Bearer mytoken'
+```
+
+```JSON
+{
+"code": 0,
+"data": [
+{
+"clusterId": "CLUSTER_ID_IN_TIEM__22",
+"createTime": "string",
+"downstream": {},
+"downstreamFetchTs": "415241823337054209",
+"downstreamFetchUnix": 1642402879000,
+"downstreamSyncTs": "415241823337054209",
+"downstreamSyncUnix": 1642402879000,
+"downstreamType": "tidb",
+"id": "CLUSTER_ID_IN_TIEM__22",
+"name": "my_sync_name",
+"rules": [
+"*.*"
+],
+"startTS": "415241823337054209",
+"startUnix": 1642402879000,
+"status": "Normal",
+"unsteady": false,
+"updateTime": "string",
+"upstreamUpdateTs": "415241823337054209",
+"upstreamUpdateUnix": 1642402879000
+}
+],
+"message": "string",
+"page": {
+"page": 0,
+"pageSize": 0,
+"total": 0
+}
+}
+```
+
 ### POST
 #### Summary
 
@@ -64,18 +110,18 @@ create a change feed task
 | ---- | ---------- | ----------- | -------- | ---- |
 | changeFeedTask | body | change feed task request | Yes | [cluster.CreateChangeFeedTaskReq](#clustercreatechangefeedtaskreq) |
 
-#### cluster.CreateChangeFeedTaskReq
+##### cluster.CreateChangeFeedTaskReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | Yes |
-| downstream | object |  | No |
+| downstream | [cluster.TiDBDownstream](#clustertidbdownstream) OR [cluster.MysqlDownstream](#clustermysqldownstream) OR [cluster.KafkaDownstream](#clusterkafkadownstream) |  | No |
 | downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | Yes |
 | name | string | _Example:_ `"my_sync_name"` | Yes |
 | rules | [ string ] | _Example:_ `["*.*"]` | No |
 | startTS | string | _Example:_ `"415241823337054209"` | No |
 
-#### cluster.TiDBDownstream
+##### cluster.TiDBDownstream
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -89,7 +135,7 @@ create a change feed task
 | username | string | _Example:_ `"tidb"` | No |
 | workerCount | integer | _Example:_ `2` | No |
 
-#### cluster.KafkaDownstream
+##### cluster.KafkaDownstream
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -106,7 +152,7 @@ create a change feed task
 | topicName | string | _Example:_ `"my_topic"` | No |
 | version | string | _Example:_ `"2.4.0"` | No |
 
-#### cluster.TiDBDownstream
+##### cluster.TiDBDownstream
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -120,7 +166,7 @@ create a change feed task
 | username | string | _Example:_ `"tidb"` | No |
 | workerCount | integer | _Example:_ `2` | No |
 
-#### cluster.Dispatcher
+##### cluster.Dispatcher
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -136,11 +182,41 @@ create a change feed task
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.CreateChangeFeedTaskResp
+##### cluster.CreateChangeFeedTaskResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | id | string | _Example:_ `"TASK_ID_IN_TIEM____22"` | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/changefeeds/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "clusterId": "CLUSTER_ID_IN_TIEM__22",
+  "downstream": {},
+  "downstreamType": "tidb",
+  "name": "my_sync_name",
+  "rules": [
+    "*.*"
+  ],
+  "startTS": "415241823337054209"
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "id": "TASK_ID_IN_TIEM____22"
+  },
+  "message": "string"
+}
+```
 
 ## /changefeeds/{changeFeedTaskId}
 
@@ -168,12 +244,32 @@ delete a change feed task
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.DeleteChangeFeedTaskResp
+##### cluster.DeleteChangeFeedTaskResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | id | string | _Example:_ `"TASK_ID_IN_TIEM____22"` | No |
 | status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
+
+#### Example
+request
+```
+curl -X 'DELETE' \
+  'http://localhost:4116/api/v1/changefeeds/12121212' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "id": "TASK_ID_IN_TIEM____22",
+    "status": "Normal"
+  },
+  "message": "string"
+}
+```
 
 ## /changefeeds/{changeFeedTaskId}/
 
@@ -201,7 +297,7 @@ get change feed detail
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.DetailChangeFeedTaskResp
+##### cluster.DetailChangeFeedTaskResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -223,6 +319,44 @@ get change feed detail
 | updateTime | string |  | No |
 | upstreamUpdateTs | string | _Example:_ `"415241823337054209"` | No |
 | upstreamUpdateUnix | integer | _Example:_ `1642402879000` | No |
+
+#### Example
+request
+```
+curl -X 'GET' \
+  'http://localhost:4116/api/v1/changefeeds/1212/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "clusterId": "CLUSTER_ID_IN_TIEM__22",
+    "createTime": "string",
+    "downstream": {},
+    "downstreamFetchTs": "415241823337054209",
+    "downstreamFetchUnix": 1642402879000,
+    "downstreamSyncTs": "415241823337054209",
+    "downstreamSyncUnix": 1642402879000,
+    "downstreamType": "tidb",
+    "id": "CLUSTER_ID_IN_TIEM__22",
+    "name": "my_sync_name",
+    "rules": [
+      "*.*"
+    ],
+    "startTS": "415241823337054209",
+    "startUnix": 1642402879000,
+    "status": "Normal",
+    "unsteady": false,
+    "updateTime": "string",
+    "upstreamUpdateTs": "415241823337054209",
+    "upstreamUpdateUnix": 1642402879000
+  },
+  "message": "string"
+}
+```
 
 ## /changefeeds/{changeFeedTaskId}/pause
 
@@ -250,11 +384,31 @@ pause a change feed task
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-### cluster.PauseChangeFeedTaskResp
+##### cluster.PauseChangeFeedTaskResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/changefeeds/1212/pause' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -d ''
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "status": "Normal"
+  },
+  "message": "string"
+}
+```
 
 ## /changefeeds/{changeFeedTaskId}/resume
 
@@ -282,11 +436,31 @@ resume a change feed task
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.ResumeChangeFeedTaskResp
+##### cluster.ResumeChangeFeedTaskResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
+
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/changefeeds/1212/resume' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -d ''
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "status": "Normal"
+  },
+  "message": "string"
+}
+```
 
 ## /changefeeds/{changeFeedTaskId}/update
 
@@ -306,7 +480,7 @@ resume a change feed
 | changeFeedTaskId | path | changeFeedTaskId | Yes | string |
 | task | body | change feed task | Yes | [cluster.UpdateChangeFeedTaskReq](#clusterupdatechangefeedtaskreq) |
 
-#### cluster.UpdateChangeFeedTaskReq
+##### cluster.UpdateChangeFeedTaskReq
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
@@ -324,13 +498,41 @@ resume a change feed
 | 403 | Forbidden | [controller.CommonResult](#controllercommonresult) |
 | 500 | Internal Server Error | [controller.CommonResult](#controllercommonresult) |
 
-#### cluster.UpdateChangeFeedTaskResp
+##### cluster.UpdateChangeFeedTaskResp
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
 
-## commonModel
+#### Example
+request
+```
+curl -X 'POST' \
+  'http://localhost:4116/api/v1/changefeeds/1212/update' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer mytoken' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "downstream": {},
+  "downstreamType": "tidb",
+  "name": "my_sync_name",
+  "rules": [
+    "*.*"
+  ]
+}'
+```
+response
+```JSON
+{
+  "code": 0,
+  "data": {
+    "status": "Normal"
+  },
+  "message": "string"
+}
+```
+
+## CommonModel
 
 ### controller.CommonResult
 

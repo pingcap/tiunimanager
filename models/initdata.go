@@ -25,6 +25,7 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -144,7 +145,13 @@ var allVersionInitializers = []system.VersionInitializer{
 				if adminUser != nil && adminUser.ID != "" {
 					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s", adminUser.ID)
 					adminUser.GenSaltAndHash("admin")
-					return defaultDb.accountReaderWriter.UpdateUserPassword(context.TODO(), adminUser.ID, adminUser.Salt, adminUser.FinalHash.Val)
+					b, err := json.Marshal(adminUser.FinalHash)
+					if err != nil {
+						return err
+					}
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s, salt: %s, finalHash: %v", adminUser.ID, adminUser.Salt, adminUser.FinalHash)
+					tx.Exec(fmt.Sprintf("update users set salt = '%s', final_hash = '%s'  where name = 'admin'", adminUser.Salt, string(b)))
+					return nil
 				}
 				framework.LogForkFile(constants.LogFileSystem).Errorf("get empty adminUser %+v", adminUser)
 				return fmt.Errorf("get empty adminUser %+v", adminUser)

@@ -25,6 +25,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -138,15 +139,15 @@ var allVersionInitializers = []system.VersionInitializer{
 				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.1.sql"
 				return initBySql(tx, parameterSqlFile, "parameters")
 			}).BreakIf(func() error {
-				framework.LogForkFile(constants.LogFileSystem).Info("init default account")
-				user := &account.User{
-					DefaultTenantID: "admin",
-					Name:            "admin",
-					Creator:         "System",
+				framework.LogForkFile(constants.LogFileSystem).Info("reset admin password")
+				adminUser, _ := defaultDb.accountReaderWriter.GetUserByName(context.TODO(), "admin")
+				if adminUser != nil && adminUser.ID != "" {
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s", adminUser.ID)
+					adminUser.GenSaltAndHash("admin")
+					return defaultDb.accountReaderWriter.UpdateUserPassword(context.TODO(), adminUser.ID, adminUser.Salt, adminUser.FinalHash.Val)
 				}
-				user.GenSaltAndHash("admin")
-				_, _, _, err := defaultDb.accountReaderWriter.CreateUser(context.TODO(), user, "admin")
-				return err
+				framework.LogForkFile(constants.LogFileSystem).Errorf("get empty adminUser %+v", adminUser)
+				return fmt.Errorf("get empty adminUser %+v", adminUser)
 			}).Present()
 		})
 	}},

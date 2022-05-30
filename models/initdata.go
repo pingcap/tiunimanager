@@ -25,6 +25,8 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -137,6 +139,22 @@ var allVersionInitializers = []system.VersionInitializer{
 			}).BreakIf(func() error {
 				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.1.sql"
 				return initBySql(tx, parameterSqlFile, "parameters")
+			}).BreakIf(func() error {
+				framework.LogForkFile(constants.LogFileSystem).Info("reset admin password")
+				adminUser, _ := defaultDb.accountReaderWriter.GetUserByName(context.TODO(), "admin")
+				if adminUser != nil && adminUser.ID != "" {
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s", adminUser.ID)
+					adminUser.GenSaltAndHash("admin")
+					b, err := json.Marshal(adminUser.FinalHash)
+					if err != nil {
+						return err
+					}
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s, salt: %s, finalHash: %v", adminUser.ID, adminUser.Salt, adminUser.FinalHash)
+					tx.Exec(fmt.Sprintf("update users set salt = '%s', final_hash = '%s'  where name = 'admin'", adminUser.Salt, string(b)))
+					return nil
+				}
+				framework.LogForkFile(constants.LogFileSystem).Errorf("get empty adminUser %+v", adminUser)
+				return fmt.Errorf("get empty adminUser %+v", adminUser)
 			}).Present()
 		})
 	}},

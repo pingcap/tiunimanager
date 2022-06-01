@@ -25,13 +25,14 @@ package system
 
 import (
 	"context"
+	"sync"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/models"
-	"sync"
 )
 
 type SystemManager struct {
@@ -129,6 +130,7 @@ var SupportedProducts = []structs.ProductWithVersions{
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.3.1"},
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.4.0"},
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.0.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.1.0"},
 		},
 	},
 }

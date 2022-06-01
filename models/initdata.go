@@ -25,11 +25,14 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
+
+	"github.com/pingcap-inc/tiem/models/platform/product"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/errors"
@@ -136,10 +139,39 @@ var allVersionInitializers = []system.VersionInitializer{
 			}).BreakIf(func() error {
 				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.1.sql"
 				return initBySql(tx, parameterSqlFile, "parameters")
+			}).BreakIf(func() error {
+				framework.LogForkFile(constants.LogFileSystem).Info("reset admin password")
+				adminUser, _ := defaultDb.accountReaderWriter.GetUserByName(context.TODO(), "admin")
+				if adminUser != nil && adminUser.ID != "" {
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s", adminUser.ID)
+					adminUser.GenSaltAndHash("admin")
+					b, err := json.Marshal(adminUser.FinalHash)
+					if err != nil {
+						return err
+					}
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s, salt: %s, finalHash: %v", adminUser.ID, adminUser.Salt, adminUser.FinalHash)
+					tx.Exec(fmt.Sprintf("update users set salt = '%s', final_hash = '%s'  where name = 'admin'", adminUser.Salt, string(b)))
+					return nil
+				}
+				framework.LogForkFile(constants.LogFileSystem).Errorf("get empty adminUser %+v", adminUser)
+				return fmt.Errorf("get empty adminUser %+v", adminUser)
 			}).Present()
 		})
 	}},
-
+	//{"v1.0.2", func() error {
+	//	return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+	//		return errors.OfNullable(nil).BreakIf(func() error {
+	//			return tx.Create(&system.VersionInfo{
+	//				ID:          "v1.0.2",
+	//				Desc:        "",
+	//				ReleaseNote: "",
+	//			}).Error
+	//		}).BreakIf(func() error {
+	//			parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.2.sql"
+	//			return initBySql(tx, parameterSqlFile, "parameters")
+	//		}).Present()
+	//	})
+	//}},
 	{inTestingVersion, func() error {
 		return defaultDb.base.Create(&system.VersionInfo{
 			ID:          "InTesting",

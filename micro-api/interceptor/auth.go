@@ -41,7 +41,7 @@ type VisitorIdentity struct {
 	TenantId    string
 }
 
-func VerifyIdentity(c *gin.Context) {
+func verifyIdentityOptional(c *gin.Context, checkPassword bool) {
 	bearerTokenStr := c.GetHeader("Authorization")
 
 	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
@@ -51,6 +51,7 @@ func VerifyIdentity(c *gin.Context) {
 
 	req := message.AccessibleReq{
 		TokenString: structs.SensitiveText(tokenString),
+		CheckPassword: checkPassword,
 	}
 
 	body, err := json.Marshal(req)
@@ -85,4 +86,12 @@ func VerifyIdentity(c *gin.Context) {
 		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}
+}
+
+func VerifyIdentity(c *gin.Context) {
+	verifyIdentityOptional(c,true)
+}
+
+func VerifyIdentityForUserModule(c *gin.Context) {
+	verifyIdentityOptional(c,false)
 }

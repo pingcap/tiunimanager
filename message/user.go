@@ -52,6 +52,7 @@ type LogoutResp struct {
 // AccessibleReq identify
 type AccessibleReq struct {
 	TokenString structs.SensitiveText `json:"token" form:"token" validate:"required,min=8,max=64"`
+	CheckPassword bool `json:"checkPassword" form:"checkPassword"`
 }
 
 type AccessibleResp struct {

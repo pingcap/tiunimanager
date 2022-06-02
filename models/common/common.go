@@ -88,7 +88,6 @@ func (p PasswordInExpired) Value() (driver.Value, error) {
 		return nil, err
 	}
 	p.Val = enc
-	p.UpdateTime = time.Now()
 	res, err := json.Marshal(p)
 	return string(res), err
 }

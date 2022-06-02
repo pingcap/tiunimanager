@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
+	"time"
 )
 
 type AccountReadWrite struct {
@@ -194,7 +195,10 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 	}
 
 	//value := dbCommon.Password{Val: finalHash, UpdateTime: time.Now()}
-	value := dbCommon.PasswordInExpired{Val: finalHash}
+	value := dbCommon.PasswordInExpired{
+		Val: finalHash,
+		UpdateTime: time.Now(),
+	}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?",
 		userID).Update("salt", salt).Update("final_hash", value).Error
 }
@@ -216,6 +220,20 @@ func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*U
 	err = arw.DB(ctx).First(user, "id = ?", userLogin.UserID).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, errors.NewErrorf(errors.UserNotExist, "query user %s profile not found", userLogin.UserID)
+	}
+	return user, nil
+}
+func (arw *AccountReadWrite) GetUserByID(ctx context.Context, id string) (*User, error) {
+	if "" == id {
+		framework.LogWithContext(ctx).Errorf("get user by id %s, parameter invalid", id)
+		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+			"get user by id %s, parameter invalid", id)
+	}
+
+	user := &User{}
+	err := arw.DB(ctx).First(user, "id = ?", id).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, errors.NewErrorf(errors.UserNotExist, "query user %s profile not found", id)
 	}
 	return user, nil
 }

@@ -49,6 +49,7 @@ func VerifyIdentity(c *gin.Context) {
 
 	req := message.AccessibleReq{
 		TokenString: structs.SensitiveText(tokenString),
+		CheckPassword: true,
 	}
 
 	body, err := json.Marshal(req)

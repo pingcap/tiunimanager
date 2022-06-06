@@ -171,7 +171,7 @@ var allVersionInitializers = []system.VersionInitializer{
 				return initBySql(tx, parameterSqlFile, "parameters")
 			}).ContinueIf(func() error {
 				tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-				return initBySql(nil, tiUPSqlFile, "tiup config")
+				return initBySql(tx, tiUPSqlFile, "tiup config")
 			}).If(func(err error) {
 				framework.LogForkFile(constants.LogFileSystem).Errorf("init v1.0.2 data failed, err = %s", err.Error())
 			}).Present()

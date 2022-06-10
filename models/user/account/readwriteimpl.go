@@ -38,7 +38,7 @@ func NewAccountReadWrite(db *gorm.DB) *AccountReadWrite {
 func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name string) (*User, *UserLogin, *UserTenantRelation, error) {
 	if "" == name {
 		framework.LogWithContext(ctx).Errorf("create user %v, parameter invalid", user)
-		return nil, nil, nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create user %v, parameter invalid", user)
+		return nil, nil, nil, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "create user %v, parameter invalid", user)
 	}
 	// query tenant
 	_, err := arw.GetTenant(ctx, user.DefaultTenantID)
@@ -78,7 +78,7 @@ func (arw *AccountReadWrite) CreateUser(ctx context.Context, user *User, name st
 func (arw *AccountReadWrite) DeleteUser(ctx context.Context, userID string) error {
 	if "" == userID {
 		framework.LogWithContext(ctx).Errorf("delete user %s, parameter invalid", userID)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete user %s, parameter invalid", userID)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "delete user %s, parameter invalid", userID)
 	}
 	// delete user
 	err := arw.DB(ctx).Where("id = ?", userID).Unscoped().Delete(&User{}).Error
@@ -104,7 +104,7 @@ func (arw *AccountReadWrite) DeleteUser(ctx context.Context, userID string) erro
 func (arw *AccountReadWrite) GetUser(ctx context.Context, userID string) (structs.UserInfo, error) {
 	if "" == userID {
 		framework.LogWithContext(ctx).Errorf("get user %s profile, parameter invalid", userID)
-		return structs.UserInfo{}, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return structs.UserInfo{}, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"get user %s profile, parameter invalid", userID)
 	}
 
@@ -169,7 +169,7 @@ func (arw *AccountReadWrite) QueryUsers(ctx context.Context) (map[string]structs
 func (arw *AccountReadWrite) UpdateUserStatus(ctx context.Context, userID string, status string) error {
 	if "" == userID {
 		framework.LogWithContext(ctx).Errorf("update user %s status %s, parameter invalid", userID, status)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"update user %s status %s, parameter invalid", userID, status)
 	}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?", userID).Update("status", status).Error
@@ -179,7 +179,7 @@ func (arw *AccountReadWrite) UpdateUserProfile(ctx context.Context, userID, nick
 	if "" == userID {
 		framework.LogWithContext(ctx).Errorf(
 			"update user %s profile, nickname: %s, email: %s, phone: %s, parameter invalid", userID, nickname, email, phone)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"update user %s profile, nickname: %s, email: %s, phone: %s, parameter invalid", userID, nickname, email, phone)
 	}
 	return arw.DB(ctx).Model(&User{}).Where("id = ?", userID).Update("email", email).
@@ -190,7 +190,7 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 	if "" == userID {
 		framework.LogWithContext(ctx).Errorf(
 			"update user %s password, salt: %s, finalHash: %s, parameter invalid", userID, salt, finalHash)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"update user %s password, salt: %s, finalHash: %s, parameter invalid", userID, salt, finalHash)
 	}
 
@@ -206,7 +206,7 @@ func (arw *AccountReadWrite) UpdateUserPassword(ctx context.Context, userID, sal
 func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*User, error) {
 	if "" == name {
 		framework.LogWithContext(ctx).Errorf("get user by name %s, parameter invalid", name)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"get user by name %s, parameter invalid", name)
 	}
 	// find user_id by login name
@@ -226,7 +226,7 @@ func (arw *AccountReadWrite) GetUserByName(ctx context.Context, name string) (*U
 func (arw *AccountReadWrite) GetUserByID(ctx context.Context, id string) (*User, error) {
 	if "" == id {
 		framework.LogWithContext(ctx).Errorf("get user by id %s, parameter invalid", id)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"get user by id %s, parameter invalid", id)
 	}
 
@@ -241,7 +241,7 @@ func (arw *AccountReadWrite) GetUserByID(ctx context.Context, id string) (*User,
 func (arw *AccountReadWrite) CreateTenant(ctx context.Context, tenant *Tenant) (*structs.TenantInfo, error) {
 	if "" == tenant.ID || "" == tenant.Name {
 		framework.LogWithContext(ctx).Errorf("create tenant %v, parameter invalid", tenant)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create tenant %v, parameter invalid", tenant)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "create tenant %v, parameter invalid", tenant)
 	}
 	return &structs.TenantInfo{ID: tenant.ID, Name: tenant.Name}, arw.DB(ctx).Create(tenant).Error
 }
@@ -249,7 +249,7 @@ func (arw *AccountReadWrite) CreateTenant(ctx context.Context, tenant *Tenant) (
 func (arw *AccountReadWrite) DeleteTenant(ctx context.Context, tenantID string) error {
 	if "" == tenantID {
 		framework.LogWithContext(ctx).Errorf("delete tenant,tenantID: %s, parameter invalid", tenantID)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete tenant, tenantID: %s, parameter invalid", tenantID)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "delete tenant, tenantID: %s, parameter invalid", tenantID)
 	}
 	return arw.DB(ctx).Where("id = ?", tenantID).Unscoped().Delete(&Tenant{}).Error
 }
@@ -257,7 +257,7 @@ func (arw *AccountReadWrite) DeleteTenant(ctx context.Context, tenantID string) 
 func (arw *AccountReadWrite) GetTenant(ctx context.Context, tenantID string) (structs.TenantInfo, error) {
 	if "" == tenantID {
 		framework.LogWithContext(ctx).Errorf("get tenant,tenantID: %s, parameter invalid", tenantID)
-		return structs.TenantInfo{}, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get tenant: tenantID: %s, parameter invalid", tenantID)
+		return structs.TenantInfo{}, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "get tenant: tenantID: %s, parameter invalid", tenantID)
 	}
 	info := &Tenant{}
 	err := arw.DB(ctx).First(info, "id = ?", tenantID).Error
@@ -277,7 +277,7 @@ func (arw *AccountReadWrite) QueryTenants(ctx context.Context) (map[string]struc
 	SQL := "SELECT id,name,creator,status,on_boarding_status,max_cluster,created_at,updated_at,creator,max_cpu,max_memory,max_storage FROM tenants;"
 	rows, err := arw.DB(ctx).Raw(SQL).Rows()
 	if err != nil {
-		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "query all user error: %v, SQL: %s", err, SQL)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_SQL_ERROR, "query all user error: %v, SQL: %s", err, SQL)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -298,7 +298,7 @@ func (arw *AccountReadWrite) QueryTenants(ctx context.Context) (map[string]struc
 func (arw *AccountReadWrite) UpdateTenantStatus(ctx context.Context, tenantID, status string) error {
 	if "" == tenantID {
 		framework.LogWithContext(ctx).Errorf("update tenant status,tenantID: %s, status: %s, parameter invalid", tenantID, status)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update tenant status: tenantID: %s, status:%s, parameter invalid", tenantID, status)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "update tenant status: tenantID: %s, status:%s, parameter invalid", tenantID, status)
 	}
 	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Update("status", status).Error
 }
@@ -306,7 +306,7 @@ func (arw *AccountReadWrite) UpdateTenantStatus(ctx context.Context, tenantID, s
 func (arw *AccountReadWrite) UpdateTenantProfile(ctx context.Context, tenantID, name string, maxCluster, maxCPU, maxMemory, maxStorage int32) error {
 	if tenantID == "" {
 		framework.LogWithContext(ctx).Errorf("update tenant profile,tenantID: %s, name: %s, maxCluster: %d, maxCPU: %d, maxMemory: %d, maxStorage: %d,parameter invalid", tenantID, name, maxCluster, maxCPU, maxMemory, maxStorage)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update tenant profile: tenantID: %s, name: %s, maxCluster: %d, maxCPU: %d, maxMemory: %d, maxStorage: %d, parameter invalid", tenantID, name, maxCluster, maxCPU, maxMemory, maxStorage)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "update tenant profile: tenantID: %s, name: %s, maxCluster: %d, maxCPU: %d, maxMemory: %d, maxStorage: %d, parameter invalid", tenantID, name, maxCluster, maxCPU, maxMemory, maxStorage)
 	}
 
 	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).
@@ -317,7 +317,7 @@ func (arw *AccountReadWrite) UpdateTenantProfile(ctx context.Context, tenantID, 
 func (arw *AccountReadWrite) UpdateTenantOnBoardingStatus(ctx context.Context, tenantID, status string) error {
 	if "" == tenantID {
 		framework.LogWithContext(ctx).Errorf("update tenant on boarding status,tenantID: %s, status: %s, parameter invalid", tenantID, status)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update tenant on boarding status: tenantID: %s, status:%s, parameter invalid", tenantID, status)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "update tenant on boarding status: tenantID: %s, status:%s, parameter invalid", tenantID, status)
 	}
 	return arw.DB(ctx).Model(&Tenant{}).Where("id = ?", tenantID).Update("on_boarding_status", status).Error
 }

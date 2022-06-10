@@ -41,12 +41,12 @@ type templateScaleOut struct {
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
 	t, err := template.New("import_topology").Parse(resourceTemplate.EMClusterScaleOut)
 	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, p); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 
@@ -145,12 +145,12 @@ func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 func (p *templateCheckHost) generateTopologyConfig(ctx context.Context) (string, error) {
 	t, err := template.New("checkHost_topology").Parse(resourceTemplate.EMClusterCheck)
 	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, p); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 

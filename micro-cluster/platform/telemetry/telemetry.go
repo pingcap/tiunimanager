@@ -149,10 +149,10 @@ func (t *Manager) generateData(ctx context.Context) (*structs.EnterpriseManagerI
 	//generate enterprise manager info
 	data.CreateTime = time.Now()    //TODO
 	data.ID = uuidutil.GenerateID() //TODO
-	data.Version.BuildTime = versioninfo.TiEMBuildTS
-	data.Version.GitBranch = versioninfo.TiEMGitHash
-	data.Version.GitHash = versioninfo.TiEMGitHash
-	data.Version.Version = versioninfo.TiEMReleaseVersion
+	data.Version.BuildTime = versioninfo.TiUniManagerBuildTS
+	data.Version.GitBranch = versioninfo.TiUniManagerGitHash
+	data.Version.GitHash = versioninfo.TiUniManagerGitHash
+	data.Version.Version = versioninfo.TiUniManagerReleaseVersion
 
 	//generate enterprise manager instance information
 	data.EmNodes, err = t.generateEMNodeInfo(ctx)

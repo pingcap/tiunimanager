@@ -174,7 +174,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", flowName, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, hostIds, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
 		host.SSHPort = int32(hostSSHPort)
@@ -238,12 +238,12 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		if err != nil {
 			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+			return nil, errors.WrapError(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
 		}
 		if count == 0 {
 			errMsg := fmt.Sprintf("deleting host %s is not found", hostId)
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.NewError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg)
+			return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, errMsg)
 		}
 		flowName := p.selectDeleteFlowName(&hosts[0], force)
 		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
@@ -252,7 +252,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", flowName, hostId, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
 		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostIDArrayKey, []string{hostId})

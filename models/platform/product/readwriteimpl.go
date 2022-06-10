@@ -49,7 +49,7 @@ func (p *ProductReadWrite) QueryAllVendors(ctx context.Context) ([]*Vendor, erro
 
 func (p *ProductReadWrite) SaveVendor(ctx context.Context, vendor *Vendor, zones []*VendorZone, specs []*VendorSpec) error {
 	if vendor == nil || len(vendor.VendorID) == 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "vendor is empty")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "vendor is empty")
 	}
 	existed := int64(0)
 	err := p.DB(ctx).Model(&Vendor{}).Where("vendor_id = ?", vendor.VendorID).Count(&existed).Error
@@ -76,7 +76,7 @@ func (p *ProductReadWrite) SaveVendor(ctx context.Context, vendor *Vendor, zones
 
 func (p *ProductReadWrite) GetVendor(ctx context.Context, vendorID string) (vendor *Vendor, zones []*VendorZone, specs []*VendorSpec, err error) {
 	if len(vendorID) == 0 {
-		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "vendorID is empty")
+		err = errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "vendorID is empty")
 	}
 
 	vendor = &Vendor{}
@@ -99,7 +99,7 @@ func (p *ProductReadWrite) GetVendor(ctx context.Context, vendorID string) (vend
 
 func (p *ProductReadWrite) DeleteVendor(ctx context.Context, vendorID string) error {
 	if len(vendorID) == 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "vendorID is empty")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "vendorID is empty")
 	}
 	whereClause := fmt.Sprintf("vendor_id = '%s'", vendorID)
 	// delete from vendors、specs、zones
@@ -125,7 +125,7 @@ func (p *ProductReadWrite) QueryAllProducts(ctx context.Context) ([]*ProductInfo
 
 func (p *ProductReadWrite) SaveProduct(ctx context.Context, product *ProductInfo, versions []*ProductVersion, components []*ProductComponentInfo) error {
 	if product == nil || len(product.ProductID) == 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "product is empty")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "product is empty")
 	}
 	existed := int64(0)
 	err := p.DB(ctx).Model(&ProductInfo{}).Where("product_id = ?", product.ProductID).Count(&existed).Error
@@ -152,7 +152,7 @@ func (p *ProductReadWrite) SaveProduct(ctx context.Context, product *ProductInfo
 
 func (p *ProductReadWrite) GetProduct(ctx context.Context, productID string) (product *ProductInfo, versions []*ProductVersion, components []*ProductComponentInfo, err error) {
 	if len(productID) == 0 {
-		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "productID is empty")
+		err = errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "productID is empty")
 	}
 
 	product = &ProductInfo{}
@@ -176,7 +176,7 @@ func (p *ProductReadWrite) GetProduct(ctx context.Context, productID string) (pr
 
 func (p *ProductReadWrite) DeleteProduct(ctx context.Context, productID string) error {
 	if len(productID) == 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "productID is empty")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "productID is empty")
 	}
 	whereClause := fmt.Sprintf("product_id = '%s'", productID)
 	// delete from products, product_versions, product_components

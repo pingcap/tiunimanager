@@ -42,7 +42,7 @@ import (
 
 func setGinContextForInvalidParam(c *gin.Context, errmsg string) {
 	framework.LogWithContext(c).Error(errmsg)
-	c.JSON(errors.TIEM_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(errors.TIEM_PARAMETER_INVALID), errmsg))
+	c.JSON(errors.TIUNIMANAGER_PARAMETER_INVALID.GetHttpCode(), controller.Fail(int(errors.TIUNIMANAGER_PARAMETER_INVALID), errmsg))
 }
 
 func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
@@ -53,7 +53,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	rows := xlsx.GetRows(ImportHostTemplateSheet)
 	if len(rows) == 0 {
 		errMsg := fmt.Sprintf("[%s] sheet not exist or has no valid data", ImportHostTemplateSheet)
-		return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 	}
 	var hosts []structs.HostInfo
 	for irow, row := range rows {
@@ -66,7 +66,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[IP_FILED])
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.IP = addr.String()
 			host.UserName = row[USERNAME_FIELD]
@@ -76,11 +76,11 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Rack = row[RACK_FIELD]
 			if host.Region == "" || host.AZ == "" || host.Rack == "" {
 				errMsg := fmt.Sprintf("input region (%s) zone (%s) rack (%s) should not be empty", host.Region, host.AZ, host.Rack)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			if err = constants.ValidArchType(row[ARCH_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get arch(%s) failed, %v", irow, row[ARCH_FIELD], err)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.Arch = row[ARCH_FIELD]
 			host.OS = row[OS_FIELD]
@@ -88,22 +88,22 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			coreNum, err := (strconv.Atoi(row[CPU_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get coreNum(%s) failed, %v", irow, row[CPU_FIELD], err)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			if coreNum <= 0 {
 				errMsg := fmt.Sprintf("input cpu core (%d) invalid", coreNum)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.CpuCores = int32(coreNum)
 			host.UsedCpuCores = 0
 			mem, err := (strconv.Atoi(row[MEM_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			if mem <= 0 {
 				errMsg := fmt.Sprintf("input memory size (%d) invalid", mem)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.Memory = int32(mem)
 			host.UsedMemory = 0
@@ -111,7 +111,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 
 			if err = constants.ValidProductID(row[CLUSTER_TYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get cluster type(%s) failed, %v", irow, row[CLUSTER_TYPE_FIELD], err)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.ClusterType = row[CLUSTER_TYPE_FIELD]
 			if err = host.AddTraits(host.ClusterType); err != nil {
@@ -126,7 +126,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 				}
 				if err = constants.ValidPurposeType(p); err != nil {
 					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
-					return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+					return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 				}
 				if err = host.AddTraits(p); err != nil {
 					return nil, err
@@ -135,7 +135,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 
 			if err = constants.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get disk type(%s) failed, %v", irow, row[DISKTYPE_FIELD], err)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			host.DiskType = row[DISKTYPE_FIELD]
 			if err = host.AddTraits(host.DiskType); err != nil {
@@ -146,7 +146,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
-				return nil, errors.NewError(errors.TIEM_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
+				return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_PARSE_TEMPLATE_FILE_ERROR, errMsg)
 			}
 			for i := range host.Disks {
 				if host.Disks[i].Type == "" {
@@ -311,7 +311,7 @@ func DownloadHostTemplateFile(c *gin.Context) {
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
-		c.JSON(errors.TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND.GetHttpCode(), controller.Fail(int(errors.TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND), err.Error()))
+		c.JSON(errors.TIUNIMANAGER_RESOURCE_TEMPLATE_FILE_NOT_FOUND.GetHttpCode(), controller.Fail(int(errors.TIUNIMANAGER_RESOURCE_TEMPLATE_FILE_NOT_FOUND), err.Error()))
 		return
 	}
 

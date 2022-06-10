@@ -624,7 +624,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 		})
 		flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{AutoBackup: false})
 
-		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).Times(1)
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIUNIMANAGER_PANIC, "")).Times(1)
 		node := &workflowModel.WorkFlowNode{}
 		err := backupBeforeDelete(node, flowContext)
 		assert.NoError(t, err)
@@ -1473,7 +1473,7 @@ func TestDestroyCluster(t *testing.T) {
 	})
 
 	t.Run("skip", func(t *testing.T) {
-		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).AnyTimes()
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIUNIMANAGER_PANIC, "")).AnyTimes()
 
 		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
@@ -1524,7 +1524,7 @@ func TestClearCDCLinks(t *testing.T) {
 	changefeed.MockChangeFeedService(service)
 
 	t.Run("query error", func(t *testing.T) {
-		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND)).Times(1)
 		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
@@ -1543,7 +1543,7 @@ func TestClearCDCLinks(t *testing.T) {
 			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "2222"},
 		}, nil).Times(1)
 
-		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND)).Times(1)
 		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, nil).Times(1)
 
 		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2329,7 +2329,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		})
 		err := validateHostsStatus(node, context)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), strconv.Itoa(int(errors.TIEM_RESOURCE_CREATE_HOST_ERROR)))
+		assert.Contains(t, err.Error(), strconv.Itoa(int(errors.TIUNIMANAGER_RESOURCE_CREATE_HOST_ERROR)))
 	})
 
 	t.Run("init + succeed", func(t *testing.T) {
@@ -2617,7 +2617,7 @@ func Test_applyParameterGroup(t *testing.T) {
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2667,7 +2667,7 @@ func Test_chooseParameterGroup(t *testing.T) {
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2734,7 +2734,7 @@ func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2786,7 +2786,7 @@ func Test_adjustParameters(t *testing.T) {
 		})
 		parameterRW.EXPECT().
 			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			Return("111", nil, int64(0), errors.Error(errors.TIEM_PANIC)).
+			Return("111", nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).
 			Times(1)
 
 		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)

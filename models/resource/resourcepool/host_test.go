@@ -51,9 +51,9 @@ func Test_BuildDefaultTraits(t *testing.T) {
 		host Host
 		want want
 	}{
-		{"test1", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute), DiskType: string(constants.NVMeSSD)}, want{errors.TIEM_SUCCESS, 73}},
-		{"test2", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute) + "," + string(constants.PurposeSchedule), DiskType: string(constants.SSD)}, want{errors.TIEM_SUCCESS, 169}},
-		{"test3", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: "General", DiskType: string(constants.NVMeSSD)}, want{errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, 0}},
+		{"test1", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute), DiskType: string(constants.NVMeSSD)}, want{errors.TIUNIMANAGER_SUCCESS, 73}},
+		{"test2", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: string(constants.PurposeCompute) + "," + string(constants.PurposeSchedule), DiskType: string(constants.SSD)}, want{errors.TIUNIMANAGER_SUCCESS, 169}},
+		{"test3", Host{ClusterType: string(constants.EMProductIDTiDB), Purpose: "General", DiskType: string(constants.NVMeSSD)}, want{errors.TIUNIMANAGER_RESOURCE_TRAIT_NOT_FOUND, 0}},
 	}
 
 	for _, tt := range tests {
@@ -295,15 +295,15 @@ func Test_UpdateHost(t *testing.T) {
 
 	err = db.Model(&Host{ID: hostId}).Update("ip", "192.168.965.965").Error
 	assert.NotNil(t, err)
-	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
 
 	err = db.Model(&Host{ID: hostId}).Update("disk_type", string(constants.SSD)).Error
 	assert.NotNil(t, err)
-	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", hostId).GetMsg())
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", hostId).GetMsg())
 
 	err = db.Model(&Host{ID: hostId}).Update("region", "NewRegion").Error
 	assert.NotNil(t, err)
-	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", hostId).GetMsg())
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", hostId).GetMsg())
 
 	host2 := genFakeHost("Region1", "Region1,Zone1", "Region1,Zone1,Rack1", "TEST_HOST2", "192.168.999.999", 48, 128,
 		string(constants.EMProductIDDataMigration), string(constants.PurposeStorage), string(constants.NVMeSSD))
@@ -346,7 +346,7 @@ func Test_UpdateHost(t *testing.T) {
 	assert.Equal(t, "192.168.999.998", ip)
 	err = db.Model(&host).Updates(updates).Error
 	assert.NotNil(t, err)
-	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
+	assert.Equal(t, err.(errors.EMError).GetMsg(), errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", hostId).GetMsg())
 
 	err = db.Delete(&Host{ID: host.ID}).Error
 	assert.Nil(t, err)

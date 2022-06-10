@@ -44,7 +44,7 @@ func GinOpenTracing() gin.HandlerFunc {
 		}
 		c.Set("Tracer", tracer)
 		c.Set("ParentSpan", parentSpan)
-		parentSpan.SetTag(framework.TiEM_X_TRACE_ID_KEY, framework.GetTraceIDFromContext(c))
+		parentSpan.SetTag(framework.TiUniManager_X_TRACE_ID_KEY, framework.GetTraceIDFromContext(c))
 		c.Next()
 	}
 }

@@ -139,10 +139,10 @@ type WorkFlowService interface {
 workflow API errors define in file common/errors/errorcode.go
 ``` go
 	// workflow
-	TIEM_WORKFLOW_CREATE_FAILED:         {"workflow create failed", 500},
-	TIEM_WORKFLOW_QUERY_FAILED:          {"workflow query failed", 500},
-	TIEM_WORKFLOW_DETAIL_FAILED:         {"workflow detail failed", 500},
-	TIEM_WORKFLOW_START_FAILED:          {"workflow start failed", 500},
-	TIEM_WORKFLOW_DEFINE_NOT_FOUND:      {"workflow define not found", 404},
-	TIEM_WORKFLOW_NODE_POLLING_TIME_OUT: {"workflow node polling time out", 500},
+	TIUNIMANAGER_WORKFLOW_CREATE_FAILED:         {"workflow create failed", 500},
+	TIUNIMANAGER_WORKFLOW_QUERY_FAILED:          {"workflow query failed", 500},
+	TIUNIMANAGER_WORKFLOW_DETAIL_FAILED:         {"workflow detail failed", 500},
+	TIUNIMANAGER_WORKFLOW_START_FAILED:          {"workflow start failed", 500},
+	TIUNIMANAGER_WORKFLOW_DEFINE_NOT_FOUND:      {"workflow define not found", 404},
+	TIUNIMANAGER_WORKFLOW_NODE_POLLING_TIME_OUT: {"workflow node polling time out", 500},
 ```

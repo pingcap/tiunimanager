@@ -679,7 +679,7 @@ func TestManager_CreateCluster(t *testing.T) {
 
 	t.Run("validate", func(t *testing.T) {
 		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
-			return em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)
+			return em_errors.Error(em_errors.TIUNIMANAGER_PARAMETER_INVALID)
 		}
 		defer func() {
 			validator = validateCreating
@@ -2226,7 +2226,7 @@ func TestManager_DeleteMetadataPhysically(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIUNIMANAGER_PARAMETER_INVALID)).AnyTimes()
 	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil).AnyTimes()
 
 	resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)

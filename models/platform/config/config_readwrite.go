@@ -39,7 +39,7 @@ func (m *ConfigReadWrite) CreateConfig(ctx context.Context, cfg *SystemConfig) (
 
 func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error) {
 	if "" == configKey {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "config key required")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "config key required")
 	}
 	config = &SystemConfig{}
 	err = m.DB(ctx).First(config, "config_key = ?", configKey).Error
@@ -51,12 +51,12 @@ func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (conf
 
 func (m *ConfigReadWrite) UpdateConfig(ctx context.Context, config *SystemConfig) (err error) {
 	if "" == config.ConfigKey {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "config key required")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "config key required")
 	}
 	cfg := &SystemConfig{}
 	err = m.DB(ctx).First(cfg, "config_key = ?", config.ConfigKey).Error
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "config key %s not exist", config.ConfigKey)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "config key %s not exist", config.ConfigKey)
 	}
 	return m.DB(ctx).Model(cfg).Update("config_value", config.ConfigValue).Error
 }

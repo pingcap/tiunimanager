@@ -85,7 +85,7 @@ func getActionBindings() map[constants.SystemEvent]map[constants.SystemState]act
 
 func (p *SystemManager) AcceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	if len(event) == 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "system event is empty")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "system event is empty")
 	}
 	return acceptSystemEvent(ctx, event)
 }
@@ -99,9 +99,9 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 		if actionFunc, statusOK := statusMapAction[systemInfo.State]; statusOK {
 			return actionFunc(ctx, event, systemInfo.State)
 		}
-		return errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "undefined action for event %s in state %s", event, systemInfo.State)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_STATE_CONFLICT, "undefined action for event %s in state %s", event, systemInfo.State)
 	} else {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "system event %s is unrecognized", event)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "system event %s is unrecognized", event)
 	}
 }
 

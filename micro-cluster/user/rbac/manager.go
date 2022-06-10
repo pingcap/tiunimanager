@@ -152,7 +152,7 @@ func (mgr *RBACManager) CheckPermissionForUser(ctx context.Context, request mess
 		result, err := mgr.enforcer.Enforce(request.UserID, permission.Resource, permission.Action)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("user %s check permission error: %s", request.UserID, err.Error())
-			return message.CheckPermissionForUserResp{Result: false}, errors.WrapError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, fmt.Sprintf("user %s check permission failed", request.UserID), err)
+			return message.CheckPermissionForUserResp{Result: false}, errors.WrapError(errors.TIUNIMANAGER_RBAC_PERMISSION_CHECK_FAILED, fmt.Sprintf("user %s check permission failed", request.UserID), err)
 		}
 		if !result {
 			framework.LogWithContext(ctx).Infof("user %s check permission %+v failed", request.UserID, permission)
@@ -174,7 +174,7 @@ func (mgr *RBACManager) QueryRoles(ctx context.Context, request message.QueryRol
 		roles, err := mgr.enforcer.GetRolesForUser(request.UserID)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("call enforcer GetRolesForUser failed %s", err.Error())
-			return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_QUERY_FAILED, "call enforcer GetRolesForUser failed", err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_ROLE_QUERY_FAILED, "call enforcer GetRolesForUser failed", err)
 		}
 		return message.QueryRolesResp{
 			Roles: roles,
@@ -188,18 +188,18 @@ func (mgr *RBACManager) DeleteRole(ctx context.Context, request message.DeleteRo
 
 	if !system {
 		if _, ok := constants.RbacRoleMap[request.Role]; ok {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("default role %s can not delete", request.Role))
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("default role %s can not delete", request.Role))
 		}
 	}
 
 	if _, err = mgr.enforcer.DeletePermissionsForUser(request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer DeletePermissionsForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_DELETE_FAILED, "call enforcer DeletePermissionsForUser failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_PERMISSION_DELETE_FAILED, "call enforcer DeletePermissionsForUser failed", err)
 	}
 
 	if _, err = mgr.enforcer.DeleteRole(request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer DeleteRole failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_DELETE_FAILED, "call enforcer DeleteRole failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_ROLE_DELETE_FAILED, "call enforcer DeleteRole failed", err)
 	}
 
 	return
@@ -210,18 +210,18 @@ func (mgr *RBACManager) CreateRole(ctx context.Context, request message.CreateRo
 	framework.LogWithContext(ctx).Info("end CreateRole")
 
 	if request.Role == "" {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid input empty role")
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "invalid input empty role")
 	}
 
 	if !system {
 		if _, ok := constants.RbacRoleMap[request.Role]; ok {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("default role %s can not modify permission", request.Role))
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("default role %s can not modify permission", request.Role))
 		}
 	}
 
 	if _, err = mgr.enforcer.AddRoleForUser("", request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRoleForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_CREATE_FAILED, "call enforcer AddRoleForUser failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_ROLE_CREATE_FAILED, "call enforcer AddRoleForUser failed", err)
 	}
 	return
 }
@@ -231,12 +231,12 @@ func (mgr *RBACManager) BindRolesForUser(ctx context.Context, request message.Bi
 	framework.LogWithContext(ctx).Info("end BindRolesForUser")
 
 	if len(request.Roles) == 0 || request.UserID == "" {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "invalid input empty userId or roles")
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "invalid input empty userId or roles")
 	}
 	roles := mgr.enforcer.GetAllRoles()
 	for _, role := range roles {
 		if role == request.UserID {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("conflict userId %s with role", request.UserID))
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("conflict userId %s with role", request.UserID))
 		}
 	}
 	for _, reqRole := range request.Roles {
@@ -248,13 +248,13 @@ func (mgr *RBACManager) BindRolesForUser(ctx context.Context, request message.Bi
 			}
 		}
 		if !exist {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("bind role %s not exist", reqRole))
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("bind role %s not exist", reqRole))
 		}
 	}
 
 	if _, err = mgr.enforcer.AddRolesForUser(request.UserID, request.Roles); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddRolesForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_BIND_FAILED, "call enforcer AddRolesForUser failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_ROLE_BIND_FAILED, "call enforcer AddRolesForUser failed", err)
 	}
 	return resp, nil
 }
@@ -265,7 +265,7 @@ func (mgr *RBACManager) UnbindRoleForUser(ctx context.Context, request message.U
 
 	if _, err = mgr.enforcer.DeleteRoleForUser(request.UserID, request.Role); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer DeleteRoleForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_ROLE_UNBIND_FAILED, "call enforcer DeleteRoleForUser failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_ROLE_UNBIND_FAILED, "call enforcer DeleteRoleForUser failed", err)
 	}
 	return resp, nil
 }
@@ -275,12 +275,12 @@ func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request messa
 	framework.LogWithContext(ctx).Info("end AddPermissionsForRole")
 
 	if request.Role == "" {
-		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, "invalid input empty role", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_PARAMETER_INVALID, "invalid input empty role", err)
 	}
 
 	if !system {
 		if _, ok := constants.RbacRoleMap[request.Role]; ok {
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("default role %s can not modify permission", request.Role))
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("default role %s can not modify permission", request.Role))
 		}
 	}
 
@@ -289,14 +289,14 @@ func (mgr *RBACManager) AddPermissionsForRole(ctx context.Context, request messa
 		if !permission.CheckInvalid() {
 			err = fmt.Errorf("permission %+v is invaild", permission)
 			framework.LogWithContext(ctx).Errorf(err.Error())
-			return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, err.Error())
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 		}
 		permissionList = append(permissionList, []string{permission.Resource, permission.Action})
 	}
 
 	if _, err = mgr.enforcer.AddPermissionsForUser(request.Role, permissionList...); err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer AddPermissionsForUser failed %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_ADD_FAILED, "call enforcer AddPermissionsForUser failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_PERMISSION_ADD_FAILED, "call enforcer AddPermissionsForUser failed", err)
 	}
 	return
 }
@@ -306,24 +306,24 @@ func (mgr *RBACManager) DeletePermissionsForRole(ctx context.Context, request me
 	framework.LogWithContext(ctx).Info("end DeletePermissionsForRole")
 
 	if request.Role == "" {
-		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, "invalid input empty role", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_PARAMETER_INVALID, "invalid input empty role", err)
 	}
 
 	if _, ok := constants.RbacRoleMap[request.Role]; ok {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("default role %s can not modify permission", request.Role))
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("default role %s can not modify permission", request.Role))
 	}
 
 	for _, permission := range request.Permissions {
 		if !permission.CheckInvalid() {
 			err = fmt.Errorf("permission %+v is invaild", permission)
 			framework.LogWithContext(ctx).Errorf(err.Error())
-			return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, "input parameters invalid", err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_PARAMETER_INVALID, "input parameters invalid", err)
 		}
 	}
 	for _, permission := range request.Permissions {
 		if _, err = mgr.enforcer.DeletePermissionForUser(request.Role, permission.Resource, permission.Action); err != nil {
 			framework.LogWithContext(ctx).Errorf("call enforcer DeletePermissionForUser failed %s", err.Error())
-			return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_DELETE_FAILED, fmt.Sprintf("delete permissions of role %s failed", request.Role), err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_PERMISSION_DELETE_FAILED, fmt.Sprintf("delete permissions of role %s failed", request.Role), err)
 		}
 	}
 
@@ -337,7 +337,7 @@ func (mgr *RBACManager) QueryPermissionsForUser(ctx context.Context, request mes
 	roles, err := mgr.enforcer.GetRolesForUser(request.UserID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call enforcer GetRolesForUser roles failed, %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_RBAC_PERMISSION_QUERY_FAILED, fmt.Sprintf("query permissions of userId %s failed", request.UserID), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_RBAC_PERMISSION_QUERY_FAILED, fmt.Sprintf("query permissions of userId %s failed", request.UserID), err)
 	}
 
 	for _, role := range roles {

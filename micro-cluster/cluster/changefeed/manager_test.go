@@ -178,7 +178,7 @@ func TestManager_Pause(t *testing.T) {
 			},
 			ClusterId:  "clusterId",
 			Downstream: &changefeed.TiDBDownstream{},
-		}, errors.Error(errors.TIEM_UNRECOGNIZED_ERROR)).Times(1)
+		}, errors.Error(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR)).Times(1)
 
 		_, err := GetManager().Pause(context.TODO(), cluster.PauseChangeFeedTaskReq{
 			"taskId",
@@ -194,7 +194,7 @@ func TestManager_Pause(t *testing.T) {
 			ClusterId:  "clusterId",
 			Downstream: &changefeed.TiDBDownstream{},
 		}, nil).Times(1)
-		changefeedRW.EXPECT().LockStatus(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+		changefeedRW.EXPECT().LockStatus(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID)).Times(1)
 
 		_, err := GetManager().Pause(context.TODO(), cluster.PauseChangeFeedTaskReq{
 			"taskId",
@@ -221,7 +221,7 @@ func TestManager_Resume(t *testing.T) {
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
 		{ClusterID: "clusterId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.Root)},
-	}, errors.Error(errors.TIEM_UNMARSHAL_ERROR)).AnyTimes()
+	}, errors.Error(errors.TIUNIMANAGER_UNMARSHAL_ERROR)).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
 	models.SetChangeFeedReaderWriter(changefeedRW)
@@ -238,7 +238,7 @@ func TestManager_Resume(t *testing.T) {
 		},
 		ClusterId:  "clusterId",
 		Downstream: &changefeed.TiDBDownstream{},
-	}, errors.Error(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR)).AnyTimes()
+	}, errors.Error(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR)).AnyTimes()
 
 	changefeedRW.EXPECT().UnlockStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
@@ -273,7 +273,7 @@ func TestManager_Resume(t *testing.T) {
 	})
 
 	t.Run("lock error", func(t *testing.T) {
-		changefeedRW.EXPECT().LockStatus(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
+		changefeedRW.EXPECT().LockStatus(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_MARSHAL_ERROR)).Times(1)
 
 		_, err := GetManager().Resume(context.TODO(), cluster.ResumeChangeFeedTaskReq{
 			"taskId",
@@ -348,7 +348,7 @@ func TestManager_Update(t *testing.T) {
 			},
 			ClusterId:  "clusterId",
 			Downstream: &changefeed.TiDBDownstream{},
-		}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
+		}, errors.Error(errors.TIUNIMANAGER_MARSHAL_ERROR)).Times(1)
 
 		_, err := GetManager().Update(context.TODO(), cluster.UpdateChangeFeedTaskReq{
 			Name:           "aa",
@@ -473,7 +473,7 @@ func TestManager_Detail(t *testing.T) {
 			},
 			ClusterId:  "clusterId",
 			Downstream: &changefeed.TiDBDownstream{},
-		}, errors.Error(errors.TIEM_UNMARSHAL_ERROR)).Times(1)
+		}, errors.Error(errors.TIUNIMANAGER_UNMARSHAL_ERROR)).Times(1)
 
 		_, err := GetManager().Detail(context.TODO(), cluster.DetailChangeFeedTaskReq{
 			ID: "taskId",
@@ -625,7 +625,7 @@ func Test_ClusterError(t *testing.T) {
 		{Type: "CDC", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
 		{ClusterID: "NotFound", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.Root)},
-	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).AnyTimes()
+	}, errors.Error(errors.TIUNIMANAGER_MARSHAL_ERROR)).AnyTimes()
 
 	clusterRW.EXPECT().GetMeta(gomock.Any(), "WithoutCDC").Return(&management.Cluster{}, []*management.ClusterInstance{
 		{Type: "PD", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.0.2"}, Ports: []int32{111}},

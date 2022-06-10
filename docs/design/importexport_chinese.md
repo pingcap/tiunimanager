@@ -132,16 +132,16 @@ flowManager.RegisterWorkFlow(context.TODO(), constants.FlowExportData, &workflow
 导入导出的API报错定义在common/errors/errorcode.go
 ``` go
 	// import && export
-	TIEM_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND: {"data transport system config not found", 404},
-	TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID:   {"data transport system config invalid", 400},
-	TIEM_TRANSPORT_RECORD_NOT_FOUND:        {"data transport record is not found", 404},
-	TIEM_TRANSPORT_RECORD_CREATE_FAILED:    {"create data transport record failed", 500},
-	TIEM_TRANSPORT_RECORD_DELETE_FAILED:    {"delete data transport record failed", 500},
-	TIEM_TRANSPORT_RECORD_QUERY_FAILED:     {"query data transport record failed", 500},
-	TIEM_TRANSPORT_FILE_DELETE_FAILED:      {"remove transport file failed", 500},
-	TIEM_TRANSPORT_PATH_CREATE_FAILED:      {"data transport filepath create failed", 500},
-	TIEM_TRANSPORT_FILE_SIZE_INVALID:       {"data transport file size invalid", 400},
-	TIEM_TRANSPORT_FILE_UPLOAD_FAILED:      {"data transport file upload failed", 500},
-	TIEM_TRANSPORT_FILE_DOWNLOAD_FAILED:    {"data transport file download failed", 500},
-	TIEM_TRANSPORT_FILE_TRANSFER_LIMITED:   {"exceed limit file transfer num", 400},
+	TIUNIMANAGER_TRANSPORT_SYSTEM_CONFIG_NOT_FOUND: {"data transport system config not found", 404},
+	TIUNIMANAGER_TRANSPORT_SYSTEM_CONFIG_INVALID:   {"data transport system config invalid", 400},
+	TIUNIMANAGER_TRANSPORT_RECORD_NOT_FOUND:        {"data transport record is not found", 404},
+	TIUNIMANAGER_TRANSPORT_RECORD_CREATE_FAILED:    {"create data transport record failed", 500},
+	TIUNIMANAGER_TRANSPORT_RECORD_DELETE_FAILED:    {"delete data transport record failed", 500},
+	TIUNIMANAGER_TRANSPORT_RECORD_QUERY_FAILED:     {"query data transport record failed", 500},
+	TIUNIMANAGER_TRANSPORT_FILE_DELETE_FAILED:      {"remove transport file failed", 500},
+	TIUNIMANAGER_TRANSPORT_PATH_CREATE_FAILED:      {"data transport filepath create failed", 500},
+	TIUNIMANAGER_TRANSPORT_FILE_SIZE_INVALID:       {"data transport file size invalid", 400},
+	TIUNIMANAGER_TRANSPORT_FILE_UPLOAD_FAILED:      {"data transport file upload failed", 500},
+	TIUNIMANAGER_TRANSPORT_FILE_DOWNLOAD_FAILED:    {"data transport file download failed", 500},
+	TIUNIMANAGER_TRANSPORT_FILE_TRANSFER_LIMITED:   {"exceed limit file transfer num", 400},
 ```

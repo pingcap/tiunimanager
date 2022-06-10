@@ -355,7 +355,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "CLUSTER_ID_IN_TIEM__22",
+                        "example": "CLUSTER_ID_IN_TIUNIMANAGER__22",
                         "name": "clusterId",
                         "in": "query",
                         "required": true
@@ -7540,7 +7540,7 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "downstream": {
                     "type": "object"
@@ -7578,7 +7578,7 @@ var doc = `{
             "properties": {
                 "id": {
                     "type": "string",
-                    "example": "TASK_ID_IN_TIEM____22"
+                    "example": "TASK_ID_IN_TIUNIMANAGER____22"
                 }
             }
         },
@@ -7676,7 +7676,7 @@ var doc = `{
             "properties": {
                 "id": {
                     "type": "string",
-                    "example": "TASK_ID_IN_TIEM____22"
+                    "example": "TASK_ID_IN_TIUNIMANAGER____22"
                 },
                 "status": {
                     "type": "string",
@@ -7737,7 +7737,7 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "createTime": {
                     "type": "string"
@@ -7772,7 +7772,7 @@ var doc = `{
                 },
                 "id": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "name": {
                     "type": "string",
@@ -8207,7 +8207,7 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "createTime": {
                     "type": "string"
@@ -8242,7 +8242,7 @@ var doc = `{
                 },
                 "id": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "name": {
                     "type": "string",
@@ -8662,7 +8662,7 @@ var doc = `{
                 },
                 "targetClusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "tls": {
                     "type": "boolean",

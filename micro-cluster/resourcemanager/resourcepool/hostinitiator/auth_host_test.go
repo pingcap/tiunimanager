@@ -48,14 +48,14 @@ func Test_createDeployUser_args_error(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
 	assert.Equal(t, "deployUser and group should not be null", emErr.GetMsg())
 
 	err = fileInitiator.createDeployUser(context.TODO(), "tiunimanager", "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, nil)
 	assert.NotNil(t, err)
 	emErr, ok = err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
 	assert.Equal(t, "authenticate info should not be nil while creating deploy user", emErr.GetMsg())
 }
 
@@ -64,7 +64,7 @@ func Test_createDeployUser_failed(t *testing.T) {
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
 	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return("", errors.NewError(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "")).AnyTimes()
+		Return("", errors.NewError(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "")).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -73,7 +73,7 @@ func Test_createDeployUser_failed(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
 
 }
 
@@ -128,7 +128,7 @@ func Test_BuildAuth(t *testing.T) {
 	if err != nil {
 		emErr, ok := err.(errors.EMError)
 		assert.True(t, ok)
-		assert.Equal(t, errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
 	}
 }
 

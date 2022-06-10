@@ -35,7 +35,7 @@ type TestErrorStruct struct {
 }
 
 func (p TestErrorStruct) MarshalJSON() ([]byte, error) {
-	return nil, errors.NewError(errors.TIEM_MARSHAL_ERROR, "")
+	return nil, errors.NewError(errors.TIUNIMANAGER_MARSHAL_ERROR, "")
 }
 
 func Test_handleRequest(t *testing.T) {
@@ -56,7 +56,7 @@ func Test_handleRequest(t *testing.T) {
 		data := TestStruct{}
 		succeed := handleRequest(context.TODO(), req, resp, &data, []structs.RbacPermission{})
 		assert.False(t, succeed)
-		assert.Equal(t, int32(errors.TIEM_UNMARSHAL_ERROR), resp.Code)
+		assert.Equal(t, int32(errors.TIUNIMANAGER_UNMARSHAL_ERROR), resp.Code)
 	})
 }
 
@@ -86,13 +86,13 @@ func Test_handleResponse(t *testing.T) {
 			Name: "aaa",
 			Type: 4,
 		}
-		handleResponse(context.TODO(), resp, errors.NewError(errors.TIEM_CLUSTER_NOT_FOUND, ""), data, &clusterservices.RpcPage{
+		handleResponse(context.TODO(), resp, errors.NewError(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, ""), data, &clusterservices.RpcPage{
 			Page:     4,
 			PageSize: 8,
 			Total:    32,
 		})
 
-		assert.Equal(t, int32(errors.TIEM_CLUSTER_NOT_FOUND), resp.Code)
+		assert.Equal(t, int32(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND), resp.Code)
 		assert.Empty(t, resp.GetPage())
 		assert.Empty(t, resp.GetResponse())
 	})
@@ -106,7 +106,7 @@ func Test_handleResponse(t *testing.T) {
 			Total:    32,
 		})
 
-		assert.Equal(t, int32(errors.TIEM_MARSHAL_ERROR), resp.Code)
+		assert.Equal(t, int32(errors.TIUNIMANAGER_MARSHAL_ERROR), resp.Code)
 		assert.Empty(t, resp.GetPage())
 		assert.Empty(t, resp.GetResponse())
 	})
@@ -129,7 +129,7 @@ func Test_handlePanic(t *testing.T) {
 			defer handlePanic(context.TODO(), "create", resp)
 			panic("aaa")
 		}()
-		assert.Equal(t, int32(errors.TIEM_PANIC), resp.Code)
+		assert.Equal(t, int32(errors.TIUNIMANAGER_PANIC), resp.Code)
 		assert.NotEmpty(t, resp.Message)
 	})
 

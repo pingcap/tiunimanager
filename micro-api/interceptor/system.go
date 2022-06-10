@@ -45,7 +45,7 @@ func SystemRunning(c *gin.Context) {
 	if err != nil {
 		framework.LogWithContext(c).Errorf("marshal request error: %s", err.Error())
 		c.Error(err)
-		c.Status(errors.TIEM_MARSHAL_ERROR.GetHttpCode())
+		c.Status(errors.TIUNIMANAGER_MARSHAL_ERROR.GetHttpCode())
 		c.Abort()
 	}
 	rpcResp, err := client.ClusterClient.GetSystemInfo(framework.NewMicroCtxFromGinCtx(c), &clusterservices.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
@@ -53,7 +53,7 @@ func SystemRunning(c *gin.Context) {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)
 		c.Abort()
-	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
+	} else if rpcResp.Code != int32(errors.TIUNIMANAGER_SUCCESS) {
 		framework.LogWithContext(c).Error(rpcResp.Message)
 		code := errors.EM_ERROR_CODE(rpcResp.Code)
 		msg := rpcResp.Message
@@ -65,11 +65,11 @@ func SystemRunning(c *gin.Context) {
 		if err != nil {
 			framework.LogWithContext(c).Errorf("unmarshal get system info rpc response error: %s", err.Error())
 			c.Error(err)
-			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
+			c.Status(errors.TIUNIMANAGER_UNMARSHAL_ERROR.GetHttpCode())
 			c.Abort()
 		}
 		if result.Info.State != string(constants.SystemRunning) {
-			stateErr := errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "current state is %s", result.Info.State)
+			stateErr := errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_STATE_CONFLICT, "current state is %s", result.Info.State)
 			framework.LogWithContext(c).Error(stateErr.Error())
 			c.JSON(stateErr.GetCode().GetHttpCode(), controller.Fail(int(stateErr.GetCode()), stateErr.Error()))
 			c.Abort()

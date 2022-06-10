@@ -67,7 +67,7 @@ func (t *ProductComponentInfo) BeforeSave(tx *gorm.DB) (err error) {
 	if jsonErr == nil {
 		t.SuggestedInstancesInfo = string(p)
 	} else {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	return nil

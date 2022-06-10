@@ -44,7 +44,7 @@ func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interf
 	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
 		err := rw.DB(ctx).Migrator().CreateTable(tableModel)
 		if nil != err {
-			return true, errors.NewErrorf(errors.TIEM_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
+			return true, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
 		}
 		return true, nil
 	} else {
@@ -58,7 +58,7 @@ func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (h
 		err = tx.Create(&host).Error
 		if err != nil {
 			tx.Rollback()
-			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
 		}
 		hostIds = append(hostIds, host.ID)
 	}
@@ -73,12 +73,12 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 		//if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
 		if err = tx.First(&host, "ID = ?", hostId).Error; err != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
+			return errors.NewErrorf(errors.TIUNIMANAGER_SQL_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
 		}
 		err = tx.Delete(&host).Error
 		if err != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
 		}
 	}
 	err = tx.Commit().Error
@@ -109,14 +109,14 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 	if filter.ClusterType != "" {
 		label, err := structs.GetTraitByName(filter.ClusterType)
 		if err != nil {
-			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid clusterType name %s, %v", filter.ClusterType, err)
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid clusterType name %s, %v", filter.ClusterType, err)
 		}
 		labels |= label
 	}
 	if filter.HostDiskType != "" {
 		label, err := structs.GetTraitByName(filter.HostDiskType)
 		if err != nil {
-			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid diskType name %s, %v", filter.HostDiskType, err)
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid diskType name %s, %v", filter.HostDiskType, err)
 		}
 		labels |= label
 	}
@@ -124,7 +124,7 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 	if filter.Purpose != "" {
 		label, err := structs.GetTraitByName(filter.Purpose)
 		if err != nil {
-			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_TRAIT_NOT_FOUND, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
 		}
 		labels |= label
 	}
@@ -185,7 +185,7 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, location *structs.Lo
 	if filter.HostID != "" {
 		err = db.Where("id = ?", filter.HostID).Count(&total).Find(&hosts).Error
 		if err != nil {
-			return nil, 0, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
+			return nil, 0, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
 		}
 		return
 	}
@@ -207,11 +207,11 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail, %v", hostId, status, result.Error)
+			return errors.NewErrorf(errors.TIUNIMANAGER_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s fail, %v", hostId, status, result.Error)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s not affected", hostId, status)
+			return errors.NewErrorf(errors.TIUNIMANAGER_UPDATE_HOST_STATUS_FAIL, "update host %s status to %s not affected", hostId, status)
 		}
 	}
 	tx.Commit()
@@ -223,11 +223,11 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail, %v", hostId, reserved, result.Error)
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESERVE_HOST_FAIL, "update host %s reserved status to %v fail, %v", hostId, reserved, result.Error)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_RESERVE_HOST_FAIL, "update host %s reserved status to %v not affected", hostId, reserved)
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESERVE_HOST_FAIL, "update host %s reserved status to %v not affected", hostId, reserved)
 		}
 	}
 	tx.Commit()
@@ -236,28 +236,28 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 
 func (rw *GormResourceReadWrite) UpdateHostInfo(ctx context.Context, host rp.Host) (err error) {
 	if host.ID == "" {
-		return errors.NewError(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host info but no host id specified")
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host info but no host id specified")
 	}
 	var originHost rp.Host
 	originHost.ID = host.ID
 	tx := rw.DB(ctx).Begin()
 	if err = tx.First(&originHost, "ID = ?", originHost.ID).Error; err != nil {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SQL_ERROR, "get origin host info before update (%s) error, %v", originHost.ID, err)
 	}
 	updates, err := originHost.PrepareForUpdate(&host)
 	if err != nil {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "prepare for update host %s %s failed, %v", originHost.HostName, originHost.IP, err)
 	}
 	result := tx.Model(&originHost).Omit("Reserved", "Status", "Stat").Updates(updates)
 	if result.Error != nil {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s info failed, %v", originHost.HostName, originHost.IP, result.Error)
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s info failed, %v", originHost.HostName, originHost.IP, result.Error)
 	}
 	if result.RowsAffected != 1 {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s not affected one row, rows affected %d", originHost.HostName, originHost.IP, result.RowsAffected)
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update host %s %s not affected one row, rows affected %d", originHost.HostName, originHost.IP, result.RowsAffected)
 	}
 	err = tx.Commit().Error
 	return
@@ -284,11 +284,11 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 		err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&items).Error
 	default:
 		errMsg := fmt.Sprintf("invalid leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
-		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, errMsg)
+		err = errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, errMsg)
 	}
 	if err != nil {
 		tx.Rollback()
-		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get hierarchy failed, %v", err)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_SQL_ERROR, "get hierarchy failed, %v", err)
 	}
 	tx.Commit()
 	return
@@ -320,7 +320,7 @@ func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *st
 	err = db.Scan(&stocks).Error
 	if err != nil {
 		tx.Rollback()
-		return nil, errors.NewErrorf(errors.TIEM_SQL_ERROR, "get stocks failed, %v", err)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_SQL_ERROR, "get stocks failed, %v", err)
 	}
 	tx.Commit()
 	return
@@ -328,7 +328,7 @@ func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *st
 
 func (rw *GormResourceReadWrite) CreateDisks(ctx context.Context, hostId string, disks []rp.Disk) (diskIds []string, err error) {
 	if hostId == "" {
-		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "batch create %d disks error, no hostId specified", len(disks))
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CREATE_DISK_ERROR, "batch create %d disks error, no hostId specified", len(disks))
 	}
 
 	tx := rw.DB(ctx).Begin()
@@ -339,7 +339,7 @@ func (rw *GormResourceReadWrite) CreateDisks(ctx context.Context, hostId string,
 	err = tx.Model(&host).First(&host).Count(&total).Error
 	if err != nil || total == 0 {
 		tx.Rollback()
-		return nil, errors.NewErrorf(errors.TIEM_RESOURCE_HOST_NOT_FOUND, "query host(%d) %s failed before creating disks, %v", total, hostId, err)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_FOUND, "query host(%d) %s failed before creating disks, %v", total, hostId, err)
 	}
 	for i := range disks {
 		if err = disks[i].ValidateDisk(hostId, host.DiskType); err != nil {
@@ -355,7 +355,7 @@ func (rw *GormResourceReadWrite) CreateDisks(ctx context.Context, hostId string,
 		err = tx.Create(&disks[i]).Error
 		if err != nil {
 			tx.Rollback()
-			return nil, errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s failed, %v", disks[i].Name, hostId, err)
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s failed, %v", disks[i].Name, hostId, err)
 		}
 		diskIds = append(diskIds, disks[i].ID)
 	}
@@ -369,7 +369,7 @@ func (rw *GormResourceReadWrite) DeleteDisks(ctx context.Context, diskIds []stri
 		err = tx.Delete(&rp.Disk{ID: diskId}).Error
 		if err != nil {
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_RESOURCE_DELETE_DISK_ERROR, "delete disk %s error, %v", diskId, err)
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_DELETE_DISK_ERROR, "delete disk %s error, %v", diskId, err)
 		}
 	}
 	err = tx.Commit().Error
@@ -378,10 +378,10 @@ func (rw *GormResourceReadWrite) DeleteDisks(ctx context.Context, diskIds []stri
 
 func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (err error) {
 	if disk.ID == "" {
-		return errors.NewError(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update disk failed, no disk id specified")
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_UPDATE_DISK_ERROR, "update disk failed, no disk id specified")
 	}
 	if disk.Status != "" && disk.Status != string(constants.DiskError) {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "disk status %s is not supported for update, only support set to %s by now",
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_DISK_ERROR, "disk status %s is not supported for update, only support set to %s by now",
 			disk.Status, string(constants.DiskError))
 	}
 	var originDisk rp.Disk
@@ -389,7 +389,7 @@ func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (
 	tx := rw.DB(ctx).Begin()
 	if err = tx.First(&originDisk, "ID = ?", originDisk.ID).Error; err != nil {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_SQL_ERROR, "get origin disk info before update (%s) error, %v", originDisk.ID, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SQL_ERROR, "get origin disk info before update (%s) error, %v", originDisk.ID, err)
 	}
 	patch := originDisk
 	if err = patch.PrepareForUpdate(&disk); err != nil {
@@ -399,11 +399,11 @@ func (rw *GormResourceReadWrite) UpdateDisk(ctx context.Context, disk rp.Disk) (
 	result := tx.Model(&originDisk).Updates(patch)
 	if result.Error != nil {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update disk %s %s info failed, %v", originDisk.Name, originDisk.Path, result.Error)
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_DISK_ERROR, "update disk %s %s info failed, %v", originDisk.Name, originDisk.Path, result.Error)
 	}
 	if result.RowsAffected != 1 {
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "update host %s %s not affected one row, rows affected %d", originDisk.Name, originDisk.Path, result.RowsAffected)
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_DISK_ERROR, "update host %s %s not affected one row, rows affected %d", originDisk.Name, originDisk.Path, result.RowsAffected)
 	}
 	err = tx.Commit().Error
 	return

@@ -114,11 +114,11 @@ func getDeployInfo(clusterMeta *meta.ClusterMeta, ctx *workflow.FlowContext, hos
 	if framework.Current.GetClientArgs().EMClusterName != "" {
 		deployDir = "/em-deploy/filebeat-0"
 		clusterComponentType = deployment.TiUPComponentTypeEM
-		home = framework.GetTiupHomePathForTiem()
+		home = framework.GetTiupHomePathForEm()
 		clusterName = framework.Current.GetClientArgs().EMClusterName
 
 		// Parse EM topology structure to get filebeat deploy dir
-		result, err := deployment.M.Display(ctx, clusterComponentType, clusterName, framework.GetTiupHomePathForTiem(), []string{"--json"}, 0)
+		result, err := deployment.M.Display(ctx, clusterComponentType, clusterName, framework.GetTiupHomePathForEm(), []string{"--json"}, 0)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("invoke tiup cluster display err： %v", err)
 			return "", "", "", "", err

@@ -182,7 +182,7 @@ func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		b, err := json.Marshal(param.RealValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("failed to convert parameter real value err: %v", err)
-			return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
+			return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain())
 		}
 		params[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   modifyParam.ClusterID,
@@ -203,14 +203,14 @@ func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		err := models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, modifyParam.ParamGroupId, modifyParam.ClusterID, params)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+			return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_APPLY_ERROR, err.Error())
 		}
 	} else {
 		// persist update parameter
 		err := models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, modifyParam.ClusterID, params)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("update cluster parameter err: %v", err)
-			return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain(), err)
+			return errors.NewErrorf(errors.TIUNIMANAGER_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIUNIMANAGER_CLUSTER_PARAMETER_UPDATE_ERROR.Explain(), err)
 		}
 	}
 	return nil
@@ -494,7 +494,7 @@ func handleApiFillParams(ctx context.Context, content []byte, instanceType strin
 	d.UseNumber()
 	if err = d.Decode(&reqApiParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s api parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instanceType, err)
 	}
 	// Get api flattened parameter set
 	return handleFillParamResult(ctx, reqApiParams, instanceType, params)
@@ -511,7 +511,7 @@ func handleConfigFillParams(ctx context.Context, content []byte, instanceType st
 	reqConfigParams := map[string]interface{}{}
 	if err = toml.Unmarshal(content, &reqConfigParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s config parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s config parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to convert %s config parameters, err = %v", instanceType, err)
 	}
 	// Get config flattened parameter set
 	return handleFillParamResult(ctx, reqConfigParams, instanceType, params)
@@ -528,7 +528,7 @@ func handleFillParamResult(ctx context.Context, reqConfigParams map[string]inter
 	flattenedParams, err := FlattenedParameters(reqConfigParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to flattened %s parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to flattened %s parameters, err = %v", instanceType, err)
 	}
 	for _, param := range params {
 		fullName := DisplayFullParameterName(param.Category, param.Name)

@@ -242,7 +242,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	if hosts[0].Stat != string(constants.HostLoadLoadLess) {
 		errMsg := fmt.Sprintf("check before delete host failed, host %s load stat is not loadless, %s", hosts[0].ID, hosts[0].Stat)
 		log.Errorln(errMsg)
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_STILL_INUSED, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_STILL_INUSED, errMsg)
 	}
 	log.Infof("check host %s before delete succeed", hosts[0].ID)
 
@@ -318,7 +318,7 @@ func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (hosts []structs
 	err = ctx.GetData(rp_consts.ContextHostInfoArrayKey, &hosts)
 	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostInfoArrayKey)
-		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return hosts, nil
 }
@@ -327,7 +327,7 @@ func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (hostIds []string,
 	err = ctx.GetData(rp_consts.ContextHostIDArrayKey, &hostIds)
 	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostIDArrayKey)
-		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return hostIds, nil
 }
@@ -336,7 +336,7 @@ func getIgnoreWarningsFromFlowContext(ctx *workflow.FlowContext) (ignoreWarnings
 	err = ctx.GetData(rp_consts.ContextIgnoreWarnings, &ignoreWarnings)
 	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextIgnoreWarnings)
-		return ignoreWarnings, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return ignoreWarnings, errors.NewError(errors.TIUNIMANAGER_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return ignoreWarnings, nil
 }

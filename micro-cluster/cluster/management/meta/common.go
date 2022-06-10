@@ -104,33 +104,33 @@ func CompareTiDBVersion(v1, v2 string) (bool, error) {
 	v2Nums := strings.Split(v2[1:], ".")
 
 	if len(v1Nums) != 3 || len(v2Nums) != 3 {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"TiDB version format is invalid")
 	}
 
 	v1MajorVersionNumber, err := strconv.Atoi(v1Nums[0])
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
 	}
 	v2MajorVersionNumber, err := strconv.Atoi(v2Nums[0])
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
 	}
 	v1MinorVersionNumber, err := strconv.Atoi(v1Nums[1])
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
 	}
 	v2MinorVersionNumber, err := strconv.Atoi(v2Nums[1])
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
 	}
 	v1RevisionVersionNumber, err := strconv.Atoi(v1Nums[2])
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "TiDB version %s format is invalid", v1)
 	}
 	v2RevisionVersionNumber, err := strconv.Atoi(v2Nums[2])
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "TiDB version %s format is invalid", v2)
 	}
 
 	if v1MajorVersionNumber > v2MajorVersionNumber {
@@ -160,7 +160,7 @@ func CompareTiDBVersion(v1, v2 string) (bool, error) {
 // @Return		error
 func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 || meta == nil {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
@@ -169,7 +169,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 		if component.Type == string(constants.ComponentIDPD) {
 			pdCount := component.Count + len(meta.Instances[component.Type])
 			if (pdCount%2 == 0) || pdCount > DefaultPDMaxCount {
-				return errors.NewError(errors.TIEM_INVALID_TOPOLOGY, "Suggest PD instances [1, 3, 5, 7]")
+				return errors.NewError(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "Suggest PD instances [1, 3, 5, 7]")
 			}
 		}
 
@@ -177,7 +177,7 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 		if component.Type == string(constants.ComponentIDTiFlash) {
 			pdAddress := meta.GetPDClientAddresses()
 			if len(pdAddress) <= 0 {
-				return errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+				return errors.NewError(errors.TIUNIMANAGER_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 			}
 			pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
@@ -188,11 +188,11 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 			}
 			replication := &PlacementRules{}
 			if err = json.Unmarshal([]byte(config), replication); err != nil {
-				return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+				return errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR,
 					fmt.Sprintf("parse placement rules error: %s", err.Error()), err)
 			}
 			if replication.EnablePlacementRules == "false" {
-				return errors.NewError(errors.TIEM_CHECK_PLACEMENT_RULES_ERROR,
+				return errors.NewError(errors.TIUNIMANAGER_CHECK_PLACEMENT_RULES_ERROR,
 					"enable-placement-rules is false, can not scale out TiFlash, please check it!")
 			}
 		}
@@ -203,17 +203,17 @@ func ScaleOutPreCheck(ctx context.Context, meta *ClusterMeta, computes []structs
 
 func CreateSQLLink(ctx context.Context, meta *ClusterMeta) (*sql.DB, error) {
 	if meta == nil {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "parameter is invalid")
 	}
 	address := meta.GetClusterConnectAddresses()
 	if len(address) <= 0 {
-		return nil, errors.NewError(errors.TIEM_CONNECT_TIDB_ERROR, "component TiDB not found!")
+		return nil, errors.NewError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, "component TiDB not found!")
 	}
 	rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/mysql",
 		rootUser.Name, rootUser.Password.Val, address[0].IP, address[0].Port))
 	if err != nil {
-		return nil, errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+		return nil, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
 	}
 	return db, nil
 }
@@ -228,14 +228,14 @@ func CreateSQLLink(ctx context.Context, meta *ClusterMeta) (*sql.DB, error) {
 // @Return		error
 func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *management.ClusterInstance) error {
 	if meta == nil || instance == nil {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if meta.IsComponentRequired(ctx, instance.Type) {
 		if len(meta.Instances[instance.Type]) <= 1 {
 			errMsg := fmt.Sprintf("instance %s is unique in cluster %s, can not delete it", instance.ID, meta.Cluster.ID)
 			framework.LogWithContext(ctx).Errorf(errMsg)
-			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
+			return errors.NewError(errors.TIUNIMANAGER_DELETE_INSTANCE_ERROR, errMsg)
 		}
 	}
 
@@ -243,25 +243,25 @@ func ScaleInPreCheck(ctx context.Context, meta *ClusterMeta, instance *managemen
 		if len(meta.Instances[instance.Type])-1 < meta.Cluster.Copies {
 			errMsg := "the number of remaining TiKV instances is less than the copies"
 			framework.LogWithContext(ctx).Errorf(errMsg)
-			return errors.NewError(errors.TIEM_DELETE_INSTANCE_ERROR, errMsg)
+			return errors.NewError(errors.TIUNIMANAGER_DELETE_INSTANCE_ERROR, errMsg)
 		}
 	}
 
 	if instance.Type == string(constants.ComponentIDTiFlash) {
 		db, err := CreateSQLLink(ctx, meta)
 		if err != nil {
-			return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+			return errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
 		}
 		defer db.Close()
 		var MaxReplicaCount sql.NullInt64
 		err = db.QueryRow(CheckMaxReplicaCmd).Scan(&MaxReplicaCount)
 		if err != nil {
-			return errors.WrapError(errors.TIEM_SCAN_MAX_REPLICA_COUNT_ERROR, err.Error(), err)
+			return errors.WrapError(errors.TIUNIMANAGER_SCAN_MAX_REPLICA_COUNT_ERROR, err.Error(), err)
 		}
 		if MaxReplicaCount.Valid {
 			framework.LogWithContext(ctx).Infof("TiFlash max replicas: %d", MaxReplicaCount.Int64)
 			if len(meta.Instances[string(constants.ComponentIDTiFlash)])-1 < int(MaxReplicaCount.Int64) {
-				return errors.NewError(errors.TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
+				return errors.NewError(errors.TIUNIMANAGER_CHECK_TIFLASH_MAX_REPLICAS_ERROR,
 					"the number of remaining TiFlash instances is less than the maximum copies of data tables")
 			}
 		}
@@ -279,7 +279,7 @@ func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMe
 			return err
 		}
 		if len(masters) > 0 {
-			return errors.NewErrorf(errors.TIEM_CLONE_SLAVE_ERROR,
+			return errors.NewErrorf(errors.TIUNIMANAGER_CLONE_SLAVE_ERROR,
 				"cluster %s is slave, which can not be cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
 		}
 
@@ -288,11 +288,11 @@ func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMe
 			return err
 		}
 		if !cmp {
-			return errors.NewErrorf(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+			return errors.NewErrorf(errors.TIUNIMANAGER_CHECK_CLUSTER_VERSION_ERROR,
 				"cluster %s version must be greater than or equal to v5.2.2", sourceMeta.Cluster.ID)
 		}
 		if _, ok := sourceMeta.Instances[string(constants.ComponentIDCDC)]; !ok {
-			return errors.NewErrorf(errors.TIEM_CDC_NOT_FOUND,
+			return errors.NewErrorf(errors.TIUNIMANAGER_CDC_NOT_FOUND,
 				"cluster %s not found CDC, which cloned by %s", sourceMeta.Cluster.ID, cloneStrategy)
 		}
 	}
@@ -300,7 +300,7 @@ func ClonePreCheck(ctx context.Context, sourceMeta *ClusterMeta, meta *ClusterMe
 	if len(meta.Instances[string(constants.ComponentIDTiKV)]) < meta.Cluster.Copies {
 		errMsg := "the number of TiKV instances is less than the copies"
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return errors.NewError(errors.TIEM_CLONE_TIKV_ERROR, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_CLONE_TIKV_ERROR, errMsg)
 	}
 	return nil
 }
@@ -324,12 +324,12 @@ func WaitWorkflow(ctx context.Context, workflowID string, interval, timeout time
 			return nil
 		} else if response.Info.Status == constants.WorkFlowStatusError {
 			framework.LogWithContext(ctx).Errorf("workflow %s runs failed!", workflowID)
-			return errors.NewError(errors.TIEM_WORKFLOW_DETAIL_FAILED,
+			return errors.NewError(errors.TIUNIMANAGER_WORKFLOW_DETAIL_FAILED,
 				fmt.Sprintf("wait workflow %s, which runs failed!", workflowID))
 		}
 		index -= 1
 		if index == 0 {
-			return errors.NewError(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT,
+			return errors.NewError(errors.TIUNIMANAGER_WORKFLOW_NODE_POLLING_TIME_OUT,
 				fmt.Sprintf("wait workflow %s timeout", workflowID))
 		}
 	}
@@ -354,7 +354,7 @@ func getRetainedPortRange(ctx context.Context) ([]int, error) {
 	}
 
 	if len(configResp.ConfigValue) == 0 {
-		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_CONFIG, "missing config %s", constants.ConfigKeyRetainedPortRange)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_MISSING_CONFIG, "missing config %s", constants.ConfigKeyRetainedPortRange)
 		framework.LogWithContext(ctx).Error(err)
 		return nil, err
 	}
@@ -362,7 +362,7 @@ func getRetainedPortRange(ctx context.Context) ([]int, error) {
 	portRange := make([]int, retainedPortCount)
 	err = json.Unmarshal([]byte(configResp.ConfigValue), &portRange)
 	if err != nil {
-		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_CONFIG, "invalid value for config %s, value = %s", constants.ConfigKeyRetainedPortRange, configResp.ConfigValue)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_MISSING_CONFIG, "invalid value for config %s, value = %s", constants.ConfigKeyRetainedPortRange, configResp.ConfigValue)
 		framework.LogWithContext(ctx).Error(err)
 		return nil, err
 	}

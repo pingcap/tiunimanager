@@ -41,7 +41,7 @@ func (m *ImportExportReadWrite) CreateDataTransportRecord(ctx context.Context, r
 
 func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, recordId string, status string, endTime time.Time) (err error) {
 	if "" == recordId {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "record id required")
 	}
 
 	record := &DataTransportRecord{}
@@ -57,7 +57,7 @@ func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, r
 
 func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, recordId string) (record *DataTransportRecord, err error) {
 	if "" == recordId {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "record id required")
 	}
 	record = &DataTransportRecord{}
 	err = m.DB(ctx).First(record, "id = ?", recordId).Error
@@ -91,7 +91,7 @@ func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, r
 
 func (m *ImportExportReadWrite) DeleteDataTransportRecord(ctx context.Context, recordId string) (err error) {
 	if "" == recordId {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "record id required")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "record id required")
 	}
 	record := &DataTransportRecord{}
 	return m.DB(ctx).First(record, "id = ?", recordId).Delete(record).Error

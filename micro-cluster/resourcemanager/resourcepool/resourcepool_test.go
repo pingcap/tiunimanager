@@ -204,7 +204,7 @@ func Test_DeleteHosts_InvalidHostId(t *testing.T) {
 	assert.NotNil(t, err)
 	emError, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_DELETE_HOST_ERROR, emError.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, emError.GetCode())
 }
 
 func Test_QueryHosts(t *testing.T) {

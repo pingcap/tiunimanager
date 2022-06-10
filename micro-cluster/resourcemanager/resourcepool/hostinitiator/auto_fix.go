@@ -85,7 +85,7 @@ func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, so
 		if err = p.installNumaCtl(ctx, h); err != nil {
 			errMsg := fmt.Sprintf("install numactl on host %s %s failed, %v", h.HostName, h.IP, err)
 			log.Errorln(errMsg)
-			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+			return errors.NewError(errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 		}
 	}
 
@@ -93,7 +93,7 @@ func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, so
 		if err = p.setOffSwap(ctx, h); err != nil {
 			errMsg := fmt.Sprintf("set off swap on host %s %s failed, %v", h.HostName, h.IP, err)
 			log.Errorln(errMsg)
-			return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+			return errors.NewError(errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 		}
 	}
 
@@ -107,7 +107,7 @@ func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, so
 			if err = p.remountFS(ctx, h, path, remountOpts); err != nil {
 				errMsg := fmt.Sprintf("remount host %s %s path %s adding opts [%v] failed, %v", h.HostName, h.IP, path, remountOpts, err)
 				log.Errorln(errMsg)
-				return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+				return errors.NewError(errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 			}
 		}
 	}
@@ -159,7 +159,7 @@ func (p *FileHostInitiator) remountFS(ctx context.Context, h *structs.HostInfo, 
 	if len(mountInfo) != 6 {
 		errMsg := fmt.Sprintf("get mount point %s option failed, mountInfo: %v", path, mountInfo)
 		log.Errorln(errMsg)
-		return errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 	}
 	originOpts := mountInfo[3]
 	targetOpts := fmt.Sprintf("%s,%s", originOpts, addingOpts)
@@ -182,14 +182,14 @@ func (p *FileHostInitiator) getRemountInfoFromMsg(ctx context.Context, msg strin
 	if len(msgFields) != len(exampleFields) {
 		errMsg := fmt.Sprintf("remount warning message [%s] has a different format as expected [%s]", msg, warnExample)
 		framework.LogWithContext(ctx).Errorln(errMsg)
-		return "", "", errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+		return "", "", errors.NewError(errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 	}
 	mountPoint = msgFields[2]
 	option = strings.Trim(msgFields[6], "'")
 	if option != "noatime" && option != "nodelalloc" {
 		errMsg := fmt.Sprintf("remount option %s is not expected, should be 'noatime' or 'nodelalloc'", option)
 		framework.LogWithContext(ctx).Errorln(errMsg)
-		return "", "", errors.NewError(errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, errMsg)
+		return "", "", errors.NewError(errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, errMsg)
 	}
 	return
 }

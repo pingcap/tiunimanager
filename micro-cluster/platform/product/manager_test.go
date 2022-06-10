@@ -45,7 +45,7 @@ func TestManager_QueryVendors(t *testing.T) {
 
 	t.Run("query all vendors failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllVendors(gomock.Any()).
-			Return(nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).
+			Return(nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).
 			Times(1)
 
 		_, err := NewManager().QueryVendors(context.TODO(), message.QueryVendorInfoReq{VendorIDs: []string{}})
@@ -58,7 +58,7 @@ func TestManager_QueryVendors(t *testing.T) {
 				VendorName: "aws",
 			},
 		}, nil).Times(1)
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().QueryVendors(context.TODO(), message.QueryVendorInfoReq{VendorIDs: []string{}})
 		assert.Error(t, err)
 	})
@@ -99,7 +99,7 @@ func TestManager_UpdateVendors(t *testing.T) {
 	})
 
 	t.Run("update failed", func(t *testing.T) {
-		productRW.EXPECT().SaveVendor(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().SaveVendor(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().UpdateVendors(context.TODO(), message.UpdateVendorInfoReq{
 			Vendors: vendors(),
 		})
@@ -108,7 +108,7 @@ func TestManager_UpdateVendors(t *testing.T) {
 
 	t.Run("flag failed", func(t *testing.T) {
 		productRW.EXPECT().SaveVendor(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-		systemRW.EXPECT().VendorInitialized(gomock.Any()).Return(errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+		systemRW.EXPECT().VendorInitialized(gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID)).Times(1)
 		_, err := NewManager().UpdateVendors(context.TODO(), message.UpdateVendorInfoReq{
 			Vendors: vendors(),
 		})
@@ -183,7 +183,7 @@ func TestManager_QueryAvailableVendors(t *testing.T) {
 	})
 	t.Run("query all vendors failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllVendors(gomock.Any()).
-			Return(nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).
+			Return(nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).
 			Times(1)
 
 		_, err := NewManager().QueryAvailableVendors(context.TODO(), message.QueryAvailableVendorsReq{})
@@ -196,7 +196,7 @@ func TestManager_QueryAvailableVendors(t *testing.T) {
 				VendorName: "aws",
 			},
 		}, nil).Times(1)
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().QueryAvailableVendors(context.TODO(), message.QueryAvailableVendorsReq{})
 		assert.Error(t, err)
 	})
@@ -211,7 +211,7 @@ func TestManager_QueryProducts(t *testing.T) {
 
 	t.Run("query all products failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllProducts(gomock.Any()).
-			Return(nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).
+			Return(nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).
 			Times(1)
 
 		_, err := NewManager().QueryProducts(context.TODO(), message.QueryProductsInfoReq{ProductIDs: []string{}})
@@ -224,7 +224,7 @@ func TestManager_QueryProducts(t *testing.T) {
 				ProductName: "tidb",
 			},
 		}, nil).Times(1)
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().QueryProducts(context.TODO(), message.QueryProductsInfoReq{ProductIDs: []string{}})
 		assert.Error(t, err)
 	})
@@ -255,7 +255,7 @@ func TestManager_UpdateProducts(t *testing.T) {
 	models.SetSystemReaderWriter(systemRW)
 
 	t.Run("update failed", func(t *testing.T) {
-		productRW.EXPECT().SaveProduct(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().SaveProduct(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 		_, err := NewManager().UpdateProducts(context.TODO(), message.UpdateProductsInfoReq{
 			Products: products(),
 		})
@@ -264,7 +264,7 @@ func TestManager_UpdateProducts(t *testing.T) {
 
 	t.Run("flag failed", func(t *testing.T) {
 		productRW.EXPECT().SaveProduct(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-		systemRW.EXPECT().ProductInitialized(gomock.Any()).Return(errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+		systemRW.EXPECT().ProductInitialized(gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID)).Times(1)
 		_, err := NewManager().UpdateProducts(context.TODO(), message.UpdateProductsInfoReq{
 			Products: products(),
 		})
@@ -289,7 +289,7 @@ func TestManager_QueryAvailableProducts(t *testing.T) {
 
 	t.Run("QueryProducts failed", func(t *testing.T) {
 		productRW.EXPECT().QueryAllProducts(gomock.Any()).
-			Return(nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).
+			Return(nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).
 			Times(1)
 
 		_, err := NewManager().QueryAvailableProducts(context.TODO(), message.QueryAvailableProductsReq{
@@ -305,7 +305,7 @@ func TestManager_QueryAvailableProducts(t *testing.T) {
 			},
 		}, nil).Times(1)
 		mockQueryTiDBFromDB(productRW.EXPECT())
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 
 		_, err := NewManager().QueryAvailableProducts(context.TODO(), message.QueryAvailableProductsReq{
 			VendorID: "Local",
@@ -336,7 +336,7 @@ func TestManager_QueryProductDetail(t *testing.T) {
 	productRW := mock_product.NewMockReaderWriter(ctrl)
 	models.SetProductReaderWriter(productRW)
 	t.Run("QueryProducts failed", func(t *testing.T) {
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 
 		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq{
 			VendorID:  "Local",
@@ -347,7 +347,7 @@ func TestManager_QueryProductDetail(t *testing.T) {
 	})
 	t.Run("QueryVendors failed", func(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
-		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 
 		_, err := NewManager().QueryProductDetail(context.TODO(), message.QueryProductDetailReq{
 			VendorID:  "Local",

@@ -63,7 +63,7 @@ func (auto *autoCheckHandler) Run() {
 
 	go func() {
 		framework.Log().Infof("Start to check platform")
-		ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiEM_X_TENANT_ID_KEY: DefaultTenantID})
+		ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiUniManager_X_TENANT_ID_KEY: DefaultTenantID})
 		GetCheckService().Check(ctx, message.CheckPlatformReq{})
 	}()
 }

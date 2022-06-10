@@ -40,11 +40,11 @@ import (
 // @Return		error
 func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if p.Cluster == nil {
-		return errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, "cluster is nil!")
+		return errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, "cluster is nil!")
 	}
 
 	if len(p.Instances) == 0 {

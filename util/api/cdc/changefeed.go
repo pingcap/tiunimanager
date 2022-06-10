@@ -136,21 +136,21 @@ func (service *ChangeFeedServiceImpl) CreateChangeFeedTask(ctx context.Context, 
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_MARSHAL_ERROR, "", err)
 		return
 	}
 	data := make(map[string]interface{})
 	err = json.Unmarshal(bytes, &data)
 
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, "", err)
 		return
 	}
 
 	framework.LogWithContext(ctx).Infof("create change feed task, url = %s, data = %s", url, data)
 	httpResp, err := util.PostJSON(url, data, map[string]string{})
 	if err != nil {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -226,20 +226,20 @@ func (service *ChangeFeedServiceImpl) UpdateChangeFeedTask(ctx context.Context, 
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_MARSHAL_ERROR, "", err)
 		return
 	}
 	data := make(map[string]interface{})
 	err = json.Unmarshal(bytes, &data)
 
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, "", err)
 		return
 	}
 
 	httpResp, err := util.PutJSON(url, data, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
@@ -258,7 +258,7 @@ func (service *ChangeFeedServiceImpl) PauseChangeFeedTask(ctx context.Context, r
 	url := fmt.Sprintf("http://%s%s/%s/pause", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, "", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, "", err)
 		return
 	}
 
@@ -277,7 +277,7 @@ func (service *ChangeFeedServiceImpl) ResumeChangeFeedTask(ctx context.Context, 
 	url := fmt.Sprintf("http://%s%s/%s/resume", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
 	if err != nil {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -296,7 +296,7 @@ func (service *ChangeFeedServiceImpl) DeleteChangeFeedTask(ctx context.Context, 
 	url := fmt.Sprintf("http://%s%s/%s", req.CDCAddress, CDCApiUrl, req.ChangeFeedID)
 	httpResp, err := util.Delete(url)
 	if err != nil {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -317,7 +317,7 @@ func (service *ChangeFeedServiceImpl) QueryChangeFeedTasks(ctx context.Context, 
 	httpResp, err := util.Get(url, params, map[string]string{})
 
 	if err != nil {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		return
 	}
 
@@ -334,7 +334,7 @@ func (service *ChangeFeedServiceImpl) QueryChangeFeedTasks(ctx context.Context, 
 			return
 		}
 	} else {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 	}
 	return
 }
@@ -348,7 +348,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 	httpResp, err := util.Get(url, map[string]string{}, map[string]string{})
 
 	if err != nil {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		framework.LogWithContext(ctx).Errorf("get change feed task failed, %s", err.Error())
 		return
 	}
@@ -365,7 +365,7 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 			return
 		}
 	} else {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, err.Error())
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, err.Error())
 		framework.LogWithContext(ctx).Errorf(err.Error())
 	}
 	return

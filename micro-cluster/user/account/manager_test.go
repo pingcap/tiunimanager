@@ -42,7 +42,7 @@ func TestManager_CreateUser(t *testing.T) {
 
 		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(&account.User{ID: "user01"}, nil, nil, nil)
 		ctx := &gin.Context{}
-		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
+		ctx.Set(framework.TiUniManager_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
 			Name:     "user",
 			TenantID: "tenant",
@@ -56,7 +56,7 @@ func TestManager_CreateUser(t *testing.T) {
 
 	t.Run("gen password fail", func(t *testing.T) {
 		ctx := &gin.Context{}
-		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
+		ctx.Set(framework.TiUniManager_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
 			Name:     "user",
 			TenantID: "tenant",
@@ -74,7 +74,7 @@ func TestManager_CreateUser(t *testing.T) {
 		rw.EXPECT().CreateUser(gomock.Any(), gomock.Any(),
 			gomock.Any()).Return(nil, nil, nil, fmt.Errorf("create user error"))
 		ctx := &gin.Context{}
-		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
+		ctx.Set(framework.TiUniManager_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateUser(framework.NewMicroCtxFromGinCtx(ctx), message.CreateUserReq{
 			Name:     "user",
 			TenantID: "tenant",
@@ -266,7 +266,7 @@ func TestManager_CreateTenant(t *testing.T) {
 			errors.NewError(errors.TenantNotExist, "tenant not exist"))
 		rw.EXPECT().CreateTenant(gomock.Any(), gomock.Any()).Return(&structs.TenantInfo{}, nil)
 		ctx := &gin.Context{}
-		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
+		ctx.Set(framework.TiUniManager_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateTenant(framework.NewMicroCtxFromGinCtx(ctx), message.CreateTenantReq{
 			ID:               "tenant01",
 			Name:             "tenant",
@@ -286,7 +286,7 @@ func TestManager_CreateTenant(t *testing.T) {
 
 		rw.EXPECT().GetTenant(gomock.Any(), gomock.Any()).Return(structs.TenantInfo{ID: "tenant01"}, nil)
 		ctx := &gin.Context{}
-		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
+		ctx.Set(framework.TiUniManager_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateTenant(framework.NewMicroCtxFromGinCtx(ctx), message.CreateTenantReq{
 			ID: "tenant01",
 		})
@@ -301,7 +301,7 @@ func TestManager_CreateTenant(t *testing.T) {
 			errors.NewError(errors.TenantNotExist, "tenant not exist"))
 		rw.EXPECT().CreateTenant(gomock.Any(), gomock.Any()).Return(&structs.TenantInfo{}, fmt.Errorf("create fail"))
 		ctx := &gin.Context{}
-		ctx.Set(framework.TiEM_X_USER_ID_KEY, "admin")
+		ctx.Set(framework.TiUniManager_X_USER_ID_KEY, "admin")
 		_, err := manager.CreateTenant(framework.NewMicroCtxFromGinCtx(ctx), message.CreateTenantReq{
 			ID:               "tenant01",
 			Name:             "tenant",

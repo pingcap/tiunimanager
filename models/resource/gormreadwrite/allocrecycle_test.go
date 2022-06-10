@@ -534,7 +534,7 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 	t.Log(err)
 	te, ok := err.(errors.EMError)
 	assert.Equal(t, true, ok)
-	assert.True(t, errors.TIEM_RESOURCE_ALLOCATE_ERROR.Equal(int32(te.GetCode())))
+	assert.True(t, errors.TIUNIMANAGER_RESOURCE_ALLOCATE_ERROR.Equal(int32(te.GetCode())))
 
 	batchReq.BatchRequests[0].Applicant.TakeoverOperation = true
 	rsp, err2 := GormRW.AllocResources(context.TODO(), &batchReq)
@@ -1118,13 +1118,13 @@ func Test_DeleteDisk(t *testing.T) {
 	// can not delete a inusing disk
 	err = GormRW.DeleteDisks(context.TODO(), diskIds)
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.TIEM_RESOURCE_DELETE_DISK_ERROR, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_DELETE_DISK_ERROR, err.(errors.EMError).GetCode())
 
 	disk.Status = string(constants.DiskAvailable)
 	disk.ID = diskIds[0]
 	err = GormRW.UpdateDisk(context.TODO(), disk)
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_UPDATE_DISK_ERROR, "disk status %s is not supported for update, only support set to %s by now",
+	assert.Equal(t, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UPDATE_DISK_ERROR, "disk status %s is not supported for update, only support set to %s by now",
 		disk.Status, string(constants.DiskError)).GetMsg(), err.(errors.EMError).GetMsg())
 
 	disk.Status = string(constants.DiskError)

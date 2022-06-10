@@ -62,7 +62,7 @@ func InvokeRpcMethod(
 		func() (interface{}, error) {
 			marshalError := json.Unmarshal([]byte(rpcResponse.Response), response)
 			if marshalError != nil {
-				return nil, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, marshalError.Error())
+				return nil, errors.NewError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, marshalError.Error())
 			} else {
 				return response, nil
 			}

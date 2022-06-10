@@ -180,7 +180,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 
 	if task.Status == constants.ChangeFeedStatusInitial.ToString() {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
 	}
 
 	clusterMeta, err := meta.Get(ctx, task.ClusterId)
@@ -189,7 +189,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	resp.ChangeFeedTaskInfo = parse(*task)

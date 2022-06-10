@@ -73,7 +73,7 @@ func (c FlowContext) SetData(key string, value interface{}) {
 func createFlowWork(ctx context.Context, bizId string, bizType string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
 	framework.LogWithContext(ctx).Infof("create flowwork %v for bizId %s", define, bizId)
 	if define == nil {
-		return nil, errors.NewErrorf(errors.TIEM_FLOW_NOT_FOUND, "empty workflow definition")
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_FLOW_NOT_FOUND, "empty workflow definition")
 	}
 	flowData := make(map[string]interface{})
 
@@ -144,7 +144,7 @@ func (flow *WorkFlowAggregation) destroy(ctx context.Context, reason string) {
 
 	if flow.CurrentNode != nil {
 		nodeDefine := flow.Define.TaskNodes[flow.CurrentNode.Name]
-		err := errors.NewError(errors.TIEM_TASK_CANCELED, reason)
+		err := errors.NewError(errors.TIUNIMANAGER_TASK_CANCELED, reason)
 		flow.handleTaskError(flow.CurrentNode, nodeDefine, err)
 	}
 	err := models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
@@ -197,7 +197,7 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 			framework.LogWithContext(flow.Context).Errorf(
 				"recover from workflow %s, node %s, stacktrace %s",
 				flow.Flow.Name, node.Name, string(debug.Stack()))
-			execErr = errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
+			execErr = errors.NewErrorf(errors.TIUNIMANAGER_PANIC, "%v", r)
 		}
 	}()
 
@@ -209,7 +209,7 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 	data, err := json.Marshal(flow.Context.FlowData)
 	if err != nil {
 		framework.LogWithContext(flow.Context).Errorf("json marshal flow context data failed %s", err.Error())
-		return errors.NewErrorf(errors.TIEM_MARSHAL_ERROR, "%v", err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_MARSHAL_ERROR, "%v", err)
 	}
 	flow.Flow.Context = string(data)
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
@@ -223,7 +223,7 @@ func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDe
 		if emErr, ok := err.(errors.EMError); ok {
 			return emErr
 		}
-		execErr = errors.NewErrorf(errors.TIEM_UNRECOGNIZED_ERROR, "%v", err)
+		execErr = errors.NewErrorf(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, "%v", err)
 		return
 	}
 
@@ -260,7 +260,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	}
 
 	handleError := flow.executeTask(node, nodeDefine)
-	if handleError.GetCode() != errors.TIEM_SUCCESS {
+	if handleError.GetCode() != errors.TIUNIMANAGER_SUCCESS {
 		flow.handleTaskError(node, nodeDefine, handleError)
 		return false
 	}
@@ -278,7 +278,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		for range ticker.C {
 			sequence++
 			if sequence > maxPollingSequence {
-				err := errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT)
+				err := errors.Error(errors.TIUNIMANAGER_WORKFLOW_NODE_POLLING_TIME_OUT)
 				flow.handleTaskError(node, nodeDefine, err)
 				return false
 			}
@@ -287,13 +287,13 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 			op, err := deployment.M.GetStatus(flow.Context, node.OperationID)
 			if err != nil {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
-				err := errors.NewError(errors.TIEM_TASK_FAILED, err.Error())
+				err := errors.NewError(errors.TIUNIMANAGER_TASK_FAILED, err.Error())
 				flow.handleTaskError(node, nodeDefine, err)
 				return false
 			}
 			if op.Status == deployment.Error {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
-				err := errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr)
+				err := errors.NewError(errors.TIUNIMANAGER_TASK_FAILED, op.ErrorStr)
 				flow.handleTaskError(node, nodeDefine, err)
 				return false
 			}

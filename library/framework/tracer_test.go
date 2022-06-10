@@ -61,7 +61,7 @@ func (m MyContext) Value(key interface{}) interface{} {
 func TestGetTraceIDFromContext(t *testing.T) {
 	t.Run("gin", func(t *testing.T) {
 		ginContext := &gin.Context{}
-		ginContext.Set(TiEM_X_TRACE_ID_KEY, "111")
+		ginContext.Set(TiUniManager_X_TRACE_ID_KEY, "111")
 		got := GetTraceIDFromContext(ginContext)
 		assert.Equal(t, "111", got)
 	})
@@ -84,10 +84,10 @@ func TestNewJaegerTracer(t *testing.T) {
 
 func TestNewMicroCtxFromGinCtx(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
+	ctx.Set(TiUniManager_X_TRACE_ID_KEY, "111")
 	got := NewMicroCtxFromGinCtx(ctx)
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_KEY) != "")
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_KEY) == ctx.Value(TiEM_X_TRACE_ID_KEY))
+	assert.True(t, got.Value(TiUniManager_X_TRACE_ID_KEY) != "")
+	assert.True(t, got.Value(TiUniManager_X_TRACE_ID_KEY) == ctx.Value(TiUniManager_X_TRACE_ID_KEY))
 }
 
 func Test_getParentSpanFromGinContext(t *testing.T) {
@@ -128,9 +128,9 @@ func Test_GetStringValuesFromContext(t *testing.T) {
 	traceID := "traceID"
 	userID := "userID"
 	tenantID := "tenantID"
-	c.Set(TiEM_X_TRACE_ID_KEY, traceID)
-	c.Set(TiEM_X_USER_ID_KEY, userID)
-	c.Set(TiEM_X_TENANT_ID_KEY, tenantID)
+	c.Set(TiUniManager_X_TRACE_ID_KEY, traceID)
+	c.Set(TiUniManager_X_USER_ID_KEY, userID)
+	c.Set(TiUniManager_X_TENANT_ID_KEY, tenantID)
 	assert.Equal(t, traceID, GetTraceIDFromContext(c))
 	assert.Equal(t, userID, GetUserIDFromContext(c))
 	assert.Equal(t, tenantID, GetTenantIDFromContext(c))
@@ -145,9 +145,9 @@ func Test_NewBackgroundMicroCtx(t *testing.T) {
 	traceID := "traceID"
 	userID := "userID"
 	tenantID := "tenantID"
-	c.Set(TiEM_X_TRACE_ID_KEY, traceID)
-	c.Set(TiEM_X_USER_ID_KEY, userID)
-	c.Set(TiEM_X_TENANT_ID_KEY, tenantID)
+	c.Set(TiUniManager_X_TRACE_ID_KEY, traceID)
+	c.Set(TiUniManager_X_USER_ID_KEY, userID)
+	c.Set(TiUniManager_X_TENANT_ID_KEY, tenantID)
 	assert.Equal(t, traceID, GetTraceIDFromContext(c))
 	assert.Equal(t, userID, GetUserIDFromContext(c))
 	assert.Equal(t, tenantID, GetTenantIDFromContext(c))

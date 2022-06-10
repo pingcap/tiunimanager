@@ -85,20 +85,20 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 
 	if err := mgr.exportDataPreCheck(ctx, &request); err != nil {
 		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("export data precheck failed, %s", err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("export data precheck failed, %s", err.Error()), err)
 	}
 
 	configRW := models.GetConfigReaderWriter()
 	exportPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyExportShareStoragePath)
 	if err != nil || exportPathConfig.ConfigValue == "" {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error())
-		return resp, errors.WrapError(errors.TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error()), err)
 	}
 
 	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
 	}
 
 	exportTime := time.Now()
@@ -125,7 +125,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 	recordCreate, err := rw.CreateDataTransportRecord(ctx, record)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
 	}
 	defer func() {
 		if exportErr != nil {
@@ -152,14 +152,14 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request message.
 	flowId, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowExportData)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowExportData, err.Error())
-		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
 	}
 	// Start the workflow
 	flowManager.InitContext(ctx, flowId, contextClusterMetaKey, meta)
 	flowManager.InitContext(ctx, flowId, contextDataTransportRecordKey, info)
 	if err := flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("start %s workflow failed, %s", constants.FlowExportData, err.Error())
-		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("start %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_START_FAILED, fmt.Sprintf("start %s workflow failed, %s", constants.FlowExportData, err.Error()), err)
 	}
 
 	resp.WorkFlowID = flowId
@@ -173,20 +173,20 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 
 	if err := mgr.importDataPreCheck(ctx, &request); err != nil {
 		framework.LogWithContext(ctx).Errorf("import data precheck failed, %s", err.Error())
-		return resp, errors.WrapError(errors.TIEM_PARAMETER_INVALID, fmt.Sprintf("import data precheck failed, %s", err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_PARAMETER_INVALID, fmt.Sprintf("import data precheck failed, %s", err.Error()), err)
 	}
 
 	configRW := models.GetConfigReaderWriter()
 	importPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyImportShareStoragePath)
 	if err != nil || importPathConfig.ConfigValue == "" {
 		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error())
-		return resp, errors.WrapError(errors.TIEM_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_SYSTEM_CONFIG_INVALID, fmt.Sprintf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error()), err)
 	}
 
 	meta, err := meta.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
-		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, fmt.Sprintf("load cluster meta %s failed, %s", request.ClusterID, err.Error()), err)
 	}
 
 	rw := models.GetImportExportReaderWriter()
@@ -200,13 +200,13 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 			err = os.Rename(filepath.Join(importPrefix, request.ClusterID, "temp"), importDir)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
-				return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("find import dir failed, %s", err.Error()), err)
+				return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("find import dir failed, %s", err.Error()), err)
 			}
 		} else {
 			err = os.MkdirAll(importDir, os.ModePerm)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("mkdir import dir failed, %s", err.Error())
-				return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("mkdir import dir failed, %s", err.Error()), err)
+				return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("mkdir import dir failed, %s", err.Error()), err)
 			}
 		}
 
@@ -229,7 +229,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		recordCreate, err = rw.CreateDataTransportRecord(ctx, record)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
-			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
 		}
 
 		info = &importInfo{
@@ -246,11 +246,11 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		recordGet, err := rw.GetDataTransportRecord(ctx, request.RecordId)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
-			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordId, err.Error()), err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordId, err.Error()), err)
 		}
 
 		if err := os.MkdirAll(importDir, os.ModePerm); err != nil {
-			return resp, errors.WrapError(errors.TIEM_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("make import dir %s failed, %s", importDir, err.Error()), err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_PATH_CREATE_FAILED, fmt.Sprintf("make import dir %s failed, %s", importDir, err.Error()), err)
 		}
 
 		record := &importexport.DataTransportRecord{
@@ -272,7 +272,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 		recordCreate, err = rw.CreateDataTransportRecord(ctx, record)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
-			return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_CREATE_FAILED, fmt.Sprintf("create data transport record failed, %s", err.Error()), err)
 		}
 		info = &importInfo{
 			ClusterId:   request.ClusterID,
@@ -296,14 +296,14 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request message.
 	flowId, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, workflow.BizTypeCluster, constants.FlowImportData)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowImportData, err.Error())
-		return resp, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, fmt.Sprintf("create %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
 	}
 	// Start the workflow
 	flowManager.InitContext(ctx, flowId, contextClusterMetaKey, meta)
 	flowManager.InitContext(ctx, flowId, contextDataTransportRecordKey, info)
 	if err = flowManager.Start(ctx, flowId); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowImportData, err.Error())
-		return resp, errors.WrapError(errors.TIEM_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_START_FAILED, fmt.Sprintf("async start %s workflow failed, %s", constants.FlowImportData, err.Error()), err)
 	}
 
 	resp.WorkFlowID = flowId
@@ -319,7 +319,7 @@ func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, r
 	records, total, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, request.StartTime, request.EndTime, request.Page, request.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query data transport records request %+v failed, %s", request, err.Error())
-		return resp, page, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("query data transport records failed, %s", err.Error()), err)
+		return resp, page, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("query data transport records failed, %s", err.Error()), err)
 	}
 
 	respRecords := make([]*structs.DataImportExportRecordInfo, len(records))
@@ -359,7 +359,7 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	record, err := rw.GetDataTransportRecord(ctx, request.RecordID)
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("get data transport record %s failed %s", request.RecordID, err)
-		return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordID, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_QUERY_FAILED, fmt.Sprintf("get data transport record %s failed, %s", request.RecordID, err.Error()), err)
 	}
 
 	if string(constants.StorageTypeS3) != record.StorageType {
@@ -386,7 +386,7 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	err = rw.DeleteDataTransportRecord(ctx, request.RecordID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("delete data transport record %s failed %s", request.RecordID, err.Error())
-		return resp, errors.WrapError(errors.TIEM_TRANSPORT_RECORD_DELETE_FAILED, fmt.Sprintf("delete data transport record %s failed %s", request.RecordID, err.Error()), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_TRANSPORT_RECORD_DELETE_FAILED, fmt.Sprintf("delete data transport record %s failed %s", request.RecordID, err.Error()), err)
 	}
 	framework.LogWithContext(ctx).Infof("delete transport record %+v success", record.ID)
 

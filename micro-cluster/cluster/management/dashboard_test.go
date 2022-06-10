@@ -189,7 +189,7 @@ func TestGetDashboardInfo(t *testing.T) {
 			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now().AddDate(0, -1, 0)},
 			RoleType:  string(constants.Root),
 		},
-	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
+	}, errors.Error(errors.TIUNIMANAGER_MARSHAL_ERROR)).Times(1)
 	_, err = GetDashboardInfo(context.TODO(), cluster.GetDashboardInfoReq{ClusterID: "2145635758"})
 	assert.Error(t, err)
 }

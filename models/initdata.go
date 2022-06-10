@@ -283,7 +283,7 @@ func initBySql(tx *gorm.DB, file string, module string) error {
 }
 
 // initDefaultProductsAndVendors
-// @Description: init default products and vendors data for TiEM v1.0.0-beta.12
+// @Description: init default products and vendors data for TiUniManager v1.0.0-beta.12
 // @Parameter tx
 // @return error
 func initDefaultProductsAndVendors(tx *gorm.DB) error {

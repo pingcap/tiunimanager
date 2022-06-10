@@ -238,14 +238,14 @@ func (p *ClusterMeta) GetDBUserNamePassword(ctx context.Context, roleType consta
 		if cmp, e := CompareTiDBVersion(p.Cluster.Version, "v5.2.2"); e != nil {
 			return nil, e
 		} else if !cmp {
-			return nil, errors.NewErrorf(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR, "data sync account is not supported under version %s", p.Cluster.Version)
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_CHECK_CLUSTER_VERSION_ERROR, "data sync account is not supported under version %s", p.Cluster.Version)
 		}
 	}
 	user := p.DBUsers[string(roleType)]
 	if user == nil {
 		msg := fmt.Sprintf("get %s user from cluser %s failed, empty user", roleType, p.Cluster.ID)
 		framework.LogWithContext(ctx).Errorf(msg)
-		return user, errors.NewError(errors.TIEM_USER_NOT_FOUND, msg)
+		return user, errors.NewError(errors.TIUNIMANAGER_USER_NOT_FOUND, msg)
 	}
 	return user, nil
 }
@@ -263,7 +263,7 @@ func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*mana
 			}
 		}
 	}
-	return nil, errors.NewError(errors.TIEM_INSTANCE_NOT_FOUND, "instance not found")
+	return nil, errors.NewError(errors.TIUNIMANAGER_INSTANCE_NOT_FOUND, "instance not found")
 }
 
 // IsComponentRequired

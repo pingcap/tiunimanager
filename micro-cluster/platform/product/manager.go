@@ -82,7 +82,7 @@ func validateVendorData(vendor structs.VendorConfigInfo) error {
 	for _, s := range vendor.Specs {
 		code := fmt.Sprintf("%d %d %s %s", s.CPU, s.Memory, s.DiskType, s.PurposeType)
 		if _, ok := specInfos[code]; ok {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "duplicated spec")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "duplicated spec")
 		} else {
 			specInfos[code] = 1
 		}
@@ -254,14 +254,14 @@ func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProdu
 		ProductIDs: []string{req.ProductID},
 	})
 	if err != nil || len(productResp.Products) == 0 {
-		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query products failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "query products failed", err)
 	}
 
 	vendorResp, err := p.QueryVendors(ctx, message.QueryVendorInfoReq{
 		VendorIDs: []string{req.VendorID},
 	})
 	if err != nil || len(vendorResp.Vendors) == 0 {
-		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query vendors failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "query vendors failed", err)
 	}
 
 	products := make(map[string]structs.ProductDetail)
@@ -275,7 +275,7 @@ func (p *Manager) QueryProductDetail(ctx context.Context, req message.QueryProdu
 		}
 	}
 	if region.ID != req.RegionID {
-		return resp, errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "query region failed", nil)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "query region failed", nil)
 	}
 	products[product.ProductID] = structs.ProductDetail{
 		ID:       product.ProductID,

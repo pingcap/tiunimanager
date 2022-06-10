@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 
-// Package classification TiEM API.
+// Package classification TiUniManager API.
 //
 // the purpose of this application is to provide an application
 // that is using plain go code to define an API
@@ -22,9 +22,9 @@
 // This should demonstrate all the possible comment annotations
 // that are available to turn go code into a fully compliant swagger 2.0 spec
 
-// @title TiEM API
+// @title TiUniManager API
 // @version v1
-// @description This is a sample TiEM-API server.
+// @description This is a sample TiUniManager-API server.
 // @BasePath /api/v1
 
 // swagger:meta

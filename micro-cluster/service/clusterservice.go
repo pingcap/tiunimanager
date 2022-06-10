@@ -61,7 +61,7 @@ import (
 	"github.com/pingcap-inc/tiunimanager/library/framework"
 )
 
-var TiEMClusterServiceName = "go.micro.tiunimanager.cluster"
+var TiUniManagerClusterServiceName = "go.micro.tiunimanager.cluster"
 
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager
@@ -88,12 +88,12 @@ func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *c
 		result, err := rbac.GetRBACService().CheckPermissionForUser(ctx, message.CheckPermissionForUserReq{UserID: framework.GetUserIDFromContext(ctx), Permissions: permissions})
 		if err != nil {
 			errMsg := fmt.Sprintf("check permission for user %s error, permission %+v, err = %s", framework.GetUserIDFromContext(ctx), permissions, err.Error())
-			handleResponse(ctx, resp, errors.NewError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
+			handleResponse(ctx, resp, errors.NewError(errors.TIUNIMANAGER_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
 			return false
 		}
 		if !result.Result {
 			errMsg := fmt.Sprintf("check permission for user %s has no permisson %+v", framework.GetUserIDFromContext(ctx), permissions)
-			handleResponse(ctx, resp, errors.NewError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
+			handleResponse(ctx, resp, errors.NewError(errors.TIUNIMANAGER_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
 			return false
 		}
 	}
@@ -102,7 +102,7 @@ func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *c
 
 	if err != nil {
 		errMsg := fmt.Sprintf("unmarshal request failed, err = %s", err.Error())
-		handleResponse(ctx, resp, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
+		handleResponse(ctx, resp, errors.NewError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, errMsg), nil, nil)
 		return false
 	} else {
 		if pc, _, _, ok := runtime.Caller(1); ok {
@@ -126,13 +126,13 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
 			// deal with err uniformly later
-			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "marshal response data failed", getDataError)
+			err = errors.WrapError(errors.TIUNIMANAGER_MARSHAL_ERROR, "marshal response data failed", getDataError)
 		} else {
 			if pc, _, _, ok := runtime.Caller(1); ok {
 				desensitizeLog(ctx, runtime.FuncForPC(pc).Name(), "end", responseData)
 			}
 			// handle data and page
-			resp.Code = int32(errors.TIEM_SUCCESS)
+			resp.Code = int32(errors.TIUNIMANAGER_SUCCESS)
 			resp.Response = string(data)
 			if page != nil {
 				resp.Page = page
@@ -148,7 +148,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 			resp.Message = finalError.Error()
 			return
 		} else {
-			resp.Code = int32(errors.TIEM_UNRECOGNIZED_ERROR)
+			resp.Code = int32(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR)
 			resp.Message = err.Error()
 		}
 
@@ -164,7 +164,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 func handlePanic(ctx context.Context, funcName string, resp *clusterservices.RpcResponse) {
 	if r := recover(); r != nil {
 		framework.LogWithContext(ctx).Errorf("recover from %s, stacktrace %s", funcName, string(debug.Stack()))
-		resp.Code = int32(errors.TIEM_PANIC)
+		resp.Code = int32(errors.TIUNIMANAGER_PANIC)
 		resp.Message = fmt.Sprintf("%v", r)
 	}
 }

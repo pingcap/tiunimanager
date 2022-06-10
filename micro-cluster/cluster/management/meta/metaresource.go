@@ -41,7 +41,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 
 	_, _, components, err := models.GetProductReaderWriter().GetProduct(ctx, p.Cluster.Type)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "get product failed", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "get product failed", err)
 		return nil, nil, err
 	}
 
@@ -58,7 +58,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			continue
 		}
 		if c, ok := componentsMap[instance.Type]; !ok {
-			return nil, nil, errors.NewError(errors.TIEM_UNSUPPORT_PRODUCT, "")
+			return nil, nil, errors.NewError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "")
 		} else {
 			componentInfo = *c
 		}

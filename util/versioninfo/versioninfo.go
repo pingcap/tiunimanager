@@ -23,9 +23,9 @@ const (
 
 // Version information.
 var (
-	TiEMReleaseVersion = "Non"
-	TiEMBuildTS   = "None"
-	TiEMGitHash   = "None"
-	TiEMGitBranch = "None"
-	TiEMEdition   = EnterpriseEdition
+	TiUniManagerReleaseVersion = "Non"
+	TiUniManagerBuildTS   = "None"
+	TiUniManagerGitHash   = "None"
+	TiUniManagerGitBranch = "None"
+	TiUniManagerEdition   = EnterpriseEdition
 )

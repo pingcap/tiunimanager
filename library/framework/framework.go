@@ -80,7 +80,7 @@ func Log() *log.Entry {
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
+	return GetRootLogger().defaultLogEntry.WithField(TiUniManager_X_TRACE_ID_KEY, id)
 }
 
 func LogForkFile(fileName string) *log.Entry {
@@ -366,7 +366,7 @@ func GetPublicKeyFilePath(userName string) (keyPath string) {
 	return
 }
 
-func GetTiupHomePathForTiem() string {
+func GetTiupHomePathForEm() string {
 	userName := GetCurrentDeployUser()
 	return fmt.Sprintf("/home/%s/.em", userName)
 }
@@ -400,7 +400,7 @@ func (b *BaseFramework) Log() *log.Entry {
 
 func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.Log().WithField(TiEM_X_TRACE_ID_KEY, id)
+	return b.Log().WithField(TiUniManager_X_TRACE_ID_KEY, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {

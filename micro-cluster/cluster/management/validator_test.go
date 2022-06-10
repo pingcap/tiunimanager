@@ -35,21 +35,21 @@ func Test_validateCreating(t *testing.T) {
 	models.SetProductReaderWriter(productRW)
 
 	t.Run("product error", func(t *testing.T) {
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_PARAMETER_INVALID))
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID))
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
 	})
 
 	t.Run("unsupported product", func(t *testing.T) {
-		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT)).Times(1)
+		productRW.EXPECT().GetProduct(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT)).Times(1)
 		err := validateCreating(context.TODO(), &cluster.CreateClusterReq{
 			CreateClusterParameter: structs.CreateClusterParameter{
 				Type: "TiDB",
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
 	})
 
 	t.Run("unsupported version", func(t *testing.T) {
@@ -61,7 +61,7 @@ func Test_validateCreating(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
 	})
 	t.Run("unsupported arch", func(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
@@ -74,7 +74,7 @@ func Test_validateCreating(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, err.(errors.EMError).GetCode())
 	})
 	t.Run("max instance", func(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
@@ -91,7 +91,7 @@ func Test_validateCreating(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
 	})
 	t.Run("min instance", func(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
@@ -108,7 +108,7 @@ func Test_validateCreating(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
 	})
 	t.Run("TiKV and copies", func(t *testing.T) {
 		mockQueryTiDBFromDB(productRW.EXPECT())
@@ -128,7 +128,7 @@ func Test_validateCreating(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
 		assert.Contains(t, err.Error(), "is less than copies ")
 	})
 	t.Run("suggested count", func(t *testing.T) {
@@ -149,7 +149,7 @@ func Test_validateCreating(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_INVALID_TOPOLOGY, err.(errors.EMError).GetCode())
 		assert.Contains(t, err.Error(), "total number of PD should be in ")
 	})
 	t.Run("OK", func(t *testing.T) {

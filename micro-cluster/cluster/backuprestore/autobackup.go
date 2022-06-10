@@ -89,7 +89,7 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 		return
 	}
 
-	ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiEM_X_TENANT_ID_KEY: meta.Cluster.TenantId})
+	ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiUniManager_X_TENANT_ID_KEY: meta.Cluster.TenantId})
 	_, err = GetBRService().BackupCluster(ctx, cluster.BackupClusterDataReq{
 		ClusterID:  strategy.ClusterID,
 		BackupMode: string(constants.BackupModeAuto),

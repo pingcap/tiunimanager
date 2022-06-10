@@ -37,16 +37,16 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 	resp := message.LoginResp{}
 	user, err := models.GetAccountReaderWriter().GetUserByName(ctx, request.Name)
 	if err != nil {
-		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
+		return resp, errors.NewError(errors.TIUNIMANAGER_LOGIN_FAILED, "incorrect username or password")
 	}
 
 	loginSuccess, err := user.CheckPassword(string(request.Password))
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_LOGIN_FAILED, "incorrect username or password", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_LOGIN_FAILED, "incorrect username or password", err)
 	}
 
 	if !loginSuccess {
-		return resp, errors.NewError(errors.TIEM_LOGIN_FAILED, "incorrect username or password")
+		return resp, errors.NewError(errors.TIUNIMANAGER_LOGIN_FAILED, "incorrect username or password")
 	}
 
 	// check password update time
@@ -57,7 +57,7 @@ func (p *Manager) Login(ctx context.Context, request message.LoginReq) (message.
 	expirationTime := time.Now().Add(constants.DefaultTokenValidPeriod)
 	_, err = models.GetTokenReaderWriter().CreateToken(ctx, tokenString, user.ID, user.DefaultTenantID, expirationTime)
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_UNRECOGNIZED_ERROR, "login failed", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, "login failed", err)
 	}
 
 	resp.TokenString = structs.SensitiveText(tokenString)
@@ -71,7 +71,7 @@ func (p *Manager) Logout(ctx context.Context, req message.LogoutReq) (message.Lo
 	resp := message.LogoutResp{UserID: ""}
 	token, err := models.GetTokenReaderWriter().GetToken(ctx, string(req.TokenString))
 	if err != nil {
-		return resp, errors.NewError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized")
+		return resp, errors.NewError(errors.TIUNIMANAGER_UNAUTHORIZED_USER, "unauthorized")
 	}
 
 	if !token.IsValid() {
@@ -88,22 +88,22 @@ func (p *Manager) Accessible(ctx context.Context, request message.AccessibleReq)
 	resp := message.AccessibleResp{}
 	token, err := models.GetTokenReaderWriter().GetToken(ctx, string(request.TokenString))
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_UNAUTHORIZED_USER, "unauthorized", err)
 	}
 
 	if !token.IsValid() {
-		return resp, errors.Error(errors.TIEM_ACCESS_TOKEN_EXPIRED)
+		return resp, errors.Error(errors.TIUNIMANAGER_ACCESS_TOKEN_EXPIRED)
 	}
 
 	if request.CheckPassword {
 		user, err := models.GetAccountReaderWriter().GetUserByID(ctx, token.UserID)
 		if err != nil {
-			return resp, errors.WrapError(errors.TIEM_UNAUTHORIZED_USER, "unauthorized", err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_UNAUTHORIZED_USER, "unauthorized", err)
 		}
 
 		passwordExpired, err := user.FinalHash.CheckUpdateTimeExpired()
 		if err != nil || passwordExpired {
-			return resp, errors.WrapError(errors.TIEM_USER_PASSWORD_EXPIRED, "password expired", err)
+			return resp, errors.WrapError(errors.TIUNIMANAGER_USER_PASSWORD_EXPIRED, "password expired", err)
 		}
 	}
 

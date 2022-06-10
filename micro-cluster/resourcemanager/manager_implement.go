@@ -64,7 +64,7 @@ func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostI
 	if !ok {
 		errMsg := "a import/delete hosts workflow is running, please retry later"
 		framework.LogWithContext(ctx).Errorln(errMsg)
-		return nil, nil, errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
+		return nil, nil, errors.NewError(errors.TIUNIMANAGER_TASK_CONFLICT, errMsg)
 	}
 	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts, condition)
 	if err != nil {
@@ -94,7 +94,7 @@ func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string, for
 	if !ok {
 		errMsg := "a import/delete hosts workflow is running, please retry later"
 		framework.LogWithContext(ctx).Errorln(errMsg)
-		return nil, errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_TASK_CONFLICT, errMsg)
 	}
 	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds, force)
 	if err != nil {

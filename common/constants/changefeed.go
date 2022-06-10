@@ -63,7 +63,7 @@ func ConvertChangeFeedStatus(s string) (status ChangeFeedStatus, err error) {
 	if IsValidChangeFeedStatus(s) {
 		return ChangeFeedStatus(s), nil
 	} else {
-		return ChangeFeedStatusUnknown, errors.NewError(errors.TIEM_PARAMETER_INVALID, "unexpected change feed status")
+		return ChangeFeedStatusUnknown, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "unexpected change feed status")
 	}
 }
 

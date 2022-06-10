@@ -100,9 +100,9 @@ func (c *FlowContext) InitFlowContext() *FlowContext {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.Context = framework.NewMicroContextWithKeyValuePairs(c.Context, map[string]string{
-		framework.TiEM_X_TRACE_ID_KEY:  c.FlowData[framework.TiEM_X_TRACE_ID_KEY],
-		framework.TiEM_X_USER_ID_KEY:   c.FlowData[framework.TiEM_X_USER_ID_KEY],
-		framework.TiEM_X_TENANT_ID_KEY: c.FlowData[framework.TiEM_X_TENANT_ID_KEY],
+		framework.TiUniManager_X_TRACE_ID_KEY:  c.FlowData[framework.TiUniManager_X_TRACE_ID_KEY],
+		framework.TiUniManager_X_USER_ID_KEY:   c.FlowData[framework.TiUniManager_X_USER_ID_KEY],
+		framework.TiUniManager_X_TENANT_ID_KEY: c.FlowData[framework.TiUniManager_X_TENANT_ID_KEY],
 	})
 	return c
 }
@@ -237,7 +237,7 @@ func (flow *WorkFlowMeta) Execute() {
 	defer func() {
 		if r := recover(); r != nil {
 			framework.LogWithContext(flow.Context).Errorf("recover from workflow %s, node %s, stacktrace %s", flow.Flow.Name, flow.CurrentNode.Name, string(debug.Stack()))
-			execErr := errors.NewErrorf(errors.TIEM_PANIC, "%v", r)
+			execErr := errors.NewErrorf(errors.TIUNIMANAGER_PANIC, "%v", r)
 			if flow.CurrentNode != nil {
 				flow.CurrentNode.Fail(execErr)
 				handleWorkFlowNodeMetrics(flow, flow.CurrentNode)
@@ -307,7 +307,7 @@ func (flow *WorkFlowMeta) Execute() {
 		for range ticker.C {
 			sequence++
 			if sequence > maxPollingSequence {
-				node.Fail(errors.Error(errors.TIEM_WORKFLOW_NODE_POLLING_TIME_OUT))
+				node.Fail(errors.Error(errors.TIUNIMANAGER_WORKFLOW_NODE_POLLING_TIME_OUT))
 				handleWorkFlowNodeMetrics(flow, node)
 				flow.CheckNeedPause()
 				flow.Restore()
@@ -318,7 +318,7 @@ func (flow *WorkFlowMeta) Execute() {
 			op, err := deployment.M.GetStatus(flow.Context, node.OperationID)
 			if err != nil {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, failed %s", node.OperationID, err.Error())
-				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, err.Error()))
+				node.Fail(errors.NewError(errors.TIUNIMANAGER_TASK_FAILED, err.Error()))
 				handleWorkFlowNodeMetrics(flow, node)
 				flow.CheckNeedPause()
 				flow.Restore()
@@ -326,7 +326,7 @@ func (flow *WorkFlowMeta) Execute() {
 			}
 			if op.Status == deployment.Error {
 				framework.LogWithContext(flow.Context).Errorf("call deployment GetStatus %s, response error %s", node.OperationID, op.ErrorStr)
-				node.Fail(errors.NewError(errors.TIEM_TASK_FAILED, op.ErrorStr))
+				node.Fail(errors.NewError(errors.TIUNIMANAGER_TASK_FAILED, op.ErrorStr))
 				handleWorkFlowNodeMetrics(flow, node)
 				flow.CheckNeedPause()
 				flow.Restore()

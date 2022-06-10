@@ -507,7 +507,7 @@ func Test_getRetainedPortRange(t *testing.T) {
 		assert.Equal(t, []int{10, 11}, portRange)
 	})
 	t.Run("error", func(t *testing.T) {
-		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIUNIMANAGER_SYSTEM_MISSING_CONFIG)).Times(1)
 		_, err := getRetainedPortRange(context.TODO())
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "missing system config")

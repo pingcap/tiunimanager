@@ -848,7 +848,7 @@ func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
 			funcName, wfGetOldMasterClusterId(ctx), err)
-		errToRet = emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		errToRet = emerr.NewErrorf(emerr.TIUNIMANAGER_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", wfGetOldMasterClusterId(ctx), err.Error())
 	} else {
 		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldMasterPreviousMaintenanceStatus(ctx))
@@ -863,7 +863,7 @@ func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
 			funcName, wfGetOldSlaveClusterId(ctx), err)
-		errToRet = emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		errToRet = emerr.NewErrorf(emerr.TIUNIMANAGER_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", wfGetOldSlaveClusterId(ctx), err.Error())
 	} else {
 		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldSlavePreviousMaintenanceStatus(ctx))

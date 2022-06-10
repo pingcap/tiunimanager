@@ -82,7 +82,7 @@ func (h Host) IsLoadless() bool {
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
 	if err == nil {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		h.ID = uuidutil.GenerateID()
@@ -97,7 +97,7 @@ func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
 		h.Disks[i].HostID = h.ID
 		err = tx.Create(&(h.Disks[i])).Error
 		if err != nil {
-			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", h.Disks[i].Name, h.HostName, h.IP, err)
+			return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", h.Disks[i].Name, h.HostName, h.IP, err)
 		}
 	}
 	return nil
@@ -107,11 +107,11 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("ID = ?", h.ID).First(h).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
+			return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
 		}
 	} else {
 		if h.IsInused() {
-			return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
+			return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
 		}
 	}
 
@@ -142,13 +142,13 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 
 func (h *Host) BeforeUpdate(tx *gorm.DB) (err error) {
 	if tx.Statement.Changed("IP") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update ip on host %s is not allowed", h.ID)
 	}
 	if tx.Statement.Changed("DiskType", "Arch", "ClusterType", "Stat") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type or arch type or cluster type or load stat on host %s is not allowed", h.ID)
 	}
 	if tx.Statement.Changed("Vendor", "Region", "AZ", "Rack") {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update vendor/region/zone/rack info on host %s is not allowed", h.ID)
 	}
 	return
 }
@@ -396,13 +396,13 @@ func (h *Host) prepareForUpdateLocation(vendor, region, zone, rack string, updat
 
 func (h *Host) prepareForUpdateType(arch, diskType, clusterType string, updates map[string]interface{}) (err error) {
 	if arch != "" && arch != h.Arch {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update arch on host %s is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update arch on host %s is not allowed", h.ID)
 	}
 	if diskType != "" && diskType != h.DiskType {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type on host %s is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update disk type on host %s is not allowed", h.ID)
 	}
 	if clusterType != "" && clusterType != h.ClusterType {
-		return em_errors.NewErrorf(em_errors.TIEM_RESOURCE_UPDATE_HOSTINFO_ERROR, "update cluster type on host %s is not allowed", h.ID)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_RESOURCE_UPDATE_HOSTINFO_ERROR, "update cluster type on host %s is not allowed", h.ID)
 	}
 	return nil
 }

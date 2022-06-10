@@ -399,7 +399,7 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	var emERR errors.EMError
 	emERR, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
 }
 
 func Test_LeaveEMCluster_Normal(t *testing.T) {

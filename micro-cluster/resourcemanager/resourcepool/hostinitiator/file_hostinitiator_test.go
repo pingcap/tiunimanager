@@ -85,7 +85,7 @@ func Test_AuthHost(t *testing.T) {
 	if err != nil {
 		emErr, ok := err.(errors.EMError)
 		assert.True(t, ok)
-		assert.Equal(t, errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
 	}
 }
 
@@ -153,7 +153,7 @@ func Test_Verify_Warings(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
 }
 
 func Test_Prepare_NoError(t *testing.T) {
@@ -195,7 +195,7 @@ func Test_Prepare_ConnectError(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 }
 
 func Test_SetOffSwap(t *testing.T) {
@@ -343,7 +343,7 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 
 	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.999"}})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.TIEM_RESOURCE_BAD_INSTANCE_EXIST, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_BAD_INSTANCE_EXIST, err.(errors.EMError).GetCode())
 }
 
 func Test_JoinEMCluster(t *testing.T) {
@@ -469,14 +469,14 @@ func Test_GetRemountInfoFromMsg(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 
 	message4 := "mount point /data does not have 'cached', auto fixing not supported"
 	_, _, err = fileInitiator.getRemountInfoFromMsg(context.TODO(), message4)
 	assert.NotNil(t, err)
 	emErr, ok = err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 }
 
 func Test_AddRemountOpts(t *testing.T) {
@@ -580,7 +580,7 @@ func Test_skipAuthHost_Skip(t *testing.T) {
 		if authenticate.AuthenticatedUser == "root" && authenticate.AuthenticateContent == framework.GetPrivateKeyFilePath("root") {
 			return "", nil
 		}
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host")
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host")
 	}).Times(2)
 
 	fileInitiator := NewFileHostInitiator()
@@ -602,7 +602,7 @@ func Test_skipAuthHost_NotSkip(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host"))
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host"))
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -636,7 +636,7 @@ func Test_extraVMManufacturerCheck(t *testing.T) {
 	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
 	assert.False(t, isVM)
 
-	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "Bad Request"))
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "Bad Request"))
 	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
 	assert.False(t, isVM)
 

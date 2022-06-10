@@ -92,7 +92,7 @@ func ValidProductID(p string) error {
 	if p == string(EMProductIDTiDB) || p == string(EMProductIDDataMigration) || p == string(EMProductIDEnterpriseManager) {
 		return nil
 	}
-	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+	return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
 }
 
 type ProvidedVendor string
@@ -107,7 +107,7 @@ func ValidProvidedVendor(p string) error {
 	if p == string(Local) || p == string(AWS) {
 		return nil
 	}
-	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
+	return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
 }
 
 type EMProductComponentIDType string

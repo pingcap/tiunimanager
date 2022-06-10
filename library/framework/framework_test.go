@@ -42,10 +42,10 @@ func TestLog(t *testing.T) {
 
 func TestBaseFramework_GetLoggerWithContext(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
+	ctx.Set(TiUniManager_X_TRACE_ID_KEY, "111")
 
 	got := LogWithContext(ctx)
-	assert.Equal(t, "111", got.Data[TiEM_X_TRACE_ID_KEY])
+	assert.Equal(t, "111", got.Data[TiUniManager_X_TRACE_ID_KEY])
 }
 
 func TestBaseFramework_loadCert(t *testing.T) {

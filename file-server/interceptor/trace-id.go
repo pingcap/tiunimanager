@@ -22,15 +22,15 @@ import (
 	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
 )
 
-// Tiem-X-Trace-ID
+// Em-X-Trace-ID
 func GinTraceIDHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.GetHeader(framework.TiEM_X_TRACE_ID_KEY)
+		id := c.GetHeader(framework.TiUniManager_X_TRACE_ID_KEY)
 		if len(id) <= 0 {
 			id = uuidutil.GenerateID()
 		}
-		c.Set(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Header(framework.TiEM_X_TRACE_ID_KEY, id)
+		c.Set(framework.TiUniManager_X_TRACE_ID_KEY, id)
+		c.Header(framework.TiUniManager_X_TRACE_ID_KEY, id)
 		c.Next()
 	}
 }

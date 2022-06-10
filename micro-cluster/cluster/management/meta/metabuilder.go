@@ -76,7 +76,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 			return nil, err
 		}
 		if !cmp {
-			return nil, errors.NewError(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+			return nil, errors.NewError(errors.TIUNIMANAGER_CHECK_CLUSTER_VERSION_ERROR,
 				"the specified cluster version is less than source cluster version")
 		}
 		meta.Cluster.Version = parameter.Version
@@ -230,7 +230,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 // @return error
 func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.Specification) error {
 	if specs == nil {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "cannot parse empty specification")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "cannot parse empty specification")
 	}
 	instances := make([]*management.ClusterInstance, 0)
 	if len(specs.PDServers) > 0 {

@@ -64,7 +64,7 @@ func TestSystemManager_GetSystemInfo(t *testing.T) {
 		Desc: "v2",
 		ReleaseNote: "this is v2",
 	}, nil).AnyTimes()
-	systemRW.EXPECT().GetVersion(gomock.Any(), "v3").Return(nil, errors.Error(errors.TIEM_SYSTEM_INVALID_VERSION)).AnyTimes()
+	systemRW.EXPECT().GetVersion(gomock.Any(), "v3").Return(nil, errors.Error(errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION)).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(&system.SystemInfo{
@@ -88,7 +88,7 @@ func TestSystemManager_GetSystemInfo(t *testing.T) {
 		assert.Equal(t, "v1", got.LastVersion.VersionID)
 	})
 	t.Run("error", func(t *testing.T) {
-		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(nil, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
+		systemRW.EXPECT().GetSystemInfo(gomock.Any()).Return(nil, errors.Error(errors.TIUNIMANAGER_SYSTEM_MISSING_CONFIG)).Times(1)
 		_, err := GetSystemManager().GetSystemInfo(context.TODO(), message.GetSystemInfoReq{WithVersionDetail: true})
 		assert.Error(t, err)
 	})

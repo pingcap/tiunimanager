@@ -140,7 +140,7 @@ func Open(fw *framework.BaseFramework) error {
 // @return error
 func IncrementVersionData(originalVersion string, targetVersion string) error {
 	if len(targetVersion) == 0 {
-		return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "invalid version %s", targetVersion)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION, "invalid version %s", targetVersion)
 	}
 
 	if originalVersion == targetVersion {
@@ -150,7 +150,7 @@ func IncrementVersionData(originalVersion string, targetVersion string) error {
 	for i, eachVersion := range allVersionInitializers {
 		// match target version before originalVersion, return err
 		if originalVersionIndex == -1 && targetVersion == eachVersion.VersionID {
-			return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "unable to upgrade version from %s to %s", originalVersion, targetVersion)
+			return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION, "unable to upgrade version from %s to %s", originalVersion, targetVersion)
 		}
 		if originalVersionIndex == -1 && originalVersion == eachVersion.VersionID {
 			originalVersionIndex = i

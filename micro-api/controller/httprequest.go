@@ -146,14 +146,14 @@ func HandleRequest(c *gin.Context,
 		BreakIf(func() error {
 			return errors.OfNullable(builder(c, req)).
 				Map(func(err error) error {
-					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
+					return errors.NewError(errors.TIUNIMANAGER_MARSHAL_ERROR, err.Error())
 				}).
 				Present()
 		}).
 		BreakIf(func() error {
 			return errors.OfNullable(validator(req)).
 				Map(func(err error) error {
-					return errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+					return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 				}).
 				Present()
 		}).
@@ -161,7 +161,7 @@ func HandleRequest(c *gin.Context,
 			bytes, err := serializer(req)
 			return errors.OfNullable(err).
 				Map(func(err error) error {
-					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
+					return errors.NewError(errors.TIUNIMANAGER_MARSHAL_ERROR, err.Error())
 				}).
 				Else(func() {
 					requestContent = string(bytes)

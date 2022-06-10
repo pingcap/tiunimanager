@@ -103,7 +103,7 @@ func Test_GetTraitByName(t *testing.T) {
 		{"EM", string(constants.EMProductIDEnterpriseManager), want{trait: 0x0000000000000004, err: nil}},
 		{"Schedule", string(constants.PurposeSchedule), want{trait: 0x0000000000000020, err: nil}},
 		{"SSD", string(constants.SSD), want{trait: 0x0000000000000080, err: nil}},
-		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewErrorf(errors.TIEM_RESOURCE_TRAIT_NOT_FOUND,
+		{"ERROR", "InvalidName", want{trait: 0, err: errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_TRAIT_NOT_FOUND,
 			"label type %v not found in system default labels", "InvalidName")}},
 	}
 	for _, tt := range tests {
@@ -112,7 +112,7 @@ func Test_GetTraitByName(t *testing.T) {
 			if err == nil {
 				assert.Equal(t, tt.want.trait, trait)
 			} else {
-				assert.Equal(t, err.(errors.EMError).GetCode(), errors.TIEM_RESOURCE_TRAIT_NOT_FOUND)
+				assert.Equal(t, err.(errors.EMError).GetCode(), errors.TIUNIMANAGER_RESOURCE_TRAIT_NOT_FOUND)
 			}
 
 		})
@@ -319,31 +319,31 @@ func Test_ValidateDisk(t *testing.T) {
 		{"normal_without_type", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Status: string(constants.DiskAvailable)}, want{nil}},
 		{"normal_without_status", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity}, want{nil}},
 		{"no_name", fakeHostId, constants.NVMeSSD, DiskInfo{Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 				fakeHostId, "", diskPath, capacity),
 		}},
 		{"no_path", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Capacity: capacity, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 				fakeHostId, diskName, "", capacity),
 		}},
 		{"no_capacity", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 				fakeHostId, diskName, diskPath, 0),
 		}},
 		{"hostId_mismatch", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, HostId: "fake-host2", Type: string(constants.NVMeSSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
 				diskName, diskPath, "fake-host2", fakeHostId),
 		}},
 		{"diskType_mismatch", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.SSD), Status: string(constants.DiskAvailable)}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
 				diskName, diskPath, fakeHostId, string(constants.SSD), string(constants.NVMeSSD)),
 		}},
 		{"status_invalid", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: string(constants.NVMeSSD), Status: "bad_status"}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
 				diskName, diskPath, fakeHostId, "bad_status"),
 		}},
 		{"type_invalid", fakeHostId, constants.NVMeSSD, DiskInfo{Name: diskName, Path: diskPath, Capacity: capacity, Type: "bad_disk_type"}, want{
-			errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v",
+			errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v",
 				diskName, diskPath, fakeHostId, constants.ValidDiskType("bad_disk_type")),
 		}},
 	}

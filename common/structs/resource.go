@@ -148,28 +148,28 @@ func GenSpecCode(cpuCores int32, mem int32) string {
 func (d *DiskInfo) ValidateDisk(hostId string, hostDiskType string) (err error) {
 	// disk name, disk path, disk capacity is required
 	if d.Name == "" || d.Path == "" || d.Capacity <= 0 {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 			hostId, d.Name, d.Path, d.Capacity)
 	}
 	// disk's host id is optional, if specified, should be equal to the existed host id
 	if d.HostId != "" {
 		if hostId != "" && d.HostId != hostId {
-			return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s failed, host id conflict %s vs %s",
 				d.Name, d.Path, d.HostId, hostId)
 		}
 	}
 
 	if d.Status != "" && !constants.DiskStatus(d.Status).IsValidStatus() {
-		return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
+		return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s specified a invalid status %s, [Available|Reserved]",
 			d.Name, d.Path, hostId, d.Status)
 	}
 
 	if d.Type != "" {
 		if err = constants.ValidDiskType(d.Type); err != nil {
-			return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v", d.Name, d.Path, hostId, err)
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, %v", d.Name, d.Path, hostId, err)
 		}
 		if hostDiskType != "" && d.Type != hostDiskType {
-			return errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
+			return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk %s %s for host %s failed, disk type conflict %s vs %s",
 				d.Name, d.Path, hostId, d.Type, hostDiskType)
 		}
 	}

@@ -1,10 +1,10 @@
-# TiEM backup and restore design doc
+# TiUniManager backup and restore design doc
 
 - Author(s): [cchenkey](http://github.com/cchenkey)
 
 ## table of Contents
 
-- [TiEM backup and restore design doc](#TiEM-backup-and-restore-design-doc)
+- [TiUniManager backup and restore design doc](#TiUniManager-backup-and-restore-design-doc)
   - [table of Contents](#table-f-Contents)
   - [backup and restore API](#backup-and-restore-API)
   - [design](#design)

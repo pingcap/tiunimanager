@@ -1,10 +1,10 @@
-# TiEM clone cluster design doc
+# TiUniManager clone cluster design doc
 
 - Author(s): [YaozhengWang](https://github.com/YaozhengWang)
 
 ## table of Contents
 
-- [TiEM clone cluster design doc](#TiEM-clone-cluster-design-doc)
+- [TiUniManager clone cluster design doc](#TiUniManager-clone-cluster-design-doc)
     - [table of Contents](#table-f-Contents)
     - [clone cluster API](#clone-cluster-API)
     - [design](#design)

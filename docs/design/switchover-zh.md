@@ -1,6 +1,6 @@
 # 背景
 
-为满足用户的容灾需求，TiEM 需要备支持 TiDB 集群主备切换的功能，要求尽可能减少甚至在某些情况下能完全杜绝数据丢失。
+为满足用户的容灾需求，TiUniManager 需要备支持 TiDB 集群主备切换的功能，要求尽可能减少甚至在某些情况下能完全杜绝数据丢失。
 
 # 概览
 
@@ -101,7 +101,7 @@ curl -vX 'POST' \
 
 
 
-因为当前 TiEM 中的 WorkFlow 组件不支持分支执行，故将之拆分为三个基本流程，在收到主备切换指令时根据具体输入参数和当前各主备集群健康状态进行 Switch：
+因为当前 TiUniManager 中的 WorkFlow 组件不支持分支执行，故将之拆分为三个基本流程，在收到主备切换指令时根据具体输入参数和当前各主备集群健康状态进行 Switch：
 
 * WorkFlowMasterSlaveSwitchoverNormal
 
@@ -184,7 +184,7 @@ end
 
 #### swapMasterSlaveRelationInDB
 
-更新 TiEM 数据库中的集群主备关系。
+更新 TiUniManager 数据库中的集群主备关系。
 
 #### end
 
@@ -284,7 +284,7 @@ rollback 节点详细执行过程：
 4. resume old CDC tasks on A
 5. create previous deleted CDC tasks on A
 6. set cluster A writeable
-7. reset master-slave relations in TiEM DB
+7. reset master-slave relations in TiUniManager DB
 8. endMaintenance of cluster A B C
 ```
 
@@ -313,7 +313,7 @@ curl -vX 'POST' \
 
 这一部分比较简单，没有涉及到工作流。在 onlyCheck 为真的情况下，在进行完预检查之后就会立即返回，并不会执行实际的主备切换逻辑。
 
-除了可以进行主集群是否可写、备集群是否只读的预检查之外，默认还进行了 targetCluster 是否包含 CDC 组件和 TiEM DB 中主备关系条目是否合法的预检查。
+除了可以进行主集群是否可写、备集群是否只读的预检查之外，默认还进行了 targetCluster 是否包含 CDC 组件和 TiUniManager DB 中主备关系条目是否合法的预检查。
 
 # FT 设计
 

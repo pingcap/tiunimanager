@@ -1,10 +1,10 @@
-# TiEM scale-out and scale-in design doc
+# TiUniManager scale-out and scale-in design doc
 
 - Author(s): [YaozhengWang](https://github.com/YaozhengWang)
 
 ## table of Contents
 
-- [TiEM scale-out and scale-in design doc](#TiEM-scale-out-and-scale-in-design-doc)
+- [TiUniManager scale-out and scale-in design doc](#TiUniManager-scale-out-and-scale-in-design-doc)
     - [table of Contents](#table-f-Contents)
     - [scale-out and scale-in API](#scale-out-and-scale-in-API)
     - [design](#design)

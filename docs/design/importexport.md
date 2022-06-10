@@ -1,10 +1,10 @@
-# TiEM improt and export design
+# TiUniManager improt and export design
 
 - Author(s): [cchenkey](http://github.com/cchenkey)
 
 ## table of Contents
 
-- [TiEM improt and export design](#TiEM-improt-and-export-design)
+- [TiUniManager improt and export design](#TiUniManager-improt-and-export-design)
   - [table of Contents](#table-of-Contents)
   - [import export API](#import-export-API)
   - [design](#design)

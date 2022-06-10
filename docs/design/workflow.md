@@ -1,10 +1,10 @@
-# TiEM workflow design doc
+# TiUniManager workflow design doc
 
 - Author(s): [cchenkey](http://github.com/cchenkey)
 
 ## table of Contents
 
-- [TiEMworkflow design doc](#TiEM-workflow-design-doc)
+- [TiUniManagerworkflow design doc](#TiUniManager-workflow-design-doc)
   - [table of Contents](#table-of-Contents)
   - [workflow API](#workflow-API)
   - [design](#design)
@@ -129,7 +129,7 @@ type WorkFlowService interface {
 
 ### workflow implement
 
-- in metadb of tiem, workflow contains one workflow and some workflow nodes belongs to it
+- in metadb of tiunimanager, workflow contains one workflow and some workflow nodes belongs to it
 - workflow meta define info of workflow, definition and flow context
 - user can call workflow interface will update workflow status
 - after workflow manager init，it will start a watchLoop goroutine，it will handle unfinished workflow and push workflow until end, fail or pause

@@ -1,10 +1,10 @@
-# TiEM 扩缩容设计文档
+# TiUniManager 扩缩容设计文档
 
 - Author(s): [YaozhengWang](https://github.com/YaozhengWang)
 
 ## 目录
 
-- [TiEM扩缩容设计文档](#TiEM-扩缩容设计文档)
+- [TiUniManager扩缩容设计文档](#TiUniManager-扩缩容设计文档)
     - [目录](#目录)
     - [扩缩容API](#扩缩容API)
     - [设计](#设计)

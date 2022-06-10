@@ -1,10 +1,10 @@
-# TiEM 备份恢复设计文档
+# TiUniManager 备份恢复设计文档
 
 - Author(s): [cchenkey](http://github.com/cchenkey)
 
 ## 目录
 
-- [TiEM 备份恢复设计文档](#tiem-备份恢复设计文档)
+- [TiUniManager 备份恢复设计文档](#tiunimanager-备份恢复设计文档)
   - [目录](#目录)
   - [备份恢复模块API](#备份恢复模块API)
   - [设计](#设计)

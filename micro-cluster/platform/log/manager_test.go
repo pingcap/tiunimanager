@@ -122,7 +122,7 @@ var esResult = `
           "log" : {
             "offset" : 8166163,
             "file" : {
-              "path" : "/root/tiem/logs/cluster-server.log"
+              "path" : "/root/tiunimanager/logs/cluster-server.log"
             }
           },
           "msg" : "WeekDay Friday, Hour: 18 need do auto backup for 0 clusters",

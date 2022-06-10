@@ -61,12 +61,12 @@ func TestBaseFramework_loadCert(t *testing.T) {
 
 func Test_GetPrivateKeyFilePath(t *testing.T) {
 	InitBaseFrameworkForUt(ClusterService)
-	privPath := GetPrivateKeyFilePath("test_tiem")
-	assert.Equal(t, "/home/test_tiem/.ssh/tiup_rsa", privPath)
+	privPath := GetPrivateKeyFilePath("test_tiunimanager")
+	assert.Equal(t, "/home/test_tiunimanager/.ssh/tiup_rsa", privPath)
 }
 
 func Test_GetPublicKeyFilePath(t *testing.T) {
 	InitBaseFrameworkForUt(ClusterService)
-	publicPath := GetPublicKeyFilePath("test_tiem")
-	assert.Equal(t, "/home/test_tiem/.ssh/id_rsa.pub", publicPath)
+	publicPath := GetPublicKeyFilePath("test_tiunimanager")
+	assert.Equal(t, "/home/test_tiunimanager/.ssh/id_rsa.pub", publicPath)
 }

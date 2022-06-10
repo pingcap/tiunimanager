@@ -148,9 +148,9 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	hosts = append(hosts, *host)
 	_, err := hostprovider.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
-	tiemErr, ok := err.(errors.EMError)
+	tiunimanagerErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiunimanagerErr.GetCode())
 
 }
 

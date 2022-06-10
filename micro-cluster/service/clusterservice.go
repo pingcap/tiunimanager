@@ -61,7 +61,7 @@ import (
 	"github.com/pingcap-inc/tiunimanager/library/framework"
 )
 
-var TiEMClusterServiceName = "go.micro.tiem.cluster"
+var TiEMClusterServiceName = "go.micro.tiunimanager.cluster"
 
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager

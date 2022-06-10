@@ -44,7 +44,7 @@ func PrintTiEMInfo() {
 	logutil.BgLogger().Info("loaded config", zap.ByteString("config", configJSON))**/
 }
 
-// GetTiEMInfo returns the git hash and build time of this tiem servers binary.
+// GetTiEMInfo returns the git hash and build time of this tiunimanager servers binary.
 func GetTiEMInfo() string {
 	return fmt.Sprintf("Release Version: %s\n"+
 		"Edition: %s\n"+

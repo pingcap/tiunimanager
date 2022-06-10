@@ -186,7 +186,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 
 		flowIds = append(flowIds, flowId)
 	}
-	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
+	// Sync start each flow in a goroutine: tiup-tiunimanager/sqlite DO NOT support concurrent
 	operationName := fmt.Sprintf(
 		"%s.%s BackgroundTask",
 		framework.GetMicroServiceNameFromContext(ctx),

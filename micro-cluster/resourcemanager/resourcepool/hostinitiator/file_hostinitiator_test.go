@@ -80,7 +80,7 @@ func Test_AuthHost(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
-	err := fileInitiator.AuthHost(context.TODO(), "tiem", "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
+	err := fileInitiator.AuthHost(context.TODO(), "tiunimanager", "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
 	// depend on whether user home dir has public key
 	if err != nil {
 		emErr, ok := err.(errors.EMError)
@@ -275,10 +275,10 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 	jsonStr := `
 	{
 		"cluster_meta": {
-		  "cluster_type": "tiem",
-		  "cluster_name": "tiem-test",
+		  "cluster_type": "tiunimanager",
+		  "cluster_name": "tiunimanager-test",
 		  "cluster_version": "v1.0.0-beta.7",
-		  "deploy_user": "tiem",
+		  "deploy_user": "tiunimanager",
 		  "ssh_type": "builtin"
 		},
 		"instances": [

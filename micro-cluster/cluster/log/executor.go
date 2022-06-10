@@ -107,7 +107,7 @@ func collectorClusterLogConfig(node *workflowModel.WorkFlowNode, ctx *workflow.F
 // @return string
 // @return error
 func getDeployInfo(clusterMeta *meta.ClusterMeta, ctx *workflow.FlowContext, hostIP string) (deployment.TiUPComponentType, string, string, string, error) {
-	deployDir := "/tiem-test/filebeat"
+	deployDir := "/tiunimanager-test/filebeat"
 	clusterComponentType := deployment.TiUPComponentTypeCluster
 	home := framework.GetTiupHomePathForTidb()
 	clusterName := clusterMeta.Cluster.ID

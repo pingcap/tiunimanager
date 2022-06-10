@@ -306,7 +306,7 @@ func RemoveHosts(c *gin.Context) {
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := ImportHostTemplateFileName
-	// The template file should be on tiem/etc/hostInfo_template.xlsx
+	// The template file should be on tiunimanager/etc/hostInfo_template.xlsx
 	filePath := filepath.Join(curDir, ImportHostTemplateFilePath, templateName)
 
 	_, err := os.Stat(filePath)

@@ -38,7 +38,7 @@ import (
 var testRW *GormTiupConfigReadWrite
 
 const (
-	TestComponentType = "tiem"
+	TestComponentType = "tiunimanager"
 	TestTiUPHome      = ""
 	TestTiUPHome2     = "/home/tidb/.em"
 )

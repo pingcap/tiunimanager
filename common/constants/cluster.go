@@ -193,7 +193,7 @@ var DBUserPermission = map[DBUserRoleType][]string{
 	DBUserCDCDataSync:         {"ALL PRIVILEGES", "RESTRICTED_REPLICA_WRITER_ADMIN"},
 }
 
-// DefaultRetainedPortRange default retained port range for tiem
+// DefaultRetainedPortRange default retained port range for tiunimanager
 var DefaultRetainedPortRange = "[11000,12000]"
 
 // RequestResourceMode specifying resource mode, enums : SpecificZone,SpecificHost

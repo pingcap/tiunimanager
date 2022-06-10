@@ -183,7 +183,7 @@ var esResult = `
     "max_score" : null,
     "hits" : [
       {
-        "_index" : "tiem-tidb-cluster-2021.12.16",
+        "_index" : "tiunimanager-tidb-cluster-2021.12.16",
         "_type" : "_doc",
         "_id" : "Nu30wX0BomM1rMZIIW8w",
         "_score" : null,

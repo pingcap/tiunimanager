@@ -28,7 +28,7 @@ import (
 	"context"
 )
 
-// TiUPComponentType Type of TiUP component, e.g. cluster/dm/tiem
+// TiUPComponentType Type of TiUP component, e.g. cluster/dm/tiunimanager
 type TiUPComponentType string
 
 const (

@@ -832,7 +832,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
+		refreshCtx.SetData(contextClusterConfigStr, "user: tiunimanager\ntiunimanager_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiunimanager\n    group: tiunimanager\n")
 		err := parameterFail(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.NoError(t, err)
 	})
@@ -849,7 +849,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
+		refreshCtx.SetData(contextClusterConfigStr, "user: tiunimanager\ntiunimanager_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiunimanager\n    group: tiunimanager\n")
 		err := parameterFail(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.Error(t, err)
 	})

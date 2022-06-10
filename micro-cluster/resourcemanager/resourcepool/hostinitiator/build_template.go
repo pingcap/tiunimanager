@@ -21,11 +21,11 @@ import (
 	"encoding/json"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	resourceTemplate "github.com/pingcap-inc/tiunimanager/resource/template"
 )
 
 type HostAddr struct {

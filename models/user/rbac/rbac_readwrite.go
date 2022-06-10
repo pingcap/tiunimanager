@@ -18,7 +18,7 @@ package rbac
 import (
 	"context"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 

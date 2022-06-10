@@ -25,7 +25,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
 
 	etcd "go.etcd.io/etcd/server/v3/embed"
 )

@@ -16,7 +16,7 @@
 package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 	"strconv"
 	"time"
 )

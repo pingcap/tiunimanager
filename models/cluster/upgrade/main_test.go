@@ -27,9 +27,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

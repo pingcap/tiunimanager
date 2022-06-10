@@ -17,10 +17,10 @@
 package log
 
 import (
-	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiunimanager/common/client"
+	"github.com/pingcap-inc/tiunimanager/message/cluster"
 
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiunimanager/micro-api/controller"
 
 	"github.com/gin-gonic/gin"
 )

@@ -26,12 +26,12 @@ package account
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap-inc/tiunimanager/models/user/account"
 )
 
 type Manager struct{}

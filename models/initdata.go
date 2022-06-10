@@ -32,16 +32,16 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap-inc/tiunimanager/models/platform/product"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/models/platform/system"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/models/platform/config"
+	"github.com/pingcap-inc/tiunimanager/models/platform/system"
+	resourcePool "github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiunimanager/models/user/account"
 	"gorm.io/gorm"
 )
 

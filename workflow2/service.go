@@ -17,8 +17,8 @@ package workflow2
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/message"
 )
 
 // WorkFlowService workflow interface

@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
 )
 
 func (p *FileHostInitiator) autoFix(ctx context.Context, h *structs.HostInfo, sortedResult map[string]*[]checkHostResult) (err error) {

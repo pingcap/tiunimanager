@@ -20,22 +20,22 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pingcap-inc/tiem/metrics"
+	"github.com/pingcap-inc/tiunimanager/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiunimanager/common/client"
+	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/file-server/service"
+	"github.com/pingcap-inc/tiunimanager/file-server/service"
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
-	_ "github.com/pingcap-inc/tiem/docs"
-	"github.com/pingcap-inc/tiem/file-server/interceptor"
-	"github.com/pingcap-inc/tiem/file-server/route"
-	"github.com/pingcap-inc/tiem/library/framework"
+	_ "github.com/pingcap-inc/tiunimanager/docs"
+	"github.com/pingcap-inc/tiunimanager/file-server/interceptor"
+	"github.com/pingcap-inc/tiunimanager/file-server/route"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
 )
 
 func main() {

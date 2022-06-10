@@ -27,10 +27,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	util "github.com/pingcap-inc/tiem/util/http"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	util "github.com/pingcap-inc/tiunimanager/util/http"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	CDCApiUrl  = "/api/v1/changefeeds"
+	CDCApiUrl = "/api/v1/changefeeds"
 )
 
 type ChangeFeedCreateReq struct {
@@ -124,7 +124,7 @@ type ChangeFeedService interface {
 	DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error)
 }
 
-type ChangeFeedServiceImpl struct {}
+type ChangeFeedServiceImpl struct{}
 
 func init() {
 	CDCService = new(ChangeFeedServiceImpl)
@@ -343,7 +343,6 @@ func (service *ChangeFeedServiceImpl) DetailChangeFeedTask(ctx context.Context, 
 	return getChangeFeedTaskByID(ctx, req.CDCAddress, req.ChangeFeedID)
 }
 
-
 func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp ChangeFeedDetailResp, err error) {
 	url := fmt.Sprintf("http://%s%s/%s", pdAddress, CDCApiUrl, id)
 	httpResp, err := util.Get(url, map[string]string{}, map[string]string{})
@@ -371,4 +370,3 @@ func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp Chan
 	}
 	return
 }
-

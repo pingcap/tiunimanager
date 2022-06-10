@@ -25,7 +25,7 @@
 package tiup
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
 	"time"
 
 	"gorm.io/gorm"

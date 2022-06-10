@@ -23,13 +23,13 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/models"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/deployment"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap-inc/tiunimanager/models"
+	wfModel "github.com/pingcap-inc/tiunimanager/models/workflow"
+	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
 )
 
 func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {

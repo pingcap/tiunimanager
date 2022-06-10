@@ -17,7 +17,7 @@
 package storage_test
 
 import (
-	storage2 "github.com/pingcap-inc/tiem/util/sys/storage"
+	storage2 "github.com/pingcap-inc/tiunimanager/util/sys/storage"
 	"testing"
 
 	"github.com/stretchr/testify/require"

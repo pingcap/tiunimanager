@@ -27,15 +27,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap-inc/tiunimanager/models/parametergroup"
+	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
 )
 
 type Manager struct{}

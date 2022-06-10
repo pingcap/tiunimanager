@@ -17,14 +17,14 @@ package backuprestore
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap-inc/tiunimanager/message/cluster"
+	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap-inc/tiunimanager/models/cluster/backuprestore"
+	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
+	"github.com/pingcap-inc/tiunimanager/models/common"
+	mock_br_service "github.com/pingcap-inc/tiunimanager/test/mockbr"
+	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockbr"
+	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

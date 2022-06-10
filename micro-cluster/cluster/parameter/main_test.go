@@ -28,17 +28,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/models"
 
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
+	"github.com/pingcap-inc/tiunimanager/models/common"
 )
 
 var mockManager = NewManager()

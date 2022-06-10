@@ -29,14 +29,14 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiunimanager/message"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
 	"github.com/golang/mock/gomock"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 )
 
 func TestManager_prepareSearchParams_Success(t *testing.T) {

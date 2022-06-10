@@ -21,12 +21,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	crypto "github.com/pingcap-inc/tiunimanager/util/encrypt"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

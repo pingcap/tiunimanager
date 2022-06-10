@@ -16,7 +16,7 @@
 package client
 
 import (
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
 )
 
 var ClusterClient clusterservices.ClusterService

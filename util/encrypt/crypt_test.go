@@ -17,7 +17,7 @@
 package encrypt
 
 import (
-	testleak2 "github.com/pingcap-inc/tiem/util/testleak"
+	testleak2 "github.com/pingcap-inc/tiunimanager/util/testleak"
 	. "github.com/pingcap/check"
 )
 

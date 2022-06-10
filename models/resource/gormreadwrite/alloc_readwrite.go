@@ -19,16 +19,16 @@ import (
 	"context"
 	"sort"
 
-	"github.com/pingcap-inc/tiem/util/bitmap"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	"github.com/pingcap-inc/tiunimanager/util/bitmap"
+	crypto "github.com/pingcap-inc/tiunimanager/util/encrypt"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
-	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	resource_structs "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	mm "github.com/pingcap-inc/tiunimanager/models/resource/management"
+	rp "github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
 

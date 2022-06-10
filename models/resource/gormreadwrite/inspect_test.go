@@ -20,9 +20,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	resource_structs "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
 	"github.com/stretchr/testify/assert"
 )
 

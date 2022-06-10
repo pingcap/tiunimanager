@@ -16,8 +16,8 @@
 package check
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/message"
 	"github.com/robfig/cron"
 	"golang.org/x/net/context"
 	"time"

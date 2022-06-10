@@ -27,8 +27,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/metrics"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/metrics"
 
 	prom "github.com/prometheus/client_golang/prometheus"
 
@@ -39,7 +39,7 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	crypto "github.com/pingcap-inc/tiunimanager/util/encrypt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	transport2 "go.etcd.io/etcd/client/pkg/v3/transport"

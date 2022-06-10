@@ -15,7 +15,7 @@
 
 package structs
 
-import "github.com/pingcap-inc/tiem/common/constants"
+import "github.com/pingcap-inc/tiunimanager/common/constants"
 
 type RbacPermission struct {
 	Resource string `json:"resource"`

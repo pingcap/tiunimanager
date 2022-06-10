@@ -30,16 +30,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiunimanager/message"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
+	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/log"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"github.com/pingcap-inc/tiem/util/convert"
+	"github.com/pingcap-inc/tiunimanager/util/convert"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
 )
 
 //  search log index prefix

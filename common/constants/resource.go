@@ -24,7 +24,7 @@
 package constants
 
 import (
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
 )
 
 type ArchType string

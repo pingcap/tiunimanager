@@ -17,8 +17,8 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
 	"net/http"
 )
 

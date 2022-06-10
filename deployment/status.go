@@ -31,7 +31,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pingcap-inc/tiem/util/disk"
+	"github.com/pingcap-inc/tiunimanager/util/disk"
 )
 
 type Status string

@@ -19,8 +19,8 @@ package printer
 import (
 	"bytes"
 	"fmt"
-	israce2 "github.com/pingcap-inc/tiem/util/israce"
-	versioninfo2 "github.com/pingcap-inc/tiem/util/versioninfo"
+	israce2 "github.com/pingcap-inc/tiunimanager/util/israce"
+	versioninfo2 "github.com/pingcap-inc/tiunimanager/util/versioninfo"
 	_ "runtime" // import link package
 	_ "unsafe"  // required by go:linkname
 )

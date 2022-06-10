@@ -17,11 +17,11 @@ package check
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/models"
+	workflowModel "github.com/pingcap-inc/tiunimanager/models/workflow"
+	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
 )
 
 func checkCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {

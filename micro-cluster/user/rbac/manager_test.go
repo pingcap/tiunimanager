@@ -18,11 +18,11 @@ package rbac
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	mock_account "github.com/pingcap-inc/tiem/test/mockmodels/mockaccount"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap-inc/tiunimanager/models"
+	mock_account "github.com/pingcap-inc/tiunimanager/test/mockmodels/mockaccount"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

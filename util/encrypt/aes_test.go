@@ -19,7 +19,7 @@ package encrypt
 import (
 	"crypto/aes"
 	"encoding/hex"
-	testleak2 "github.com/pingcap-inc/tiem/util/testleak"
+	testleak2 "github.com/pingcap-inc/tiunimanager/util/testleak"
 	"strings"
 	"testing"
 

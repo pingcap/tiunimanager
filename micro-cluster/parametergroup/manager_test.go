@@ -30,18 +30,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap-inc/tiunimanager/models/parametergroup"
 
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockparametergroup"
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/message"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/models"
 )
 
 var manager = NewManager()

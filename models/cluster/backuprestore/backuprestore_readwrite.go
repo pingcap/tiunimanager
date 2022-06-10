@@ -17,8 +17,8 @@ package backuprestore
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
 	"gorm.io/gorm"
 	"time"
 )

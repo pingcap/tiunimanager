@@ -26,12 +26,12 @@ package meta
 import (
 	"bytes"
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap-inc/tiunimanager/models/platform/config"
+	resourceTemplate "github.com/pingcap-inc/tiunimanager/resource/template"
 	"text/template"
 )
 

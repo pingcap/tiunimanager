@@ -18,7 +18,7 @@ package hostinitiator
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 )
 
 type HostInitiator interface {

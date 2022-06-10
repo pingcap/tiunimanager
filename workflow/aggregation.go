@@ -23,15 +23,15 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/metrics"
-	"github.com/pingcap-inc/tiem/models"
-	dbModel "github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/deployment"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap-inc/tiunimanager/metrics"
+	"github.com/pingcap-inc/tiunimanager/models"
+	dbModel "github.com/pingcap-inc/tiunimanager/models/common"
+	"github.com/pingcap-inc/tiunimanager/models/workflow"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes

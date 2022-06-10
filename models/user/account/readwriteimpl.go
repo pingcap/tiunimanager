@@ -17,10 +17,10 @@ package account
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
+	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
 	"gorm.io/gorm"
 	"time"
 )

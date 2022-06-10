@@ -18,17 +18,17 @@ package interceptor
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 	"net/http"
 
-	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	utils "github.com/pingcap-inc/tiem/util/stringutil"
+	"github.com/pingcap-inc/tiunimanager/common/client"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap-inc/tiunimanager/micro-api/controller"
+	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
+	utils "github.com/pingcap-inc/tiunimanager/util/stringutil"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
 
 	"github.com/gin-gonic/gin"
 )

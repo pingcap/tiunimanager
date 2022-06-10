@@ -30,9 +30,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiunimanager/library/spec"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 )
 
 const (

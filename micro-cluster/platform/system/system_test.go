@@ -26,12 +26,12 @@ package system
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/system"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mocksystem"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap-inc/tiunimanager/models/platform/system"
+	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mocksystem"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

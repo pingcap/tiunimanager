@@ -16,7 +16,7 @@
 package config
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
 	"gorm.io/gorm"
 	"time"
 )

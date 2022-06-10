@@ -19,7 +19,7 @@ package util
 import (
 	"crypto/x509/pkix"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
 	"runtime"
 	"strconv"
 	"strings"

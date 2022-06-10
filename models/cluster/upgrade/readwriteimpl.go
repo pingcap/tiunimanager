@@ -27,11 +27,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
 
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 

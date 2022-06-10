@@ -18,11 +18,11 @@ package gormreadwrite
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
-	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
+	resource_structs "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	mm "github.com/pingcap-inc/tiunimanager/models/resource/management"
+	rp "github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
 

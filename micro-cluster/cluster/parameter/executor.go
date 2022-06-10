@@ -36,35 +36,35 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap-inc/tiunimanager/deployment"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pingcap-inc/tiem/util/api/cdc"
+	"github.com/pingcap-inc/tiunimanager/util/api/cdc"
 
-	"github.com/pingcap-inc/tiem/util/api/pd"
+	"github.com/pingcap-inc/tiunimanager/util/api/pd"
 
-	"github.com/pingcap-inc/tiem/util/api/tikv"
+	"github.com/pingcap-inc/tiunimanager/util/api/tikv"
 
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiunimanager/message/cluster"
 
-	tidbApi "github.com/pingcap-inc/tiem/util/api/tidb/http"
+	tidbApi "github.com/pingcap-inc/tiunimanager/util/api/tidb/http"
 
-	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
+	"github.com/pingcap-inc/tiunimanager/util/api/tidb/sql"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap-inc/tiunimanager/models/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiunimanager/library/framework"
 
-	spec2 "github.com/pingcap-inc/tiem/library/spec"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	spec2 "github.com/pingcap-inc/tiunimanager/library/spec"
+	workflowModel "github.com/pingcap-inc/tiunimanager/models/workflow"
+	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
 	tiupSpec "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 

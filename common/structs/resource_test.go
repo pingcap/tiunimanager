@@ -19,8 +19,8 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/errors"
 )
 
 func Test_GenDomainCodeByName(t *testing.T) {

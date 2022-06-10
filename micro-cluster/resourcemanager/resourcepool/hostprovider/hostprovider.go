@@ -18,7 +18,7 @@ package hostprovider
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiunimanager/common/structs"
 )
 
 type HostProvider interface {

@@ -18,7 +18,7 @@ package kvcache
 //import (
 //	"testing"
 //
-//	"github.com/pingcap-inc/tiem/library/firstparty/util/testbridge"
+//	"github.com/pingcap-inc/tiunimanager/library/firstparty/util/testbridge"
 //	"go.uber.org/goleak"
 //)
 //

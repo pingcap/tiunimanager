@@ -31,7 +31,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiunimanager/message/cluster"
 )
 
 func Test_EditConfig_Success(t *testing.T) {

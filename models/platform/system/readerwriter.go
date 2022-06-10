@@ -25,7 +25,7 @@ package system
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
 )
 
 type ReaderWriter interface {

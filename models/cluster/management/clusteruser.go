@@ -16,7 +16,7 @@
 package management
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 

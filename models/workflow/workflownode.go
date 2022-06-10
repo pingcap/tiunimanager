@@ -17,8 +17,8 @@ package workflow
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap-inc/tiunimanager/models/common"
 	"time"
 )
 

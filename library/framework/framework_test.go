@@ -42,10 +42,10 @@ func TestLog(t *testing.T) {
 
 func TestBaseFramework_GetLoggerWithContext(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
+	ctx.Set(TiUniManager_X_TRACE_ID_KEY, "111")
 
 	got := LogWithContext(ctx)
-	assert.Equal(t, "111", got.Data[TiEM_X_TRACE_ID_KEY])
+	assert.Equal(t, "111", got.Data[TiUniManager_X_TRACE_ID_KEY])
 }
 
 func TestBaseFramework_loadCert(t *testing.T) {
@@ -61,12 +61,12 @@ func TestBaseFramework_loadCert(t *testing.T) {
 
 func Test_GetPrivateKeyFilePath(t *testing.T) {
 	InitBaseFrameworkForUt(ClusterService)
-	privPath := GetPrivateKeyFilePath("test_tiem")
-	assert.Equal(t, "/home/test_tiem/.ssh/tiup_rsa", privPath)
+	privPath := GetPrivateKeyFilePath("test_tiunimanager")
+	assert.Equal(t, "/home/test_tiunimanager/.ssh/tiup_rsa", privPath)
 }
 
 func Test_GetPublicKeyFilePath(t *testing.T) {
 	InitBaseFrameworkForUt(ClusterService)
-	publicPath := GetPublicKeyFilePath("test_tiem")
-	assert.Equal(t, "/home/test_tiem/.ssh/id_rsa.pub", publicPath)
+	publicPath := GetPublicKeyFilePath("test_tiunimanager")
+	assert.Equal(t, "/home/test_tiunimanager/.ssh/id_rsa.pub", publicPath)
 }

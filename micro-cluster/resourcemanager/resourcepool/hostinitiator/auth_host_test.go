@@ -20,11 +20,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
-	sshclient "github.com/pingcap-inc/tiem/util/ssh"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	mock_ssh "github.com/pingcap/tiunimanager/test/mockutil/mocksshclientexecutor"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +37,7 @@ func Test_createDeployUser_succeed(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
-	err := fileInitiator.createDeployUser(context.TODO(), "tiem", "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
+	err := fileInitiator.createDeployUser(context.TODO(), "tiunimanager", "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
 	assert.Nil(t, err)
 }
 
@@ -48,14 +48,14 @@ func Test_createDeployUser_args_error(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
 	assert.Equal(t, "deployUser and group should not be null", emErr.GetMsg())
 
-	err = fileInitiator.createDeployUser(context.TODO(), "tiem", "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, nil)
+	err = fileInitiator.createDeployUser(context.TODO(), "tiunimanager", "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, nil)
 	assert.NotNil(t, err)
 	emErr, ok = err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
 	assert.Equal(t, "authenticate info should not be nil while creating deploy user", emErr.GetMsg())
 }
 
@@ -64,27 +64,27 @@ func Test_createDeployUser_failed(t *testing.T) {
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
 	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return("", errors.NewError(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "")).AnyTimes()
+		Return("", errors.NewError(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "")).AnyTimes()
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
-	err := fileInitiator.createDeployUser(context.TODO(), "tiem", "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
+	err := fileInitiator.createDeployUser(context.TODO(), "tiunimanager", "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, emErr.GetCode())
 
 }
 
 func Test_buildUserCommand_addUser(t *testing.T) {
 	um := UserModuleConfig{
 		Action: userActionAdd,
-		Name:   "tiem",
-		Group:  "tiem",
+		Name:   "tiunimanager",
+		Group:  "tiunimanager",
 		Sudoer: true,
 	}
-	expectedCmd := "id -u tiem > /dev/null 2>&1 || (/usr/sbin/groupadd -f tiem && /usr/sbin/useradd -m -s /bin/bash -g tiem tiem) && echo 'tiem ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/tiem"
+	expectedCmd := "id -u tiunimanager > /dev/null 2>&1 || (/usr/sbin/groupadd -f tiunimanager && /usr/sbin/useradd -m -s /bin/bash -g tiunimanager tiunimanager) && echo 'tiunimanager ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/tiunimanager"
 	createUserCmd := um.buildUserCommand()
 	assert.Equal(t, expectedCmd, createUserCmd)
 }
@@ -92,11 +92,11 @@ func Test_buildUserCommand_addUser(t *testing.T) {
 func Test_buildUserCommand_delUser(t *testing.T) {
 	um := UserModuleConfig{
 		Action: userActionDel,
-		Name:   "tiem",
-		Group:  "tiem",
+		Name:   "tiunimanager",
+		Group:  "tiunimanager",
 		Sudoer: true,
 	}
-	expectedCmd := "/usr/sbin/userdel -r tiem || [ $? -eq 6 ]"
+	expectedCmd := "/usr/sbin/userdel -r tiunimanager || [ $? -eq 6 ]"
 	deleteUserCmd := um.buildUserCommand()
 	assert.Equal(t, expectedCmd, deleteUserCmd)
 }
@@ -110,7 +110,7 @@ func Test_appendAuthorizedKeysFile_succeed(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
-	err := fileInitiator.appendRemoteAuthorizedKeysFile(context.TODO(), nil, "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
+	err := fileInitiator.appendRemoteAuthorizedKeysFile(context.TODO(), nil, "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
 	assert.Nil(t, err)
 }
 
@@ -123,12 +123,12 @@ func Test_BuildAuth(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
-	err := fileInitiator.buildAuth(context.TODO(), "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
+	err := fileInitiator.buildAuth(context.TODO(), "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"}, &sshclient.HostAuthenticate{})
 	// depend on whether user home dir has public key
 	if err != nil {
 		emErr, ok := err.(errors.EMError)
 		assert.True(t, ok)
-		assert.Equal(t, errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
 	}
 }
 

@@ -26,10 +26,10 @@ package system
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 
@@ -51,7 +51,7 @@ func (s *SystemReadWrite) GetVersion(ctx context.Context, versionID string) (*Ve
 	if "" == versionID {
 		errInfo := "get version info failed : empty versionID"
 		framework.LogWithContext(ctx).Error(errInfo)
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, errInfo)
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, errInfo)
 	}
 
 	version := &VersionInfo{}
@@ -61,7 +61,7 @@ func (s *SystemReadWrite) GetVersion(ctx context.Context, versionID string) (*Ve
 		errInfo := fmt.Sprintf("get version info failed : versionID = %s, err = %s", versionID, err.Error())
 		framework.LogWithContext(ctx).Error(errInfo)
 
-		return nil, errors.WrapError(errors.TIEM_SYSTEM_INVALID_VERSION, errInfo, err)
+		return nil, errors.WrapError(errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION, errInfo, err)
 	} else {
 		return version, nil
 	}
@@ -71,7 +71,7 @@ func (s *SystemReadWrite) GetSystemInfo(ctx context.Context) (*SystemInfo, error
 	info := &SystemInfo{}
 	err := s.DB(ctx).First(info).Error
 	if err != nil {
-		return nil, errors.WrapError(errors.TIEM_SYSTEM_MISSING_DATA, "", err)
+		return nil, errors.WrapError(errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, "", err)
 	}
 	return info, err
 }
@@ -83,7 +83,7 @@ func (s *SystemReadWrite) UpdateState(ctx context.Context, original, target cons
 	}
 
 	if info.State != original {
-		return errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "current state = %s, expected original state = %s", info.State, original)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_STATE_CONFLICT, "current state = %s, expected original state = %s", info.State, original)
 	}
 	err = s.DB(ctx).Model(info).Where("system_name is not null").Update("state", target).Error
 	return dbCommon.WrapDBError(err)

@@ -26,7 +26,7 @@ package parameter
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap/tiunimanager/models/parametergroup"
 )
 
 // ClusterParameterMapping

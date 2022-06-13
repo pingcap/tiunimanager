@@ -19,10 +19,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"gorm.io/gorm"
 	"strings"
 	"time"
@@ -62,7 +62,7 @@ func UnmarshalDownstream(dt constants.DownstreamType, cc string) (ChangeFeedDown
 		err := json.Unmarshal([]byte(cc), downstream)
 		return downstream, err
 	}
-	return nil, errors.NewError(errors.TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM, "")
+	return nil, errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM, "")
 }
 
 func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
@@ -71,7 +71,7 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 		if jsonErr == nil {
 			t.DownstreamConfig = string(b)
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, jsonErr.Error())
 		}
 	}
 	if t.FilterRules == nil {
@@ -82,7 +82,7 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 	if jsonErr == nil {
 		t.FilterRulesConfig = string(b)
 	} else {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	if len(t.ID) == 0 {

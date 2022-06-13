@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TIEM_BINARY_DIR = ${CURDIR}/bin
-TIUPCMD_BINARY = ${TIEM_BINARY_DIR}/tiupcmd
-BRCMD_BINARY = ${TIEM_BINARY_DIR}/brcmd
-OPENAPI_SERVER_BINARY = ${TIEM_BINARY_DIR}/openapi-server
-CLUSTER_SERVER_BINARY = ${TIEM_BINARY_DIR}/cluster-server
-FILE_SERVER_BINARY = ${TIEM_BINARY_DIR}/file-server
-TIEM_INSTALL_PREFIX = ${PREFIX}/tiem
+TIUNIMANAGER_BINARY_DIR = ${CURDIR}/bin
+TIUPCMD_BINARY = ${TIUNIMANAGER_BINARY_DIR}/tiupcmd
+BRCMD_BINARY = ${TIUNIMANAGER_BINARY_DIR}/brcmd
+OPENAPI_SERVER_BINARY = ${TIUNIMANAGER_BINARY_DIR}/openapi-server
+CLUSTER_SERVER_BINARY = ${TIUNIMANAGER_BINARY_DIR}/cluster-server
+FILE_SERVER_BINARY = ${TIUNIMANAGER_BINARY_DIR}/file-server
+TIUNIMANAGER_INSTALL_PREFIX = ${PREFIX}/tiunimanager
 PROTOC_GEN_MICRO = github.com/asim/go-micro/cmd/protoc-gen-micro/v3@v3.7.0
 PROTOC_GEN_GO = google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
 PROTOBUF_VERSION = 3.14.0
@@ -55,13 +55,13 @@ proto:
 
 # 1. build binary
 build:
-	@echo "build TiEM server start."
+	@echo "build TiUniManager server start."
 	make build_openapi_server
 	make build_cluster_server
 	make build_file_server
-	@echo "build TiEM all server successfully."
+	@echo "build TiUniManager all server successfully."
 
-#Compile all TiEM microservices
+#Compile all TiUniManager microservices
 build_openapi_server:
 	@echo "build openapi-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${OPENAPI_SERVER_BINARY} micro-api/*.go
@@ -105,34 +105,34 @@ gotool:
 #Get and compile the tools required in the project
 build_revive: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/revive github.com/mgechev/revive
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/revive github.com/mgechev/revive
 
 build_goword: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/goword github.com/chzchzchz/goword
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/goword github.com/chzchzchz/goword
 
 build_unconvert: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/unconvert github.com/mdempsky/unconvert
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/unconvert github.com/mdempsky/unconvert
 
 build_failpoint_ctl: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/failpoint-ctl github.com/pingcap/failpoint/failpoint-ctl
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/failpoint-ctl github.com/pingcap/failpoint/failpoint-ctl
 
 build_errdoc_gen: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/errdoc-gen github.com/pingcap/errors/errdoc-gen
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/errdoc-gen github.com/pingcap/errors/errdoc-gen
 
 build_golangci_lint:
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${TIEM_BINARY_DIR} v1.41.1
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${TIUNIMANAGER_BINARY_DIR} v1.41.1
 
 build_vfsgendev: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/vfsgendev github.com/shurcooL/vfsgen/cmd/vfsgendev
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/vfsgendev github.com/shurcooL/vfsgen/cmd/vfsgendev
 
 build_megacheck: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o ${TIEM_BINARY_DIR}/megacheck honnef.co/go/build_helper/cmd/megacheck
+	$(GO) build -o ${TIUNIMANAGER_BINARY_DIR}/megacheck honnef.co/go/build_helper/cmd/megacheck
 
 check_fmt:
 	@echo "gofmt (simplify)"
@@ -140,40 +140,40 @@ check_fmt:
 
 check_goword:
 	@echo "goword check, files: ${FILES}"
-	#${TIEM_BINARY_DIR}/goword $(FILES) 2>&1 | $(FAIL_ON_STDOUT)
+	#${TIUNIMANAGER_BINARY_DIR}/goword $(FILES) 2>&1 | $(FAIL_ON_STDOUT)
 
 check_static:
 	@echo "code static check, files: $($(PACKAGE_LIST))"
-	#${TIEM_BINARY_DIR}/golangci-lint run -v $$($(PACKAGE_DIRECTORIES))
+	#${TIUNIMANAGER_BINARY_DIR}/golangci-lint run -v $$($(PACKAGE_DIRECTORIES))
 
 check_unconvert:
 	@echo "unconvert check, files: $($(PACKAGE_LIST))"
-	#@GO111MODULE=on ${TIEM_BINARY_DIR}/unconvert $(UNCONVERT_PACKAGES)
+	#@GO111MODULE=on ${TIUNIMANAGER_BINARY_DIR}/unconvert $(UNCONVERT_PACKAGES)
 
 check_lint:
 	@echo "linting check"
-	#@${TIEM_BINARY_DIR}/revive -formatter friendly -config build_helper/revive.toml $(FILES_WITHOUT_BR)
+	#@${TIUNIMANAGER_BINARY_DIR}/revive -formatter friendly -config build_helper/revive.toml $(FILES_WITHOUT_BR)
 
 check_vet:
 	@echo "vet check"
 	#$(GO) vet -all $(PACKAGES_WITHOUT_BR) 2>&1 | $(FAIL_ON_STDOUT)
 
 install:
-	mkdir -p ${TIEM_INSTALL_PREFIX}
-	mkdir -p ${TIEM_INSTALL_PREFIX}/bin
-	mkdir -p ${TIEM_INSTALL_PREFIX}/etc
-	mkdir -p ${TIEM_INSTALL_PREFIX}/logs
-	mkdir -p ${TIEM_INSTALL_PREFIX}/scripts
-	mkdir -p ${TIEM_INSTALL_PREFIX}/docs
-	cp ${TIUPCMD_BINARY} ${TIEM_INSTALL_PREFIX}/bin
-	cp ${BRCMD_BINARY} ${TIEM_INSTALL_PREFIX}/bin
-	cp ${OPENAPI_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
-	cp ${CLUSTER_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
-	cp ${FILE_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
+	mkdir -p ${TIUNIMANAGER_INSTALL_PREFIX}
+	mkdir -p ${TIUNIMANAGER_INSTALL_PREFIX}/bin
+	mkdir -p ${TIUNIMANAGER_INSTALL_PREFIX}/etc
+	mkdir -p ${TIUNIMANAGER_INSTALL_PREFIX}/logs
+	mkdir -p ${TIUNIMANAGER_INSTALL_PREFIX}/scripts
+	mkdir -p ${TIUNIMANAGER_INSTALL_PREFIX}/docs
+	cp ${TIUPCMD_BINARY} ${TIUNIMANAGER_INSTALL_PREFIX}/bin
+	cp ${BRCMD_BINARY} ${TIUNIMANAGER_INSTALL_PREFIX}/bin
+	cp ${OPENAPI_SERVER_BINARY} ${TIUNIMANAGER_INSTALL_PREFIX}/bin
+	cp ${CLUSTER_SERVER_BINARY} ${TIUNIMANAGER_INSTALL_PREFIX}/bin
+	cp ${FILE_SERVER_BINARY} ${TIUNIMANAGER_INSTALL_PREFIX}/bin
 
 uninstall:
-	@echo "uninstall: remove all files in $(TIEM_INSTALL_PREFIX)"
-	@if [ -d ${TIEM_INSTALL_PREFIX} ] ; then rm ${TIEM_INSTALL_PREFIX} ; fi
+	@echo "uninstall: remove all files in $(TIUNIMANAGER_INSTALL_PREFIX)"
+	@if [ -d ${TIUNIMANAGER_INSTALL_PREFIX} ] ; then rm ${TIUNIMANAGER_INSTALL_PREFIX} ; fi
 
 clean:
 	@if [ -f ${BRCMD_BINARY} ] ; then rm ${BRCMD_BINARY} ; fi
@@ -181,13 +181,13 @@ clean:
 	@if [ -f ${OPENAPI_SERVER_BINARY} ] ; then rm ${OPENAPI_SERVER_BINARY} ; fi
 	@if [ -f ${CLUSTER_SERVER_BINARY} ] ; then rm ${CLUSTER_SERVER_BINARY} ; fi
 	@if [ -f ${FILE_SERVER_BINARY} ] ; then rm ${FILE_SERVER_BINARY} ; fi
-	@if [ -f ${TIEM_BINARY_DIR}/revive ] ; then rm ${TIEM_BINARY_DIR}/revive ; fi
-	@if [ -f ${TIEM_BINARY_DIR}/goword ] ; then rm ${TIEM_BINARY_DIR}/goword ; fi
-	@if [ -f ${TIEM_BINARY_DIR}/unconvert ] ; then rm ${TIEM_BINARY_DIR}/unconvert ; fi
-	@if [ -f ${TIEM_BINARY_DIR}/failpoint-ctl ] ; then rm ${TIEM_BINARY_DIR}/failpoint-ctl; fi
-	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
-	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
-	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/revive ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/revive ; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/goword ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/goword ; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/unconvert ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/unconvert ; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/failpoint-ctl ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/failpoint-ctl; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/vfsgendev ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/vfsgendev; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/golangci-lint ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/golangci-lint; fi
+	@if [ -f ${TIUNIMANAGER_BINARY_DIR}/errdoc-gen ] ; then rm ${TIUNIMANAGER_BINARY_DIR}/errdoc-gen; fi
 	@if [ -d ${GENERATE_TARGET_DIR}/clusterservices ] ; then rm -rf ${GENERATE_TARGET_DIR}/clusterservices; fi
 	@if [ -d ${CURDIR}/test ] ; then rm -rf ${CURDIR}/test; fi
 

@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -111,7 +111,7 @@ func (c *SSHClient) Connect() (err error) {
 	addr := fmt.Sprintf("%s:%d", c.sshHost, c.sshPort)
 	c.client, err = ssh.Dial("tcp", addr, config)
 	if err != nil {
-		err = errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "ssh client dial to addr %s@%s by %s failed, %v", c.sshUser, addr, c.sshType, err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "ssh client dial to addr %s@%s by %s failed, %v", c.sshUser, addr, c.sshType, err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (c *SSHClient) Close() {
 func (c *SSHClient) RunCommandsInSession(sudo bool, commands []string) (result string, err error) {
 	session, err := c.client.NewSession()
 	if err != nil {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_NEW_SESSION_ERROR, "new ssh session failed for %s@%s:%d, %v", c.sshUser, c.sshHost, c.sshPort, err)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_NEW_SESSION_ERROR, "new ssh session failed for %s@%s:%d, %v", c.sshUser, c.sshHost, c.sshPort, err)
 	}
 	defer session.Close()
 
@@ -137,7 +137,7 @@ func (c *SSHClient) RunCommandsInSession(sudo bool, commands []string) (result s
 	}
 	combo, err := session.CombinedOutput(command)
 	if err != nil {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_RUN_COMMAND_ERROR, "exec command %s on %s@%s:%d failed, %v", command, c.sshUser, c.sshHost, c.sshPort, err)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_RUN_COMMAND_ERROR, "exec command %s on %s@%s:%d failed, %v", command, c.sshUser, c.sshHost, c.sshPort, err)
 	}
 	result = string(combo)
 	return

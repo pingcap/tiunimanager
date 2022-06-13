@@ -19,15 +19,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/util/api/cdc"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
 	"strconv"
 	"sync"
 	"time"
@@ -64,7 +64,7 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	task := &changefeed.ChangeFeedTask{
@@ -83,7 +83,7 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		if parseError == nil {
 			task.StartTS = tso
 		} else {
-			err = errors.NewError(errors.TIEM_PARAMETER_INVALID, parseError.Error())
+			err = errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, parseError.Error())
 			return
 		}
 	}
@@ -124,7 +124,7 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 	}
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	//ctx = framework.NewBackgroundMicroCtx(ctx, true)
@@ -160,7 +160,7 @@ func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTask
 	}
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
@@ -189,7 +189,7 @@ func (p *Manager) Resume(ctx context.Context, request cluster.ResumeChangeFeedTa
 
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	err = models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
@@ -233,7 +233,7 @@ func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTa
 	}
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	// pause -> update -> resume
@@ -283,7 +283,7 @@ func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTask
 
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	// remote
@@ -334,14 +334,14 @@ func (p *Manager) createExecutor(ctx context.Context, clusterMeta *meta.ClusterM
 	if libError != nil || !libResp.Accepted {
 		errMsg := fmt.Sprintf("createExecutor change feed task failed, err = %v, resp = %v", libError, libResp)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, errMsg)
 	}
 
 	if libResp.Succeed {
 		models.GetChangeFeedReaderWriter().UnlockStatus(ctx, task.ID, constants.ChangeFeedStatusNormal)
 	} else {
 		framework.LogWithContext(ctx).Errorf("createExecutor change feed task faile, resp = %v", libResp)
-		return errors.NewError(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, libResp.ErrorMsg)
+		return errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, libResp.ErrorMsg)
 	}
 
 	return
@@ -356,7 +356,7 @@ func (p *Manager) pauseExecutor(ctx context.Context, clusterMeta *meta.ClusterMe
 	if libError != nil || !libResp.Accepted || !libResp.Succeed {
 		errMsg := fmt.Sprintf("pause change feed task failed, err = %v, resp = %v", libError, libResp)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return errors.NewErrorf(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, errMsg)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, errMsg)
 	}
 
 	return models.GetChangeFeedReaderWriter().UnlockStatus(ctx, task.ID, constants.ChangeFeedStatusStopped)
@@ -374,7 +374,7 @@ func (p *Manager) updateExecutor(ctx context.Context, clusterMeta *meta.ClusterM
 	if libError != nil || !libResp.Accepted || !libResp.Succeed {
 		errMsg := fmt.Sprintf("update change feed task failed, err = %v, resp = %v", libError, libResp)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return errors.NewErrorf(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, errMsg)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, errMsg)
 	}
 	return nil
 }
@@ -388,7 +388,7 @@ func (p *Manager) resumeExecutor(ctx context.Context, clusterMeta *meta.ClusterM
 	if libError != nil || !libResp.Accepted || !libResp.Succeed {
 		errMsg := fmt.Sprintf("resume change feed task failed, err = %v, resp = %v", libError, libResp)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return errors.NewErrorf(errors.TIEM_CHANGE_FEED_EXECUTE_ERROR, errMsg)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CHANGE_FEED_EXECUTE_ERROR, errMsg)
 	}
 
 	return models.GetChangeFeedReaderWriter().UnlockStatus(ctx, task.ID, constants.ChangeFeedStatusNormal)

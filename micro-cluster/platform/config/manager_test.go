@@ -18,10 +18,10 @@ package config
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

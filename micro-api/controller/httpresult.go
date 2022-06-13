@@ -17,8 +17,8 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"net/http"
 )
 
@@ -43,13 +43,13 @@ func HandleHttpResponse(c *gin.Context, err error,
 	withData func() (interface{}, error), withPage func() Page) {
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(http.StatusInternalServerError, Fail(int(errors.TIEM_CLUSTER_SERVER_CALL_ERROR), err.Error()))
+		c.JSON(http.StatusInternalServerError, Fail(int(errors.TIUNIMANAGER_CLUSTER_SERVER_CALL_ERROR), err.Error()))
 		return
 	}
 
 	if withStatusCode != nil {
 		code, message := withStatusCode()
-		if code != errors.TIEM_SUCCESS {
+		if code != errors.TIUNIMANAGER_SUCCESS {
 			framework.LogWithContext(c).Error(message)
 			c.JSON(code.GetHttpCode(), Fail(int(code), message))
 			return
@@ -59,7 +59,7 @@ func HandleHttpResponse(c *gin.Context, err error,
 	data, err := withData()
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
-		c.JSON(http.StatusInternalServerError, Fail(int(errors.TIEM_UNRECOGNIZED_ERROR), err.Error()))
+		c.JSON(http.StatusInternalServerError, Fail(int(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR), err.Error()))
 		return
 	}
 	if withPage != nil {

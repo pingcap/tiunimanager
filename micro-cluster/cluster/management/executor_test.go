@@ -18,26 +18,26 @@ package management
 import (
 	"context"
 	"fmt"
-	backuprestore2 "github.com/pingcap-inc/tiem/models/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
+	backuprestore2 "github.com/pingcap/tiunimanager/models/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockbr"
 	"strconv"
 
-	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
+	utilsql "github.com/pingcap/tiunimanager/util/api/tidb/sql"
 
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/test/mockchangefeed"
-	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/changefeed"
+	"github.com/pingcap/tiunimanager/test/mockchangefeed"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
 
 	"reflect"
 
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+	"github.com/pingcap/tiunimanager/models/parametergroup"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockparametergroup"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool"
+	rp "github.com/pingcap/tiunimanager/models/resource/resourcepool"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 
@@ -45,31 +45,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockresource"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	structs2 "github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-	"github.com/pingcap-inc/tiem/models/common"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	structs2 "github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	resourceManagement "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models/common"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	mock_br_service "github.com/pingcap/tiunimanager/test/mockbr"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclusterparameter"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_allocator_recycler "github.com/pingcap/tiunimanager/test/mockresource"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
@@ -624,7 +624,7 @@ func TestBackupBeforeDelete(t *testing.T) {
 		})
 		flowContext.SetData(ContextDeleteRequest, cluster.DeleteClusterReq{AutoBackup: false})
 
-		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).Times(1)
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIUNIMANAGER_PANIC, "")).Times(1)
 		node := &workflowModel.WorkFlowNode{}
 		err := backupBeforeDelete(node, flowContext)
 		assert.NoError(t, err)
@@ -1473,7 +1473,7 @@ func TestDestroyCluster(t *testing.T) {
 	})
 
 	t.Run("skip", func(t *testing.T) {
-		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIEM_PANIC, "")).AnyTimes()
+		clusterRW.EXPECT().GetCurrentClusterTopologySnapshot(gomock.Any(), "skip").Return(management.ClusterTopologySnapshot{}, errors.NewError(errors.TIUNIMANAGER_PANIC, "")).AnyTimes()
 
 		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
@@ -1524,7 +1524,7 @@ func TestClearCDCLinks(t *testing.T) {
 	changefeed.MockChangeFeedService(service)
 
 	t.Run("query error", func(t *testing.T) {
-		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		clusterRW.EXPECT().GetMasters(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND)).Times(1)
 		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextClusterMeta, &meta.ClusterMeta{
 			Cluster: &management.Cluster{
@@ -1543,7 +1543,7 @@ func TestClearCDCLinks(t *testing.T) {
 			{RelationType: constants.ClusterRelationStandBy, SubjectClusterID: "22", SyncChangeFeedTaskID: "2222"},
 		}, nil).Times(1)
 
-		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIEM_CLUSTER_NOT_FOUND)).Times(1)
+		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND)).Times(1)
 		service.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(cluster.DeleteChangeFeedTaskResp{}, nil).Times(1)
 
 		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2329,7 +2329,7 @@ func Test_validateHostsStatus(t *testing.T) {
 		})
 		err := validateHostsStatus(node, context)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), strconv.Itoa(int(errors.TIEM_RESOURCE_CREATE_HOST_ERROR)))
+		assert.Contains(t, err.Error(), strconv.Itoa(int(errors.TIUNIMANAGER_RESOURCE_CREATE_HOST_ERROR)))
 	})
 
 	t.Run("init + succeed", func(t *testing.T) {
@@ -2617,7 +2617,7 @@ func Test_applyParameterGroup(t *testing.T) {
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2667,7 +2667,7 @@ func Test_chooseParameterGroup(t *testing.T) {
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).AnyTimes()
 
 	t.Run("normal", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2734,7 +2734,7 @@ func Test_Test_applyParameterGroupForTakeover(t *testing.T) {
 
 	parameterGroupRW.EXPECT().
 		QueryParameterGroup(gomock.Any(), gomock.Any(), gomock.Any(), "v5.0", 1, 1, gomock.Any(), gomock.Any()).
-		Return(nil, int64(0), errors.Error(errors.TIEM_PANIC)).AnyTimes()
+		Return(nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).AnyTimes()
 
 	t.Run("query group error", func(t *testing.T) {
 		ctx := workflow.NewFlowContext(context.TODO(), make(map[string]string))
@@ -2786,7 +2786,7 @@ func Test_adjustParameters(t *testing.T) {
 		})
 		parameterRW.EXPECT().
 			QueryClusterParameter(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			Return("111", nil, int64(0), errors.Error(errors.TIEM_PANIC)).
+			Return("111", nil, int64(0), errors.Error(errors.TIUNIMANAGER_PANIC)).
 			Times(1)
 
 		err := adjustParameters(&workflowModel.WorkFlowNode{}, ctx)

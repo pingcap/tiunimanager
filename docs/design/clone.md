@@ -1,10 +1,10 @@
-# TiEM clone cluster design doc
+# TiUniManager clone cluster design doc
 
 - Author(s): [YaozhengWang](https://github.com/YaozhengWang)
 
 ## table of Contents
 
-- [TiEM clone cluster design doc](#TiEM-clone-cluster-design-doc)
+- [TiUniManager clone cluster design doc](#TiUniManager-clone-cluster-design-doc)
     - [table of Contents](#table-f-Contents)
     - [clone cluster API](#clone-cluster-API)
     - [design](#design)
@@ -93,8 +93,8 @@ following steps:
 clone cluster API errors define in file common/errors/errorcode.go
 ```go
     // clone cluster
-    TIEM_CHECK_CLUSTER_VERSION_ERROR: {"Cluster version not support", 500},
-    TIEM_CDC_NOT_FOUND:               {"TiCDC not found when full clone", 404},
-    TIEM_CLONE_TIKV_ERROR:            {"Failed to clone TiKV component", 500},
-    TIEM_CLONE_SLAVE_ERROR:           {"Failed to clone when this cluster has been cloned", 500},
+    TIUNIMANAGER_CHECK_CLUSTER_VERSION_ERROR: {"Cluster version not support", 500},
+    TIUNIMANAGER_CDC_NOT_FOUND:               {"TiCDC not found when full clone", 404},
+    TIUNIMANAGER_CLONE_TIKV_ERROR:            {"Failed to clone TiKV component", 500},
+    TIUNIMANAGER_CLONE_SLAVE_ERROR:           {"Failed to clone when this cluster has been cloned", 500},
 ```

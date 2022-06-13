@@ -1,10 +1,10 @@
-# TiEM Resource Management Design Documents
+# TiUniManager Resource Management Design Documents
 
 - Author(s): [Jarivs Zheng](http://github.com/jiayang-zheng)
 
 ## Table of Contents
 
-- [TiEM Resource Management Design Documents](#tiem-resource-management-design-documents)
+- [TiUniManager Resource Management Design Documents](#tiunimanager-resource-management-design-documents)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Motivation or Background](#motivation-or-background)
@@ -20,12 +20,12 @@
 
 ## Introduction
 
-This doc introduces the design of resource module in TiEM platform.
+This doc introduces the design of resource module in TiUniManager platform.
 
 ## Motivation or Background
 
-Before using TiEM platform to create TiDB cluster or take over an existed TiDB cluster, the platform needs a module to manage host and disk resources.
-The ResourceManager module in TiEM is used to manage the lifetime of host resources, and provide allocate and recycle resources capability while creating and deleting TiDB in TiEM platform. The ResourceManager only supports local hosts management by now, it may support cloud resources management in the future.
+Before using TiUniManager platform to create TiDB cluster or take over an existed TiDB cluster, the platform needs a module to manage host and disk resources.
+The ResourceManager module in TiUniManager is used to manage the lifetime of host resources, and provide allocate and recycle resources capability while creating and deleting TiDB in TiUniManager platform. The ResourceManager only supports local hosts management by now, it may support cloud resources management in the future.
 
 
 ## Detailed Design

@@ -27,8 +27,8 @@ package tiup
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 
@@ -45,7 +45,7 @@ func NewGormTiupConfigReadWrite(db *gorm.DB) *GormTiupConfigReadWrite {
 
 func (m *GormTiupConfigReadWrite) Create(ctx context.Context, componentType string, tiUPHome string) (*TiupConfig, error) {
 	if "" == componentType {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "componenttype nil")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "componenttype nil")
 	}
 
 	tiUPConfig := &TiupConfig{
@@ -58,7 +58,7 @@ func (m *GormTiupConfigReadWrite) Create(ctx context.Context, componentType stri
 
 func (m *GormTiupConfigReadWrite) Update(ctx context.Context, updateTemplate *TiupConfig) error {
 	if "" == updateTemplate.ID {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "id is nil for %+v", updateTemplate)
 	}
 
 	return m.DB(ctx).Save(updateTemplate).Error
@@ -66,7 +66,7 @@ func (m *GormTiupConfigReadWrite) Update(ctx context.Context, updateTemplate *Ti
 
 func (m *GormTiupConfigReadWrite) Get(ctx context.Context, id string) (*TiupConfig, error) {
 	if "" == id {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "id required")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "id required")
 	}
 
 	tiUPConfig := &TiupConfig{}
@@ -81,7 +81,7 @@ func (m *GormTiupConfigReadWrite) Get(ctx context.Context, id string) (*TiupConf
 
 func (m *GormTiupConfigReadWrite) QueryByComponentType(ctx context.Context, componentType string) (*TiupConfig, error) {
 	if "" == componentType {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "componenttype is required")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "componenttype is required")
 	}
 
 	tiUPConfig := &TiupConfig{}

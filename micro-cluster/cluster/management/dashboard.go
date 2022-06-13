@@ -21,12 +21,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
 	"net/http"
@@ -51,24 +51,24 @@ func GetDashboardInfo(ctx context.Context, request cluster.GetDashboardInfoReq) 
 	if err != nil {
 		errMsg := fmt.Sprintf("get cluster %s meta failed: %s", request.ClusterID, err.Error())
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return resp, errors.WrapError(errors.TIEM_CLUSTER_NOT_FOUND, errMsg, err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, errMsg, err)
 	}
 
 	tidbUserInfo, err := meta.GetDBUserNamePassword(ctx, constants.Root)
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_USER_NOT_FOUND,
+		return resp, errors.WrapError(errors.TIUNIMANAGER_USER_NOT_FOUND,
 			fmt.Sprintf("get cluster %s user info from meta failed: %s", request.ClusterID, err.Error()), err)
 	}
 	framework.LogWithContext(ctx).Infof("get cluster %s user info from meta", meta.Cluster.ID)
 
 	url, err := getDashboardUrlFromCluster(ctx, meta)
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
+		return resp, errors.WrapError(errors.TIUNIMANAGER_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("find cluster %s dashboard failed: %s", request.ClusterID, err.Error()), err)
 	}
 	token, err := getLoginToken(ctx, url, tidbUserInfo.Name, tidbUserInfo.Password.Val)
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_DASHBOARD_NOT_FOUND,
+		return resp, errors.WrapError(errors.TIUNIMANAGER_DASHBOARD_NOT_FOUND,
 			fmt.Sprintf("get cluster %s dashboard login token failed: %s", request.ClusterID, err.Error()), err)
 	}
 

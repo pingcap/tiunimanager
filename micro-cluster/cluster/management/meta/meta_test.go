@@ -17,23 +17,23 @@ package meta
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	resource "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -469,7 +469,7 @@ func TestClusterMeta_GenerateTopologyConfig(t *testing.T) {
 
 	rw := mockconfig.NewMockReaderWriter(ctrl)
 	models.SetConfigReaderWriter(rw)
-	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT))
 	t.Run("normal", func(t *testing.T) {
 		meta := &ClusterMeta{
 			Cluster: &management.Cluster{
@@ -529,9 +529,9 @@ func TestClusterMeta_UpdateClusterStatus(t *testing.T) {
 	defer ctrl.Finish()
 	rw := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(rw)
-	rw.EXPECT().UpdateStatus(gomock.Any(), "111", gomock.Any()).Return(errors.Error(errors.TIEM_CLUSTER_NOT_FOUND))
+	rw.EXPECT().UpdateStatus(gomock.Any(), "111", gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND))
 	rw.EXPECT().UpdateStatus(gomock.Any(), "222", gomock.Any()).Return(nil)
-	rw.EXPECT().UpdateStatus(gomock.Any(), "", gomock.Any()).Return(errors.Error(errors.TIEM_CLUSTER_NOT_FOUND))
+	rw.EXPECT().UpdateStatus(gomock.Any(), "", gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{},
@@ -793,7 +793,7 @@ func TestClusterMeta_StartMaintenance(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceScaleIn).Return(nil)
-	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.Error(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT))
+	rw.EXPECT().SetMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.Error(errors.TIUNIMANAGER_CLUSTER_MAINTENANCE_CONFLICT))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -822,7 +822,7 @@ func TestClusterMeta_EndMaintenance(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceScaleIn).Return(nil)
-	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.Error(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT))
+	rw.EXPECT().ClearMaintenanceStatus(gomock.Any(), "111", constants.ClusterMaintenanceStopping).Return(errors.Error(errors.TIUNIMANAGER_CLUSTER_MAINTENANCE_CONFLICT))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -905,7 +905,7 @@ func TestClusterMeta_Delete(t *testing.T) {
 	models.SetClusterReaderWriter(rw)
 
 	rw.EXPECT().Delete(gomock.Any(), "111").Return(nil)
-	rw.EXPECT().Delete(gomock.Any(), "").Return(errors.Error(errors.TIEM_CLUSTER_NOT_FOUND))
+	rw.EXPECT().Delete(gomock.Any(), "").Return(errors.Error(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND))
 
 	meta := &ClusterMeta{
 		Cluster: &management.Cluster{
@@ -976,7 +976,7 @@ func TestClusterMeta_Get(t *testing.T) {
 			RoleType:  string(constants.Root),
 		}}, nil)
 
-	rw.EXPECT().GetMeta(gomock.Any(), "222").Return(nil, nil, nil, errors.Error(errors.TIEM_UNSUPPORT_PRODUCT))
+	rw.EXPECT().GetMeta(gomock.Any(), "222").Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT))
 
 	t.Run("normal", func(t *testing.T) {
 		meta, err := Get(context.TODO(), "111")

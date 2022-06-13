@@ -17,7 +17,7 @@
 package stringutil
 
 import (
-	testbridge2 "github.com/pingcap-inc/tiem/util/testbridge"
+	testbridge2 "github.com/pingcap/tiunimanager/util/testbridge"
 	"testing"
 
 	"go.uber.org/goleak"

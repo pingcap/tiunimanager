@@ -20,16 +20,16 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiem/models"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
-	mock_provider "github.com/pingcap-inc/tiem/test/mockresource/mockprovider"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/models"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	mock_initiator "github.com/pingcap/tiunimanager/test/mockresource/mockinitiator"
+	mock_provider "github.com/pingcap/tiunimanager/test/mockresource/mockprovider"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -399,7 +399,7 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	var emERR errors.EMError
 	emERR, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
 }
 
 func Test_LeaveEMCluster_Normal(t *testing.T) {

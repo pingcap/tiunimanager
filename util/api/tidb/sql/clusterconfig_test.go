@@ -30,7 +30,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap/tiunimanager/library/spec"
 )
 
 const TestWorkFlowNodeID = "testworkflownodeid"

@@ -18,9 +18,9 @@ package resource
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/structs"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/common/structs"
+	resource_structs "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	rp "github.com/pingcap/tiunimanager/models/resource/resourcepool"
 )
 
 // Use HostItem to store filtered hosts records to build hierarchy tree

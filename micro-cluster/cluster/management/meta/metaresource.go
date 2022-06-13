@@ -25,14 +25,14 @@ package meta
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	resource "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	resource "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/platform/product"
 )
 
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {
@@ -41,7 +41,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 
 	_, _, components, err := models.GetProductReaderWriter().GetProduct(ctx, p.Cluster.Type)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "get product failed", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "get product failed", err)
 		return nil, nil, err
 	}
 
@@ -58,7 +58,7 @@ func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) 
 			continue
 		}
 		if c, ok := componentsMap[instance.Type]; !ok {
-			return nil, nil, errors.NewError(errors.TIEM_UNSUPPORT_PRODUCT, "")
+			return nil, nil, errors.NewError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "")
 		} else {
 			componentInfo = *c
 		}

@@ -16,14 +16,14 @@
 package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 	"strconv"
 	"time"
 )
 
 type CreateChangeFeedTaskReq struct {
 	Name           string      `json:"name" form:"name" example:"my_sync_name" validate:"required,min=4,max=64"`
-	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=4,max=64"`
+	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIUNIMANAGER__22" validate:"required,min=4,max=64"`
 	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql" validate:"required,oneof=tidb kafka mysql"`
@@ -31,11 +31,11 @@ type CreateChangeFeedTaskReq struct {
 }
 
 type CreateChangeFeedTaskResp struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIUNIMANAGER____22"`
 }
 
 type QueryChangeFeedTaskReq struct {
-	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=4,max=64"`
+	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIUNIMANAGER__22" validate:"required,min=4,max=64"`
 	structs.PageRequest
 }
 
@@ -44,7 +44,7 @@ type QueryChangeFeedTaskResp struct {
 }
 
 type DetailChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIUNIMANAGER____22" validate:"required,min=8,max=64"`
 }
 
 type DetailChangeFeedTaskResp struct {
@@ -52,7 +52,7 @@ type DetailChangeFeedTaskResp struct {
 }
 
 type PauseChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIUNIMANAGER____22" validate:"required,min=8,max=64"`
 }
 
 type PauseChangeFeedTaskResp struct {
@@ -60,7 +60,7 @@ type PauseChangeFeedTaskResp struct {
 }
 
 type ResumeChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22" validate:"required,min=8,max=64"`
+	ID string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIUNIMANAGER__22" validate:"required,min=8,max=64"`
 }
 
 type ResumeChangeFeedTaskResp struct {
@@ -80,18 +80,18 @@ type UpdateChangeFeedTaskResp struct {
 }
 
 type DeleteChangeFeedTaskReq struct {
-	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22" validate:"required,min=8,max=64"`
+	ID string `json:"id" form:"id" example:"TASK_ID_IN_TIUNIMANAGER____22" validate:"required,min=8,max=64"`
 }
 
 type DeleteChangeFeedTaskResp struct {
-	ID     string `json:"id" form:"id" example:"TASK_ID_IN_TIEM____22"`
+	ID     string `json:"id" form:"id" example:"TASK_ID_IN_TIUNIMANAGER____22"`
 	Status string `json:"status" form:"status" example:"Normal" enums:"Initial,Normal,Stopped,Finished,Error,Failed"`
 }
 
 type ChangeFeedTask struct {
-	ID             string      `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+	ID             string      `json:"id" form:"id" example:"CLUSTER_ID_IN_TIUNIMANAGER__22"`
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
-	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	ClusterID      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIUNIMANAGER__22"`
 	StartTS        string      `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	Status         string      `json:"status" form:"status" example:"Normal" enums:"Initial,Normal,Stopped,Finished,Error,Failed"`
@@ -157,7 +157,7 @@ type TiDBDownstream struct {
 	WorkerCount       int                   `json:"workerCount" form:"workerCount" example:"2"`
 	MaxTxnRow         int                   `json:"maxTxnRow" form:"maxTxnRow" example:"4"`
 	Tls               bool                  `json:"tls" form:"tls" example:"false"`
-	TargetClusterID   string                `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	TargetClusterID   string                `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIUNIMANAGER__22"`
 }
 
 type ChangeFeedTaskInfo struct {

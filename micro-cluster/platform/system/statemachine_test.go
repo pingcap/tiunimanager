@@ -25,8 +25,8 @@ package system
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

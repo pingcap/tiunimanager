@@ -18,9 +18,9 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/file-server/controller"
-	files "github.com/pingcap-inc/tiem/file-server/controller/file"
-	"github.com/pingcap-inc/tiem/file-server/interceptor"
+	"github.com/pingcap/tiunimanager/file-server/controller"
+	files "github.com/pingcap/tiunimanager/file-server/controller/file"
+	"github.com/pingcap/tiunimanager/file-server/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

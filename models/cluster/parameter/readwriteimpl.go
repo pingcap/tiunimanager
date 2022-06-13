@@ -27,14 +27,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
 
 	"gorm.io/gorm"
 
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 )
 
 type ClusterParameterReadWrite struct {
@@ -54,7 +54,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v, request cluster id: %v", err.Error(), clusterId)
-		err = errors.NewErrorf(errors.TIEM_CLUSTER_NOT_FOUND, err.Error())
+		err = errors.NewErrorf(errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, err.Error())
 		return
 	}
 	paramGroupId = cluster.ParameterGroupID
@@ -82,7 +82,7 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 		Scan(&params).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v", err.Error())
-		err = errors.Error(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR)
+		err = errors.Error(errors.TIUNIMANAGER_CLUSTER_PARAMETER_QUERY_ERROR)
 		return
 	}
 	return
@@ -92,7 +92,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "cluster id is empty")
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "cluster id is empty")
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -106,7 +106,7 @@ func (m ClusterParameterReadWrite) UpdateClusterParameter(ctx context.Context, c
 		if err != nil {
 			log.Errorf("update cluster params err: %v", err.Error())
 			tx.Rollback()
-			return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, err.Error())
+			return errors.NewErrorf(errors.TIUNIMANAGER_CLUSTER_PARAMETER_UPDATE_ERROR, err.Error())
 		}
 	}
 
@@ -118,7 +118,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	log := framework.LogWithContext(ctx)
 
 	if clusterId == "" || parameterGroupId == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "cluster id or parameter group id is empty")
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "cluster id or parameter group id is empty")
 	}
 
 	tx := m.DB(ctx).Begin()
@@ -128,7 +128,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DELETE_RELATION_PARAM_ERROR, err.Error())
 	}
 
 	// update clusters table
@@ -139,7 +139,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, err.Error())
+		return errors.NewErrorf(errors.TIUNIMANAGER_CLUSTER_PARAMETER_UPDATE_ERROR, err.Error())
 	}
 
 	// batch insert cluster_parameter_mapping table
@@ -152,7 +152,7 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	if err != nil {
 		log.Errorf("apply param group map err: %v, request param map: %v", err.Error(), params)
 		tx.Rollback()
-		return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, err.Error())
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_CREATE_RELATION_PARAM_ERROR, err.Error())
 	}
 
 	tx.Commit()

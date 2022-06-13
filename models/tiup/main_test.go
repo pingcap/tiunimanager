@@ -25,12 +25,12 @@
 package tiup
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -38,7 +38,7 @@ import (
 var testRW *GormTiupConfigReadWrite
 
 const (
-	TestComponentType = "tiem"
+	TestComponentType = "tiunimanager"
 	TestTiUPHome      = ""
 	TestTiUPHome2     = "/home/tidb/.em"
 )

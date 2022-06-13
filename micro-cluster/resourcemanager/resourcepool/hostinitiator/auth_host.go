@@ -21,11 +21,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	sshclient "github.com/pingcap-inc/tiem/util/ssh"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 )
 
 const (
@@ -120,7 +120,7 @@ func (p *FileHostInitiator) getUserSpecifiedAuthenticateToHost(ctx context.Conte
 	}
 
 	errMsg := fmt.Sprintf("get authenticate to host %s %s failed, neither user-passwd or user-privatekey is available", h.HostName, h.IP)
-	return nil, errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
+	return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
 }
 
 // get authenticate to target host after AuthHost, and we could use private key of deploy user to login
@@ -132,11 +132,11 @@ func (p *FileHostInitiator) getEMAuthenticateToHost(ctx context.Context) (authen
 
 func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, userGroup string, h *structs.HostInfo, authenticate *sshclient.HostAuthenticate) error {
 	if deployUser == "" || userGroup == "" {
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "deployUser and group should not be null")
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, "deployUser and group should not be null")
 	}
 
 	if authenticate == nil {
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "authenticate info should not be nil while creating deploy user")
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, "authenticate info should not be nil while creating deploy user")
 	}
 
 	um := UserModuleConfig{
@@ -149,7 +149,7 @@ func (p *FileHostInitiator) createDeployUser(ctx context.Context, deployUser, us
 	_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{createUserCmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("create user %s on remote host %s failed by cmd %s, err: %v", deployUser, h.IP, createUserCmd, err)
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, errMsg)
 	}
 
 	return nil
@@ -159,7 +159,7 @@ func (p *FileHostInitiator) getLocalPublicKey(keyPath string) (pubKey []byte, er
 	pubKey, err = os.ReadFile(keyPath)
 	if err != nil {
 		errMsg := fmt.Sprintf("read em user public key file %s failed, %v", keyPath, err)
-		return nil, errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
 	}
 	return
 }
@@ -169,7 +169,7 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("create '~/.ssh' directory for user '%s' on host %s failed, %v", deployUser, h.IP, err)
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
 	}
 
 	pk := strings.TrimSpace(string(pubKey))
@@ -179,7 +179,7 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 	_, err = p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), *authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{cmd})
 	if err != nil {
 		errMsg := fmt.Sprintf("write public keys '%s' to host '%s' for user '%s'", sshAuthorizedKeys, h.IP, deployUser)
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, errMsg)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func (p *FileHostInitiator) appendRemoteAuthorizedKeysFile(ctx context.Context, 
 
 func (p *FileHostInitiator) buildAuth(ctx context.Context, deployUser string, h *structs.HostInfo, authenticate *sshclient.HostAuthenticate) error {
 	if authenticate == nil {
-		return errors.NewError(errors.TIEM_RESOURCE_INIT_DEPLOY_USER_ERROR, "authenticate info should not be nil while building auth for deploy user")
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INIT_DEPLOY_USER_ERROR, "authenticate info should not be nil while building auth for deploy user")
 	}
 
 	publicKeyPath := framework.GetPublicKeyFilePath(deployUser)

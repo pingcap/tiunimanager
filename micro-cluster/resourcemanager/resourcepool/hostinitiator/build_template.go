@@ -21,11 +21,11 @@ import (
 	"encoding/json"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	resourceTemplate "github.com/pingcap/tiunimanager/resource/template"
 )
 
 type HostAddr struct {
@@ -41,12 +41,12 @@ type templateScaleOut struct {
 func (p *templateScaleOut) generateTopologyConfig(ctx context.Context) (string, error) {
 	t, err := template.New("import_topology").Parse(resourceTemplate.EMClusterScaleOut)
 	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, p); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 
@@ -145,12 +145,12 @@ func (p *templateCheckHost) buildCheckHostTemplateItems(h *structs.HostInfo) {
 func (p *templateCheckHost) generateTopologyConfig(ctx context.Context) (string, error) {
 	t, err := template.New("checkHost_topology").Parse(resourceTemplate.EMClusterCheck)
 	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, p); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 

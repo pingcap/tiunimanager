@@ -1,10 +1,10 @@
-# TiEM克隆集群设计文档
+# TiUniManager克隆集群设计文档
 
 - Author(s): [YaozhengWang](https://github.com/YaozhengWang)
 
 ## 目录
 
-- [TiEM克隆集群设计文档](#TiEM-克隆集群设计文档)
+- [TiUniManager克隆集群设计文档](#TiUniManager-克隆集群设计文档)
     - [目录](#目录)
     - [克隆集群API](#克隆集群API)
     - [设计](#设计)
@@ -92,8 +92,8 @@ workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCloneCluster, &cl
 克隆集群API报错定义在common/errors/errorcode.go
 ```go
     // clone cluster
-    TIEM_CHECK_CLUSTER_VERSION_ERROR: {"Cluster version not support", 500},
-    TIEM_CDC_NOT_FOUND:               {"TiCDC not found when full clone", 404},
-    TIEM_CLONE_TIKV_ERROR:            {"Failed to clone TiKV component", 500},
-    TIEM_CLONE_SLAVE_ERROR:           {"Failed to clone when this cluster has been cloned", 500},
+    TIUNIMANAGER_CHECK_CLUSTER_VERSION_ERROR: {"Cluster version not support", 500},
+    TIUNIMANAGER_CDC_NOT_FOUND:               {"TiCDC not found when full clone", 404},
+    TIUNIMANAGER_CLONE_TIKV_ERROR:            {"Failed to clone TiKV component", 500},
+    TIUNIMANAGER_CLONE_SLAVE_ERROR:           {"Failed to clone when this cluster has been cloned", 500},
 ```

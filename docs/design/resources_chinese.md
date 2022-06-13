@@ -1,10 +1,10 @@
-# TiEM 资源模块设计文档
+# TiUniManager 资源模块设计文档
 
 - Author(s): [Jarivs Zheng](http://github.com/jiayang-zheng)
 
 ## 目录
 
-- [TiEM 资源模块设计文档](#tiem-资源模块设计文档)
+- [TiUniManager 资源模块设计文档](#tiunimanager-资源模块设计文档)
   - [目录](#目录)
   - [资源模块API](#资源模块api)
   - [资源模块类图](#资源模块类图)
@@ -326,11 +326,11 @@ RecycleHost策略是用来回收指定主机上的指定资源。目前这个策
 ### 2. 导入/接管主机时validate zone info 错误
 ![Invalid Zone Error](./images/resource_manager/chinese/invalid_zone_error.jpeg)
 
-导入或接管主机的第一步会校验导入文件里填写的RegionID和ZoneID是否合法（与TiEM初始化时填写的RegionID/ZoneID匹配）。如果这一步失败了，需要检查下导入主机的文件中填写的RegionID和ZoneID是否合法。
+导入或接管主机的第一步会校验导入文件里填写的RegionID和ZoneID是否合法（与TiUniManager初始化时填写的RegionID/ZoneID匹配）。如果这一步失败了，需要检查下导入主机的文件中填写的RegionID和ZoneID是否合法。
 ### 3. "call deployment serv"错误
 ![Call Deployment Serv Error](./images/resource_manager/chinese/call_deployment_serv_error.jpeg)
 
-在导入主机时，步骤Prepare/Verify/JoinEmCluster或在删除主机时，步骤LeaveEmCluster都会调用封装的tiup库来执行tiup命令；如果发现这些步骤中有"call deployment serv"错误，需要搜索TiEM日志，搜索以下关键字：
+在导入主机时，步骤Prepare/Verify/JoinEmCluster或在删除主机时，步骤LeaveEmCluster都会调用封装的tiup库来执行tiup命令；如果发现这些步骤中有"call deployment serv"错误，需要搜索TiUniManager日志，搜索以下关键字：
 - Prepare/Verify报错搜索："tiup cluster check"
 - JoinEmCluster报错搜索： "tiup em scale-out"
 - LeaveEmCluster报错搜索： "tiup em scale-in"

@@ -1,10 +1,10 @@
-# TiEM 备份恢复设计文档
+# TiUniManager 备份恢复设计文档
 
 - Author(s): [cchenkey](http://github.com/cchenkey)
 
 ## 目录
 
-- [TiEM 备份恢复设计文档](#tiem-备份恢复设计文档)
+- [TiUniManager 备份恢复设计文档](#tiunimanager-备份恢复设计文档)
   - [目录](#目录)
   - [备份恢复模块API](#备份恢复模块API)
   - [设计](#设计)
@@ -173,16 +173,16 @@ flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workf
 备份恢复的API报错定义在common/errors/errorcode.go
 ``` go
 	// backup && restore
-	TIEM_BACKUP_SYSTEM_CONFIG_NOT_FOUND: {"backup system config not found", 404},
-	TIEM_BACKUP_SYSTEM_CONFIG_INVAILD:   {"backup system config invalid", 400},
-	TIEM_BACKUP_RECORD_CREATE_FAILED:    {"create backup record failed", 500},
-	TIEM_BACKUP_RECORD_DELETE_FAILED:    {"delete backup record failed", 500},
-	TIEM_BACKUP_RECORD_QUERY_FAILED:     {"query backup record failed", 500},
-	TIEM_BACKUP_STRATEGY_SAVE_FAILED:    {"save backup strategy failed", 500},
-	TIEM_BACKUP_STRATEGY_QUERY_FAILED:   {"query backup strategy failed", 500},
-	TIEM_BACKUP_STRATEGY_DELETE_FAILED:  {"delete backup strategy failed", 500},
-	TIEM_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
-	TIEM_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
-	TIEM_BACKUP_RECORD_INVALID:          {"backup record invalid", 400},
-	TIEM_BACKUP_RECORD_CANCEL_FAILED:    {"cancel backup record failed", 500},
+	TIUNIMANAGER_BACKUP_SYSTEM_CONFIG_NOT_FOUND: {"backup system config not found", 404},
+	TIUNIMANAGER_BACKUP_SYSTEM_CONFIG_INVAILD:   {"backup system config invalid", 400},
+	TIUNIMANAGER_BACKUP_RECORD_CREATE_FAILED:    {"create backup record failed", 500},
+	TIUNIMANAGER_BACKUP_RECORD_DELETE_FAILED:    {"delete backup record failed", 500},
+	TIUNIMANAGER_BACKUP_RECORD_QUERY_FAILED:     {"query backup record failed", 500},
+	TIUNIMANAGER_BACKUP_STRATEGY_SAVE_FAILED:    {"save backup strategy failed", 500},
+	TIUNIMANAGER_BACKUP_STRATEGY_QUERY_FAILED:   {"query backup strategy failed", 500},
+	TIUNIMANAGER_BACKUP_STRATEGY_DELETE_FAILED:  {"delete backup strategy failed", 500},
+	TIUNIMANAGER_BACKUP_FILE_DELETE_FAILED:      {"remove backup file failed", 500},
+	TIUNIMANAGER_BACKUP_PATH_CREATE_FAILED:      {"backup filepath create failed", 500},
+	TIUNIMANAGER_BACKUP_RECORD_INVALID:          {"backup record invalid", 400},
+	TIUNIMANAGER_BACKUP_RECORD_CANCEL_FAILED:    {"cancel backup record failed", 500},
 ```

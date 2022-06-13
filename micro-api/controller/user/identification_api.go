@@ -18,11 +18,11 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
-	utils "github.com/pingcap-inc/tiem/util/stringutil"
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/micro-api/controller"
+	utils "github.com/pingcap/tiunimanager/util/stringutil"
 )
 
 // Login login

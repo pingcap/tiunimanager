@@ -26,7 +26,7 @@ package log
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 )
 
 const (
@@ -123,7 +123,7 @@ func FilterTimestamp(startTime, endTime int64) (map[string]interface{}, error) {
 
 	if startTime > 0 && endTime > 0 {
 		if startTime > endTime {
-			return nil, errors.NewErrorf(errors.TIEM_LOG_TIME_AFTER, errors.TIEM_LOG_TIME_AFTER.Explain())
+			return nil, errors.NewErrorf(errors.TIUNIMANAGER_LOG_TIME_AFTER, errors.TIUNIMANAGER_LOG_TIME_AFTER.Explain())
 		}
 		tsFilter["gte"] = startTime * 1000
 		tsFilter["lte"] = endTime * 1000

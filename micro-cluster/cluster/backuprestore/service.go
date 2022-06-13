@@ -17,8 +17,8 @@ package backuprestore
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message/cluster"
 )
 
 type BRService interface {

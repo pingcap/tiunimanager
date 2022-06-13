@@ -20,7 +20,7 @@ package kvcache
 //	"reflect"
 //	"testing"
 //
-//	"github.com/pingcap-inc/tiem/library/firstparty/util/memory"
+//	"github.com/pingcap/tiunimanager/library/firstparty/util/memory"
 //	"github.com/stretchr/testify/require"
 //)
 //

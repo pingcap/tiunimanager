@@ -19,12 +19,12 @@ import (
 	"context"
 	"sync"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management"
+	resource_structs "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool"
 )
 
 type ResourceManager struct {
@@ -64,7 +64,7 @@ func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostI
 	if !ok {
 		errMsg := "a import/delete hosts workflow is running, please retry later"
 		framework.LogWithContext(ctx).Errorln(errMsg)
-		return nil, nil, errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
+		return nil, nil, errors.NewError(errors.TIUNIMANAGER_TASK_CONFLICT, errMsg)
 	}
 	flowIds, hostIds, err = m.resourcePool.ImportHosts(ctx, hosts, condition)
 	if err != nil {
@@ -94,7 +94,7 @@ func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string, for
 	if !ok {
 		errMsg := "a import/delete hosts workflow is running, please retry later"
 		framework.LogWithContext(ctx).Errorln(errMsg)
-		return nil, errors.NewError(errors.TIEM_TASK_CONFLICT, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_TASK_CONFLICT, errMsg)
 	}
 	flowIds, err = m.resourcePool.DeleteHosts(ctx, hostIds, force)
 	if err != nil {

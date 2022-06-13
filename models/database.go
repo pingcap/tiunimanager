@@ -18,31 +18,31 @@ package models
 import (
 	"context"
 	"github.com/asim/go-micro/v3/util/file"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-	"github.com/pingcap-inc/tiem/models/platform/check"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/models/platform/product"
-	"github.com/pingcap-inc/tiem/models/platform/system"
-	"github.com/pingcap-inc/tiem/models/resource"
-	resource_rw "github.com/pingcap-inc/tiem/models/resource/gormreadwrite"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/models/tiup"
-	"github.com/pingcap-inc/tiem/models/user/account"
-	"github.com/pingcap-inc/tiem/models/user/identification"
-	"github.com/pingcap-inc/tiem/models/user/rbac"
-	"github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models/cluster/upgrade"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/datatransfer/importexport"
+	"github.com/pingcap/tiunimanager/models/parametergroup"
+	"github.com/pingcap/tiunimanager/models/platform/check"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/models/platform/product"
+	"github.com/pingcap/tiunimanager/models/platform/system"
+	"github.com/pingcap/tiunimanager/models/resource"
+	resource_rw "github.com/pingcap/tiunimanager/models/resource/gormreadwrite"
+	mm "github.com/pingcap/tiunimanager/models/resource/management"
+	resourcePool "github.com/pingcap/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/models/tiup"
+	"github.com/pingcap/tiunimanager/models/user/account"
+	"github.com/pingcap/tiunimanager/models/user/identification"
+	"github.com/pingcap/tiunimanager/models/user/rbac"
+	"github.com/pingcap/tiunimanager/models/workflow"
+	"github.com/pingcap/tiunimanager/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
 	gormopentracing "gorm.io/plugin/opentracing"
 
@@ -140,7 +140,7 @@ func Open(fw *framework.BaseFramework) error {
 // @return error
 func IncrementVersionData(originalVersion string, targetVersion string) error {
 	if len(targetVersion) == 0 {
-		return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "invalid version %s", targetVersion)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION, "invalid version %s", targetVersion)
 	}
 
 	if originalVersion == targetVersion {
@@ -150,7 +150,7 @@ func IncrementVersionData(originalVersion string, targetVersion string) error {
 	for i, eachVersion := range allVersionInitializers {
 		// match target version before originalVersion, return err
 		if originalVersionIndex == -1 && targetVersion == eachVersion.VersionID {
-			return errors.NewErrorf(errors.TIEM_SYSTEM_INVALID_VERSION, "unable to upgrade version from %s to %s", originalVersion, targetVersion)
+			return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION, "unable to upgrade version from %s to %s", originalVersion, targetVersion)
 		}
 		if originalVersionIndex == -1 && originalVersion == eachVersion.VersionID {
 			originalVersionIndex = i

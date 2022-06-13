@@ -27,8 +27,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/metrics"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/metrics"
 
 	prom "github.com/prometheus/client_golang/prometheus"
 
@@ -39,7 +39,7 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
+	crypto "github.com/pingcap/tiunimanager/util/encrypt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	transport2 "go.etcd.io/etcd/client/pkg/v3/transport"
@@ -80,7 +80,7 @@ func Log() *log.Entry {
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
+	return GetRootLogger().defaultLogEntry.WithField(TiUniManager_X_TRACE_ID_KEY, id)
 }
 
 func LogForkFile(fileName string) *log.Entry {
@@ -366,7 +366,7 @@ func GetPublicKeyFilePath(userName string) (keyPath string) {
 	return
 }
 
-func GetTiupHomePathForTiem() string {
+func GetTiupHomePathForEm() string {
 	userName := GetCurrentDeployUser()
 	return fmt.Sprintf("/home/%s/.em", userName)
 }
@@ -400,7 +400,7 @@ func (b *BaseFramework) Log() *log.Entry {
 
 func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.Log().WithField(TiEM_X_TRACE_ID_KEY, id)
+	return b.Log().WithField(TiUniManager_X_TRACE_ID_KEY, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {

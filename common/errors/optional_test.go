@@ -30,10 +30,10 @@ func TestOfNullable(t *testing.T) {
 		args args
 		want *Optional
 	}{
-		{"normal", args{err: NewError(TIEM_UNRECOGNIZED_ERROR, "")}, &Optional{
-			last:  NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+		{"normal", args{err: NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")}, &Optional{
+			last:  NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, ""),
 			broken: true,
-			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
+			allErrors: []error{ NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")},
 		}},
 	}
 	for _, tt := range tests {
@@ -60,11 +60,11 @@ func TestOptional_BreakIf(t *testing.T) {
 		want   *Optional
 	}{
 		{"with error", fields{broken: false}, args{executor: func() error {
-			return NewError(TIEM_UNRECOGNIZED_ERROR, "")
+			return NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")
 		}}, &Optional{
-			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last:   NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, ""),
 			broken: true,
-			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
+			allErrors: []error{ NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")},
 		}},
 		{"without error", fields{broken: false}, args{executor: func() error {
 			return nil
@@ -110,11 +110,11 @@ func TestOptional_ContinueIf(t *testing.T) {
 		want   *Optional
 	}{
 		{"with error", fields{}, args{executor: func() error {
-			return NewError(TIEM_UNRECOGNIZED_ERROR, "")
+			return NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")
 		}}, &Optional{
-			last:   NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last:   NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, ""),
 			broken: false,
-			allErrors: []error{ NewError(TIEM_UNRECOGNIZED_ERROR, "")},
+			allErrors: []error{ NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")},
 
 		}},
 		{"without error", fields{}, args{executor: func() error {
@@ -149,7 +149,7 @@ func TestOptional_Else(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
 		a := 0
 		optional := &Optional{
-			last: NewError(TIEM_UNRECOGNIZED_ERROR, ""),
+			last: NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, ""),
 		}
 		optional.Else(func() {
 			a = 5
@@ -172,7 +172,7 @@ func TestOptional_Handle(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
 		a := ""
 		optional := &Optional{
-			last: NewError(TIEM_UNRECOGNIZED_ERROR, "aaa"),
+			last: NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "aaa"),
 		}
 		optional.If(func(err error) {
 			a = err.Error()
@@ -193,15 +193,15 @@ func TestOptional_Handle(t *testing.T) {
 
 func TestOptional_Map(t *testing.T) {
 	t.Run("with error", func(t *testing.T) {
-		assert.Contains(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "aaa")).
+		assert.Contains(t, OfNullable(NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "aaa")).
 			Map(func(err error) error {
-				return NewError(TIEM_MARSHAL_ERROR, "bbb")
+				return NewError(TIUNIMANAGER_MARSHAL_ERROR, "bbb")
 			}).Present().Error(), "[10004]")
 	})
 	t.Run("without error", func(t *testing.T) {
 		assert.NoError(t, OfNullable(nil).
 			Map(func(err error) error {
-				return NewError(TIEM_MARSHAL_ERROR, "bbb")
+				return NewError(TIUNIMANAGER_MARSHAL_ERROR, "bbb")
 			}).
 			Present())
 	})
@@ -212,7 +212,7 @@ func TestOptional_If(t *testing.T) {
 		a := ""
 		b := 0
 		optional := &Optional{
-			last: NewError(TIEM_UNRECOGNIZED_ERROR, "aaa"),
+			last: NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "aaa"),
 		}
 		optional.IfElse(func(err error) {
 			a = err.Error()
@@ -249,7 +249,7 @@ func TestOptional_Present(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"error", fields{err: NewError(TIEM_UNRECOGNIZED_ERROR, "")}, true},
+		{"error", fields{err: NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")}, true},
 		{"error", fields{err: nil}, false},
 	}
 	for _, tt := range tests {
@@ -267,8 +267,8 @@ func TestOptional_Present(t *testing.T) {
 
 
 func TestOptional_IfPresent(t *testing.T) {
-	assert.True(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "")).IfPresent())
-	assert.False(t, OfNullable(NewError(TIEM_UNRECOGNIZED_ERROR, "")).IfNil())
+	assert.True(t, OfNullable(NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")).IfPresent())
+	assert.False(t, OfNullable(NewError(TIUNIMANAGER_UNRECOGNIZED_ERROR, "")).IfNil())
 	assert.True(t, OfNullable(nil).IfNil())
 	assert.False(t, OfNullable(nil).IfPresent())
 

@@ -32,16 +32,16 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap/tiunimanager/models/platform/product"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/models/platform/system"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/models/platform/system"
+	resourcePool "github.com/pingcap/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/models/user/account"
 	"gorm.io/gorm"
 )
 
@@ -283,7 +283,7 @@ func initBySql(tx *gorm.DB, file string, module string) error {
 }
 
 // initDefaultProductsAndVendors
-// @Description: init default products and vendors data for TiEM v1.0.0-beta.12
+// @Description: init default products and vendors data for TiUniManager v1.0.0-beta.12
 // @Parameter tx
 // @return error
 func initDefaultProductsAndVendors(tx *gorm.DB) error {

@@ -1,10 +1,10 @@
-# TiEM scale-out and scale-in design doc
+# TiUniManager scale-out and scale-in design doc
 
 - Author(s): [YaozhengWang](https://github.com/YaozhengWang)
 
 ## table of Contents
 
-- [TiEM scale-out and scale-in design doc](#TiEM-scale-out-and-scale-in-design-doc)
+- [TiUniManager scale-out and scale-in design doc](#TiUniManager-scale-out-and-scale-in-design-doc)
     - [table of Contents](#table-f-Contents)
     - [scale-out and scale-in API](#scale-out-and-scale-in-API)
     - [design](#design)
@@ -99,10 +99,10 @@ following steps:
 scale-out and scale-in API errors define in file common/errors/errorcode.go
 ```go
     // scale out & scale in
-    TIEM_INSTANCE_NOT_FOUND:               {"Instance of cluster is not found", 404},
-    TIEM_CONNECT_TIDB_ERROR:               {"Failed to connect TiDB instances", 500},
-    TIEM_DELETE_INSTANCE_ERROR:            {"Failed to delete cluster instance", 500},
-    TIEM_CHECK_PLACEMENT_RULES_ERROR:      {"Placement rule is not set when scale out TiFlash", 409},
-    TIEM_CHECK_TIFLASH_MAX_REPLICAS_ERROR: {"The number of remaining TiFlash instances is less than the maximum replicas of data tables", 409},
-    TIEM_SCAN_MAX_REPLICA_COUNT_ERROR:     {"Failed to scan max replicas of data tables of TiFlash", 500},    
+    TIUNIMANAGER_INSTANCE_NOT_FOUND:               {"Instance of cluster is not found", 404},
+    TIUNIMANAGER_CONNECT_TIDB_ERROR:               {"Failed to connect TiDB instances", 500},
+    TIUNIMANAGER_DELETE_INSTANCE_ERROR:            {"Failed to delete cluster instance", 500},
+    TIUNIMANAGER_CHECK_PLACEMENT_RULES_ERROR:      {"Placement rule is not set when scale out TiFlash", 409},
+    TIUNIMANAGER_CHECK_TIFLASH_MAX_REPLICAS_ERROR: {"The number of remaining TiFlash instances is less than the maximum replicas of data tables", 409},
+    TIUNIMANAGER_SCAN_MAX_REPLICA_COUNT_ERROR:     {"Failed to scan max replicas of data tables of TiFlash", 500},    
 ```

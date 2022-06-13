@@ -18,16 +18,16 @@ package changefeed
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockchangefeed"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiem/test/mockutilcdc"
-	"github.com/pingcap-inc/tiem/util/api/cdc"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockchangefeed"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockutilcdc"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -62,7 +62,7 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
 		{ClusterID: "errorId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
-	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).AnyTimes()
+	}, errors.Error(errors.TIUNIMANAGER_MARSHAL_ERROR)).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
 	models.SetChangeFeedReaderWriter(changefeedRW)
@@ -101,7 +101,7 @@ func TestManager_CreateBetweenClusters(t *testing.T) {
 				ID: "11111",
 			},
 			Downstream: &changefeed.TiDBDownstream{},
-		}, errors.Error(errors.TIEM_UNRECOGNIZED_ERROR)).AnyTimes()
+		}, errors.Error(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR)).AnyTimes()
 
 		_, err := GetChangeFeedService().CreateBetweenClusters(context.TODO(), "sourceId", "targetId", 0, constants.ClusterRelationStandBy)
 		assert.Error(t, err)
@@ -137,7 +137,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 		{Type: "TiDB", Entity: common.Entity{Status: string(constants.ClusterInstanceRunning)}, HostIP: []string{"127.0.1.2"}, Ports: []int32{111}},
 	}, []*management.DBUser{
 		{ClusterID: "targetId", Name: "root", Password: common.PasswordInExpired{Val: "123455678"}, RoleType: string(constants.DBUserCDCDataSync)},
-	}, errors.Error(errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+	}, errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID)).AnyTimes()
 
 	changefeedRW := mockchangefeed.NewMockReaderWriter(ctrl)
 	models.SetChangeFeedReaderWriter(changefeedRW)
@@ -237,7 +237,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 					TargetClusterId: "targetId",
 				},
 			},
-		}, int64(3), errors.Error(errors.TIEM_UNMARSHAL_ERROR)).Times(1)
+		}, int64(3), errors.Error(errors.TIUNIMANAGER_UNMARSHAL_ERROR)).Times(1)
 
 		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)
@@ -275,7 +275,7 @@ func TestManager_ReverseBetweenClusters(t *testing.T) {
 				},
 			},
 		}, int64(3), nil).Times(1)
-		changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+		changefeedRW.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID)).AnyTimes()
 
 		_, err := GetChangeFeedService().ReverseBetweenClusters(context.TODO(), "sourceId", "targetId", constants.ClusterRelationStandBy)
 		assert.Error(t, err)

@@ -19,13 +19,13 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/constants"
-	crypto "github.com/pingcap-inc/tiem/util/encrypt"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	crypto "github.com/pingcap/tiunimanager/util/encrypt"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 	"gorm.io/gorm"
 )
 
@@ -143,7 +143,7 @@ func (m *GormDB) DB(ctx context.Context) *gorm.DB {
 // WrapDBError
 // @Description:
 // @Parameter err
-// @return error is nil or TiEMError
+// @return error is nil or TiUniManagerError
 func WrapDBError(err error) error {
 	if err == nil {
 		return nil
@@ -153,13 +153,13 @@ func WrapDBError(err error) error {
 	case errors.EMError:
 		return err
 	default:
-		return errors.NewError(errors.TIEM_SQL_ERROR, err.Error())
+		return errors.NewError(errors.TIUNIMANAGER_SQL_ERROR, err.Error())
 	}
 }
 
 func FinalHash(salt string, password string) ([]byte, error) {
 	if password == "" {
-		return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "password cannot be empty")
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "password cannot be empty")
 	}
 	s := salt + password
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)

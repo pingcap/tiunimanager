@@ -30,8 +30,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/library/spec"
 )
 
 type ClusterEditConfigReq struct {

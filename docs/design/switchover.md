@@ -1,6 +1,6 @@
 # Background
 
-In order to meet the disaster recovery needs of users, TiEM needs to support the function of master-slave switchover of tidb clusters. It is required to reduce or even completely eliminate data loss in some cases.
+In order to meet the disaster recovery needs of users, TiUniManager needs to support the function of master-slave switchover of tidb clusters. It is required to reduce or even completely eliminate data loss in some cases.
 
 # Overview
 
@@ -99,7 +99,7 @@ The flow chart:
 
 
 
-Because the current implementation of workflow component in TiEM does not support branches, the workflow of master-slave switchover is divided into three straightforward workflows. When receiving the master-slave switchover instruction, select one of these workflows to execute according to the specific input parameters and the current health status of master-slave clusters:
+Because the current implementation of workflow component in TiUniManager does not support branches, the workflow of master-slave switchover is divided into three straightforward workflows. When receiving the master-slave switchover instruction, select one of these workflows to execute according to the specific input parameters and the current health status of master-slave clusters:
 
 * WorkFlowMasterSlaveSwitchoverNormal
 
@@ -180,7 +180,7 @@ Set cluster B writeable.
 
 #### swapMasterSlaveRelationInDB
 
-Update the master-slave cluster relations in the TiEM DB.
+Update the master-slave cluster relations in the TiUniManager DB.
 
 #### end
 
@@ -278,7 +278,7 @@ Detailed execution steps of this `rollback` node:
 4. resume old CDC tasks on A
 5. create previous deleted CDC tasks on A
 6. set cluster A writeable
-7. reset master-slave relations in TiEM DB
+7. reset master-slave relations in TiUniManager DB
 8. endMaintenance of cluster A B C
 ```
 
@@ -307,7 +307,7 @@ curl -vX 'POST' \
 
 This part is relatively simple and does not involve workflow. That is, if `onlyCheck` is true, it will return immediately after the pre-check, and the actual master/slave switchover will not be executed.
 
-In addition to pre-check whether the master cluster is writable and the slave cluster is read-only, pre-checks like whether the target cluster contains CDC component and whether the master/slave relations entry in TiEM DB is legal is also implemented by default.
+In addition to pre-check whether the master cluster is writable and the slave cluster is read-only, pre-checks like whether the target cluster contains CDC component and whether the master/slave relations entry in TiUniManager DB is legal is also implemented by default.
 
 # FT Design
 

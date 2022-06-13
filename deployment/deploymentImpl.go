@@ -34,11 +34,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
-	"github.com/pingcap-inc/tiem/util/disk"
+	"github.com/pingcap/tiunimanager/util/disk"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 type Manager struct {

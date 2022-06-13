@@ -17,11 +17,11 @@ package management
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 var validator = validateCreating
@@ -29,12 +29,12 @@ var validator = validateCreating
 func validateCreating(ctx context.Context, req *cluster.CreateClusterReq) error {
 	product, versions, components, err := models.GetProductReaderWriter().GetProduct(ctx, req.Type)
 	if err != nil {
-		return errors.WrapError(errors.TIEM_UNSUPPORT_PRODUCT, "get product failed", err)
+		return errors.WrapError(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "get product failed", err)
 	}
 
 	return errors.OfNullable(nil).BreakIf(func() error {
 		if len(product.ProductID) == 0 || len(versions) == 0 || len(components) == 0 {
-			return errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "product %s is not available", req.Type)
+			return errors.NewErrorf(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "product %s is not available", req.Type)
 		}
 		return nil
 	}).BreakIf(func() error {
@@ -43,21 +43,21 @@ func validateCreating(ctx context.Context, req *cluster.CreateClusterReq) error 
 				return nil
 			}
 		}
-		return errors.NewErrorf(errors.TIEM_UNSUPPORT_PRODUCT, "product is not available, productID = %s, version = %s, arch = %s", req.Type, req.Version, req.CpuArchitecture)
+		return errors.NewErrorf(errors.TIUNIMANAGER_UNSUPPORT_PRODUCT, "product is not available, productID = %s, version = %s, arch = %s", req.Type, req.Version, req.CpuArchitecture)
 	}).BreakIf(func() error {
 		count := req.ResourceParameter.GetComponentCount(constants.ComponentIDTiKV)
 		if count < int32(req.Copies) {
-			return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "count of TiKV = %d, is less than copies %d", count, req.Copies)
+			return errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "count of TiKV = %d, is less than copies %d", count, req.Copies)
 		}
 		return nil
 	}).BreakIf(func() error {
 		for _, componentInfo := range components {
 			count := req.ResourceParameter.GetComponentCount(constants.EMProductComponentIDType(componentInfo.ComponentID))
 			if count > componentInfo.MaxInstance {
-				return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "count of components %s should be less than %d", componentInfo.ComponentID, componentInfo.MaxInstance)
+				return errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "count of components %s should be less than %d", componentInfo.ComponentID, componentInfo.MaxInstance)
 			}
 			if count < componentInfo.MinInstance {
-				return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "count of components %s should be more than %d", componentInfo.ComponentID, componentInfo.MinInstance)
+				return errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "count of components %s should be more than %d", componentInfo.ComponentID, componentInfo.MinInstance)
 			}
 			if len(componentInfo.SuggestedInstancesCount) > 0 {
 				matched := false
@@ -67,7 +67,7 @@ func validateCreating(ctx context.Context, req *cluster.CreateClusterReq) error 
 					}
 				}
 				if !matched {
-					return errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "the total number of %s should be in %v", componentInfo.ComponentID, componentInfo.SuggestedInstancesCount)
+					return errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "the total number of %s should be in %v", componentInfo.ComponentID, componentInfo.SuggestedInstancesCount)
 				}
 			}
 		}

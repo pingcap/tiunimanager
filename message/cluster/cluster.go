@@ -24,7 +24,7 @@
 package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 //CreateClusterReq Message for creating a new cluster

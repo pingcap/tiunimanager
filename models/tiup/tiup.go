@@ -25,7 +25,7 @@
 package tiup
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"time"
 
 	"gorm.io/gorm"
@@ -34,7 +34,7 @@ import (
 // TiupConfig Record config, i.e. TIUP_HOME for different component of TiUP
 type TiupConfig struct {
 	ID            string    `gorm:"primaryKey;"`
-	ComponentType string    `gorm:"not null;comment:'TiUP component type, eg: cluster, tiem, dm, ctl;'"`
+	ComponentType string    `gorm:"not null;comment:'TiUP component type, eg: cluster, tiunimanager, dm, ctl;'"`
 	TiupHome      string    `gorm:"not null;comment:'TiUP_HOME path'"`
 	CreatedAt     time.Time `gorm:"<-:create"`
 	UpdatedAt     time.Time

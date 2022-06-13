@@ -154,7 +154,7 @@ curl -X 'GET' \
 ```
 
 ## Import Hosts 
-Import hosts to the TiEM platform with a hosts xlsx file. 
+Import hosts to the TiUniManager platform with a hosts xlsx file. 
 
 ### Request URI
 ```

@@ -26,45 +26,45 @@ package parameter
 import (
 	"context"
 	"errors"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
 	"math"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap/tiunimanager/deployment"
 
-	"github.com/pingcap-inc/tiem/util/api/cdc"
-	"github.com/pingcap-inc/tiem/util/api/pd"
-	"github.com/pingcap-inc/tiem/util/api/tidb/http"
-	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
-	"github.com/pingcap-inc/tiem/util/api/tikv"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
+	"github.com/pingcap/tiunimanager/util/api/pd"
+	"github.com/pingcap/tiunimanager/util/api/tidb/http"
+	"github.com/pingcap/tiunimanager/util/api/tidb/sql"
+	"github.com/pingcap/tiunimanager/util/api/tikv"
 
-	"github.com/pingcap-inc/tiem/test/mockutilcdc"
-	"github.com/pingcap-inc/tiem/test/mockutilpd"
-	"github.com/pingcap-inc/tiem/test/mockutiltidbhttp"
-	mockutiltidbsqlconfig "github.com/pingcap-inc/tiem/test/mockutiltidbsql_config"
-	"github.com/pingcap-inc/tiem/test/mockutiltikv"
+	"github.com/pingcap/tiunimanager/test/mockutilcdc"
+	"github.com/pingcap/tiunimanager/test/mockutilpd"
+	"github.com/pingcap/tiunimanager/test/mockutiltidbhttp"
+	mockutiltidbsqlconfig "github.com/pingcap/tiunimanager/test/mockutiltidbsql_config"
+	"github.com/pingcap/tiunimanager/test/mockutiltikv"
 
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclusterparameter"
 
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockparametergroup"
 
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func TestExecutor_asyncMaintenance_Success(t *testing.T) {
@@ -832,7 +832,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
+		refreshCtx.SetData(contextClusterConfigStr, "user: tiunimanager\ntiunimanager_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiunimanager\n    group: tiunimanager\n")
 		err := parameterFail(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.NoError(t, err)
 	})
@@ -849,7 +849,7 @@ func TestDefaultFail(t *testing.T) {
 		modifyParameter := mockModifyParameter()
 		modifyParameter.Reboot = true
 		refreshCtx.SetData(contextModifyParameters, modifyParameter)
-		refreshCtx.SetData(contextClusterConfigStr, "user: tiem\ntiem_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiem\n    group: tiem\n")
+		refreshCtx.SetData(contextClusterConfigStr, "user: tiunimanager\ntiunimanager_version: v1.0.0-beta.7\ntopology:\n  global:\n    user: tiunimanager\n    group: tiunimanager\n")
 		err := parameterFail(&workflowModel.WorkFlowNode{}, refreshCtx)
 		assert.Error(t, err)
 	})

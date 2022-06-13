@@ -21,23 +21,23 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
-	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	host_provider "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiem/models"
-	config "github.com/pingcap-inc/tiem/models/platform/config"
-	resource_models "github.com/pingcap-inc/tiem/models/resource"
-	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
-	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	allocrecycle "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/allocator_recycler"
+	resource_structs "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	host_provider "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap/tiunimanager/models"
+	config "github.com/pingcap/tiunimanager/models/platform/config"
+	resource_models "github.com/pingcap/tiunimanager/models/resource"
+	resourcepool "github.com/pingcap/tiunimanager/models/resource/resourcepool"
+	mock_cluster "github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	mock_config "github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_resource "github.com/pingcap/tiunimanager/test/mockmodels/mockresource"
+	mock_initiator "github.com/pingcap/tiunimanager/test/mockresource/mockinitiator"
+	mock_workflow "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -118,7 +118,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	mockConfigModels := mock_config.NewMockReaderWriter(ctrl1)
@@ -172,7 +172,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 
@@ -203,9 +203,9 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	hosts = append(hosts, *host)
 	flowIds, _, err := resourceManager.ImportHosts(context.TODO(), hosts, &structs.ImportCondition{})
 	assert.NotNil(t, err)
-	tiemErr, ok := err.(errors.EMError)
+	tiunimanagerErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, tiunimanagerErr.GetCode())
 	assert.Nil(t, flowIds)
 
 }
@@ -229,7 +229,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			hosts = append(hosts, *dbhost)
 			return hosts, 1, nil
 		} else {
-			return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, 0, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -309,7 +309,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 			host2.Reserved = reserved
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -341,7 +341,7 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 			host2.Status = status
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -392,7 +392,7 @@ func Test_GetHierarchy_Succeed(t *testing.T) {
 			items = append(items, item3)
 			return items, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -436,7 +436,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			stocks = append(stocks, stocks2)
 			return stocks, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	}).Times(2)
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -475,7 +475,7 @@ func Test_AllocResources_Succeed(t *testing.T) {
 		if batchReq.BatchRequests[0].Applicant.HolderId == fake_holder_id && batchReq.BatchRequests[1].Applicant.RequestId == fake_request_id &&
 			batchReq.BatchRequests[0].Requires[0].Count == 1 && batchReq.BatchRequests[1].Requires[1].Require.PortReq[1].PortCnt == 2 {
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 		var r resource_structs.Compute
 		r.Reqseq = 0
@@ -574,7 +574,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 		if request.RecycleReqs[0].RecycleType == 2 && request.RecycleReqs[0].HolderID == fake_cluster_id {
 
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 		return nil
 	}).Times(2)
@@ -613,7 +613,7 @@ func Test_UpdateHostInfo(t *testing.T) {
 		if host.ID == fake_hostId1 {
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := resourceManager.GetResourcePool().GetHostProvider()
@@ -623,7 +623,7 @@ func Test_UpdateHostInfo(t *testing.T) {
 
 	err := resourceManager.UpdateHostInfo(context.TODO(), *host1)
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewError(errors.TIEM_PARAMETER_INVALID, "update host failed without host id").GetMsg(), err.(errors.EMError).GetMsg())
+	assert.Equal(t, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "update host failed without host id").GetMsg(), err.(errors.EMError).GetMsg())
 
 	host1.ID = fake_hostId1
 	err = resourceManager.UpdateHostInfo(context.TODO(), *host1)
@@ -647,7 +647,7 @@ func Test_CUD_Disk(t *testing.T) {
 	var disk structs.DiskInfo
 	_, err := resourceManager.CreateDisks(context.TODO(), fake_hostId1, []structs.DiskInfo{disk})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+	assert.Equal(t, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 		fake_hostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
 
 	_, err = resourceManager.CreateDisks(context.TODO(), fake_hostId1, nil)
@@ -658,7 +658,7 @@ func Test_CUD_Disk(t *testing.T) {
 
 	err = resourceManager.UpdateDisk(context.TODO(), disk)
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewError(errors.TIEM_PARAMETER_INVALID, "update disk failed without disk id").GetMsg(), err.(errors.EMError).GetMsg())
+	assert.Equal(t, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "update disk failed without disk id").GetMsg(), err.(errors.EMError).GetMsg())
 	disk.ID = "fake-disk-id"
 	err = resourceManager.UpdateDisk(context.TODO(), disk)
 	assert.Nil(t, err)

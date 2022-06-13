@@ -19,7 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"strconv"
 	"strings"
 )

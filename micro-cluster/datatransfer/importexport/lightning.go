@@ -18,8 +18,8 @@ package importexport
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 )
 
 // DataImportConfig data import toml config for lightning https://docs.pingcap.com/zh/tidb/dev/tidb-lightning-configuration

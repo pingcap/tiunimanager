@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/models/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -120,7 +120,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 			Tags: []string{"tag1", "tag2"},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_DUPLICATED_NAME, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_DUPLICATED_NAME, err.(errors.EMError).GetCode())
 	})
 	t.Run("other error", func(t *testing.T) {
 		_, err := testRW.Create(context.TODO(), &Cluster{
@@ -131,7 +131,7 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 			Tags: []string{"tag1", "tag2"},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_SQL_ERROR, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_SQL_ERROR, err.(errors.EMError).GetCode())
 	})
 	t.Run("default", func(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
@@ -210,11 +210,11 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		err := testRW.Delete(context.TODO(), "whatever")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
 
 		err = testRW.Delete(context.TODO(), "")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 }
 
@@ -262,11 +262,11 @@ func TestGormClusterReadWrite_ClearClusterPhysically(t *testing.T) {
 	t.Run("parameter", func(t *testing.T) {
 		err := testRW.ClearClusterPhysically(context.TODO(), "whatever", "")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 
 		err = testRW.ClearClusterPhysically(context.TODO(), "", "empty")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 }
 
@@ -398,11 +398,11 @@ func TestGormClusterReadWrite_UpdateBaseInfo(t *testing.T) {
 			},
 		})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
 
 		err = testRW.UpdateClusterInfo(context.TODO(), &Cluster{})
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 
 	})
 	t.Run("empty", func(t *testing.T) {
@@ -500,11 +500,11 @@ func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		err := testRW.UpdateStatus(context.TODO(), "whatever", constants.ClusterRunning)
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_CLUSTER_NOT_FOUND, err.(errors.EMError).GetCode())
 
 		err = testRW.UpdateStatus(context.TODO(), "", constants.ClusterRunning)
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 }
 

@@ -29,14 +29,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	emerr "github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	changefeedModel "github.com/pingcap-inc/tiem/models/cluster/changefeed"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	emerr "github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	changefeedModel "github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 const (
@@ -848,7 +848,7 @@ func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
 			funcName, wfGetOldMasterClusterId(ctx), err)
-		errToRet = emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		errToRet = emerr.NewErrorf(emerr.TIUNIMANAGER_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", wfGetOldMasterClusterId(ctx), err.Error())
 	} else {
 		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldMasterPreviousMaintenanceStatus(ctx))
@@ -863,7 +863,7 @@ func wfnEndMaintenance(node *workflowModel.WorkFlowNode, ctx *workflow.FlowConte
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("%s get meta of cluster %s failed:%s",
 			funcName, wfGetOldSlaveClusterId(ctx), err)
-		errToRet = emerr.NewErrorf(emerr.TIEM_MASTER_SLAVE_SWITCHOVER_FAILED,
+		errToRet = emerr.NewErrorf(emerr.TIUNIMANAGER_MASTER_SLAVE_SWITCHOVER_FAILED,
 			"get meta of %s failed, %s", wfGetOldSlaveClusterId(ctx), err.Error())
 	} else {
 		previousStatus := constants.ClusterMaintenanceStatus(wfGetOldSlavePreviousMaintenanceStatus(ctx))

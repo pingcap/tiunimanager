@@ -17,20 +17,20 @@ package resourcepool
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_provider "github.com/pingcap-inc/tiem/test/mockresource/mockprovider"
-	mock_workflow "github.com/pingcap-inc/tiem/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	mock_config "github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_provider "github.com/pingcap/tiunimanager/test/mockresource/mockprovider"
+	mock_workflow "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -204,7 +204,7 @@ func Test_DeleteHosts_InvalidHostId(t *testing.T) {
 	assert.NotNil(t, err)
 	emError, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_DELETE_HOST_ERROR, emError.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, emError.GetCode())
 }
 
 func Test_QueryHosts(t *testing.T) {

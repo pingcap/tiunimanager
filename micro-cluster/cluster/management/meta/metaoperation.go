@@ -25,13 +25,13 @@ package meta
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 )
 
 // AddInstances
@@ -40,11 +40,11 @@ import (
 // @Return		error
 func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "parameter is invalid!")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "parameter is invalid!")
 	}
 
 	if p.Cluster == nil {
-		return errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, "cluster is nil!")
+		return errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, "cluster is nil!")
 	}
 
 	if len(p.Instances) == 0 {

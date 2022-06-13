@@ -26,33 +26,33 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/changefeed"
+	"github.com/pingcap/tiunimanager/micro-cluster/parametergroup"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap/tiunimanager/models/common"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
-	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	utilsql "github.com/pingcap-inc/tiem/util/api/tidb/sql"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/library/util"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/log"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/parameter"
+	resourceManagement "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management"
+	resourceStructs "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	utilsql "github.com/pingcap/tiunimanager/util/api/tidb/sql"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	tiupMgr "github.com/pingcap/tiup/pkg/cluster/manager"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
@@ -280,7 +280,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 
 	pdAddress := clusterMeta.GetPDClientAddresses()
 	if len(pdAddress) <= 0 {
-		return errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+		return errors.NewError(errors.TIUNIMANAGER_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 	}
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
@@ -292,7 +292,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 	storeInfos := &meta.StoreInfos{}
 	if err = json.Unmarshal([]byte(config), storeInfos); err != nil {
-		return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+		return errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR,
 			fmt.Sprintf("parse TiKV or TiFlash store status error: %s", err.Error()), err)
 	}
 
@@ -305,7 +305,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		}
 	}
 	if len(storeID) <= 0 {
-		return errors.NewError(errors.TIEM_STORE_NOT_FOUND_ERROR, "TiKV or TiFlash store not found")
+		return errors.NewError(errors.TIUNIMANAGER_STORE_NOT_FOUND_ERROR, "TiKV or TiFlash store not found")
 	}
 
 	index := int(meta.CheckInstanceStatusTimeout / meta.CheckInstanceStatusInterval)
@@ -314,7 +314,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	for range ticker.C {
 		pdAddress := clusterMeta.GetPDClientAddresses()
 		if len(pdAddress) <= 0 {
-			return errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+			return errors.NewError(errors.TIUNIMANAGER_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 		}
 		pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
 
@@ -325,7 +325,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		}
 		storeInfo := &meta.StoreInfo{}
 		if err = json.Unmarshal([]byte(config), storeInfo); err != nil {
-			return errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+			return errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR,
 				fmt.Sprintf("parse TiKV or TiFlash store status error: %s", err.Error()), err)
 		}
 		if totalRegionCount == 0 {
@@ -340,7 +340,7 @@ func checkInstanceStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 		// timeout
 		index -= 1
 		if index == 0 {
-			return errors.NewError(errors.TIEM_CHECK_INSTANCE_TIEMOUT_ERROR,
+			return errors.NewError(errors.TIUNIMANAGER_CHECK_INSTANCE_TIUNIMANAGEROUT_ERROR,
 				fmt.Sprintf("check instnace %s status timeout", instance.ID))
 		}
 	}
@@ -1160,7 +1160,7 @@ func modifySourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workfl
 
 	db, err := meta.CreateSQLLink(context.Context, &sourceClusterMeta)
 	if err != nil {
-		return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+		return errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
 	}
 	defer db.Close()
 
@@ -1170,7 +1170,7 @@ func modifySourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workfl
 		return err
 	}
 	if !GCLifeTime.Valid {
-		return errors.NewErrorf(errors.TIEM_UNRECOGNIZED_ERROR,
+		return errors.NewErrorf(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR,
 			"cluster %s not found tidb_gc_life_time", sourceClusterMeta.Cluster.ID)
 	}
 	_, err = db.ExecContext(context.Context, "set global tidb_gc_life_time=?;", meta.DefaultMaxGCLifeTime)
@@ -1204,7 +1204,7 @@ func recoverSourceClusterGCTime(node *workflowModel.WorkFlowNode, context *workf
 
 	db, err := meta.CreateSQLLink(context.Context, &sourceClusterMeta)
 	if err != nil {
-		return errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+		return errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
 	}
 	defer db.Close()
 
@@ -1292,7 +1292,7 @@ func syncIncrData(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		}
 		index -= 1
 		if index == 0 {
-			return errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR,
+			return errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR,
 				fmt.Sprintf("wait changefeed task %s timeout", taskID))
 		}
 	}
@@ -1318,7 +1318,7 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
 		"ssh/id_rsa")
 	if err != nil {
-		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, "sync connection private key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return err
 	}
@@ -1326,7 +1326,7 @@ func syncConnectionKey(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
 		"ssh/id_rsa.pub")
 	if err != nil {
-		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, "sync connection public key failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return err
 	}
@@ -1352,7 +1352,7 @@ func syncTopology(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 		getClusterSpaceInTiUP(context, clusterMeta.Cluster.ID),
 		"meta.yaml")
 	if err != nil {
-		err = errors.NewErrorf(errors.TIEM_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, "read meta.yaml failed for cluster %s, err = %s", clusterMeta.Cluster.ID, err)
 		framework.LogWithContext(context).Errorf(err.Error())
 		return err
 	}
@@ -1639,7 +1639,7 @@ func initGrafanaAccount(node *workflowModel.WorkFlowNode, context *workflow.Flow
 
 	if len(meta.Grafanas) <= 0 || len(meta.Grafanas[0].Username) == 0 {
 		framework.LogWithContext(context.Context).Errorf("not found grafana config")
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "not found grafana config")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "not found grafana config")
 	}
 
 	grafanaUser := &management.DBUser{
@@ -1707,7 +1707,7 @@ func chooseParameterGroup(clusterMeta *meta.ClusterMeta, node *workflowModel.Wor
 		msg := fmt.Sprintf("no default group found for cluster %s, type = %s, version = %s", clusterMeta.Cluster.ID, clusterMeta.Cluster.Type, clusterMeta.GetMinorVersion())
 		framework.LogWithContext(context).Errorf(msg)
 		node.Record(msg)
-		return errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, msg)
 	} else {
 		clusterMeta.Cluster.ParameterGroupID = groups[0].ParamGroupID
 		msg := fmt.Sprintf("default parameter group %s will be applied to cluster %s", clusterMeta.Cluster.ParameterGroupID, clusterMeta.Cluster.ID)
@@ -1768,7 +1768,7 @@ func adjustParameters(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 	}
 
 	if len(paramId) == 0 {
-		return errors.NewError(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
+		return errors.NewError(errors.TIUNIMANAGER_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
 	}
 	resp, err := parameter.NewManager().UpdateClusterParameters(context, cluster.UpdateClusterParametersReq{
 		ClusterID: clusterMeta.Cluster.ID,
@@ -1820,7 +1820,7 @@ func adjustParametersAfterUpgrade(node *workflowModel.WorkFlowNode, context *wor
 		}
 	}
 	if len(paramId) == 0 {
-		return errors.NewError(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
+		return errors.NewError(errors.TIUNIMANAGER_CLUSTER_PARAMETER_QUERY_ERROR, "no parameter found by name max-replicas")
 	}
 	targetParams = append(targetParams, structs.ClusterParameterSampleInfo{
 		ParamId: paramId,
@@ -1970,11 +1970,11 @@ func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			PageSize: 1,
 		})
 		if err != nil {
-			err = errors.WrapError(errors.TIEM_RESOURCE_HOST_NOT_FOUND, ip, err)
+			err = errors.WrapError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_FOUND, ip, err)
 			return err
 		}
 		if len(list) == 0 {
-			err = errors.WrapError(errors.TIEM_RESOURCE_HOST_NOT_FOUND, ip, err)
+			err = errors.WrapError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_FOUND, ip, err)
 			return err
 		}
 		hostInfo := list[0]
@@ -1987,14 +1987,14 @@ func validateHostStatus(node *workflowModel.WorkFlowNode, context *workflow.Flow
 			node.Record(fmt.Sprintf("importing host %s", ip))
 			index = index - 1
 			if index == 0 {
-				err := errors.NewErrorf(errors.TIEM_TASK_TIMEOUT, "importing host %s timeout", ip)
+				err := errors.NewErrorf(errors.TIUNIMANAGER_TASK_TIMEOUT, "importing host %s timeout", ip)
 				framework.LogWithContext(context).Error(err.Error())
 				ticker.Stop()
 				return err
 			}
 			break // nolint
 		default:
-			err := errors.NewErrorf(errors.TIEM_RESOURCE_CREATE_HOST_ERROR, "host %s status is %s", ip, hostInfo.Status)
+			err := errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CREATE_HOST_ERROR, "host %s status is %s", ip, hostInfo.Status)
 			framework.LogWithContext(context).Error(err.Error())
 			ticker.Stop()
 			return err
@@ -2018,7 +2018,7 @@ func validateHostsStatus(node *workflowModel.WorkFlowNode, context *workflow.Flo
 					return err
 				}
 			} else {
-				err := errors.NewErrorf(errors.TIEM_INSTANCE_NOT_FOUND, "clusterInstance %s has no ip", instance.ID)
+				err := errors.NewErrorf(errors.TIUNIMANAGER_INSTANCE_NOT_FOUND, "clusterInstance %s has no ip", instance.ID)
 				framework.LogWithContext(context).Errorf(err.Error())
 				return err
 			}
@@ -2047,7 +2047,7 @@ func rebuildTopologyFromConfig(node *workflowModel.WorkFlowNode, context *workfl
 	metadata := &spec.ClusterMeta{}
 	err = yaml.Unmarshal(dataByte, metadata)
 	if err != nil {
-		err = errors.WrapError(errors.TIEM_UNMARSHAL_ERROR, "rebuild topology config failed", err)
+		err = errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, "rebuild topology config failed", err)
 		return err
 	}
 
@@ -2318,7 +2318,7 @@ func checkRegionHealth(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 	}
 
 	if !strings.Contains(result, "All regions are healthy") {
-		return errors.NewErrorf(errors.TIEM_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
+		return errors.NewErrorf(errors.TIUNIMANAGER_UPGRADE_REGION_UNHEALTHY, "check cluster %s health result: %s", clusterMeta.Cluster.ID, result)
 	}
 
 	node.Record("check all regions are healthy")
@@ -2408,7 +2408,7 @@ func checkUpgradeVersion(node *workflowModel.WorkFlowNode, context *workflow.Flo
 	}
 
 	if displayResp.ClusterMetaInfo.ClusterVersion != version {
-		return errors.NewErrorf(errors.TIEM_UPGRADE_VERSION_INCORRECT, "check cluster %s upgrade version result: %s, expect : %s",
+		return errors.NewErrorf(errors.TIUNIMANAGER_UPGRADE_VERSION_INCORRECT, "check cluster %s upgrade version result: %s, expect : %s",
 			clusterMeta.Cluster.ID, displayResp.ClusterMetaInfo.ClusterVersion, version)
 	}
 	node.Record(fmt.Sprintf("check version %s as expected", displayResp.ClusterMetaInfo.ClusterVersion))

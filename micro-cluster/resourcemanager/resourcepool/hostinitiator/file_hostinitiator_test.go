@@ -21,18 +21,18 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	mock_config "github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_ssh "github.com/pingcap-inc/tiem/test/mockutil/mocksshclientexecutor"
-	sshclient "github.com/pingcap-inc/tiem/util/ssh"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	mock_config "github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_ssh "github.com/pingcap/tiunimanager/test/mockutil/mocksshclientexecutor"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -80,12 +80,12 @@ func Test_AuthHost(t *testing.T) {
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
 
-	err := fileInitiator.AuthHost(context.TODO(), "tiem", "tiem", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
+	err := fileInitiator.AuthHost(context.TODO(), "tiunimanager", "tiunimanager", &structs.HostInfo{Arch: "X86_64", IP: "192.168.177.180", UserName: "fakeUser", Passwd: "fakePasswd"})
 	// depend on whether user home dir has public key
 	if err != nil {
 		emErr, ok := err.(errors.EMError)
 		assert.True(t, ok)
-		assert.Equal(t, errors.TIEM_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INIT_HOST_AUTH_ERROR, emErr.GetCode())
 	}
 }
 
@@ -153,7 +153,7 @@ func Test_Verify_Warings(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, emErr.GetCode())
 }
 
 func Test_Prepare_NoError(t *testing.T) {
@@ -195,7 +195,7 @@ func Test_Prepare_ConnectError(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 }
 
 func Test_SetOffSwap(t *testing.T) {
@@ -275,10 +275,10 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 	jsonStr := `
 	{
 		"cluster_meta": {
-		  "cluster_type": "tiem",
-		  "cluster_name": "tiem-test",
+		  "cluster_type": "tiunimanager",
+		  "cluster_name": "tiunimanager-test",
 		  "cluster_version": "v1.0.0-beta.7",
-		  "deploy_user": "tiem",
+		  "deploy_user": "tiunimanager",
 		  "ssh_type": "builtin"
 		},
 		"instances": [
@@ -343,7 +343,7 @@ func Test_PreCheckHostInstallFilebeat(t *testing.T) {
 
 	installed, err = fileInitiator.PreCheckHostInstallFilebeat(context.TODO(), []structs.HostInfo{{Arch: "X86_64", IP: "172.16.6.999"}})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.TIEM_RESOURCE_BAD_INSTANCE_EXIST, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_BAD_INSTANCE_EXIST, err.(errors.EMError).GetCode())
 }
 
 func Test_JoinEMCluster(t *testing.T) {
@@ -469,14 +469,14 @@ func Test_GetRemountInfoFromMsg(t *testing.T) {
 	assert.NotNil(t, err)
 	emErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 
 	message4 := "mount point /data does not have 'cached', auto fixing not supported"
 	_, _, err = fileInitiator.getRemountInfoFromMsg(context.TODO(), message4)
 	assert.NotNil(t, err)
 	emErr, ok = err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_PREPARE_HOST_ERROR, emErr.GetCode())
 }
 
 func Test_AddRemountOpts(t *testing.T) {
@@ -580,7 +580,7 @@ func Test_skipAuthHost_Skip(t *testing.T) {
 		if authenticate.AuthenticatedUser == "root" && authenticate.AuthenticateContent == framework.GetPrivateKeyFilePath("root") {
 			return "", nil
 		}
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host")
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host")
 	}).Times(2)
 
 	fileInitiator := NewFileHostInitiator()
@@ -602,7 +602,7 @@ func Test_skipAuthHost_NotSkip(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mock_ssh.NewMockSSHClientExecutor(ctrl)
-	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.NewErrorf(errors.TIEM_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host"))
+	mockClient.EXPECT().RunCommandsInRemoteHost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_CONNECT_TO_HOST_ERROR, "bad host"))
 
 	fileInitiator := NewFileHostInitiator()
 	fileInitiator.SetSSHClient(mockClient)
@@ -636,7 +636,7 @@ func Test_extraVMManufacturerCheck(t *testing.T) {
 	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
 	assert.False(t, isVM)
 
-	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "Bad Request"))
+	rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "Bad Request"))
 	isVM = fileInitiator.extraVMManufacturerCheck(context.TODO(), "fakeFacturer")
 	assert.False(t, isVM)
 

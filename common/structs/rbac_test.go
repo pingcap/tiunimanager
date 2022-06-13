@@ -16,7 +16,7 @@
 package structs
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

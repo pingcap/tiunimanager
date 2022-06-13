@@ -17,7 +17,7 @@
 package workflow2
 
 import (
-	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap/tiunimanager/models/workflow"
 )
 
 type WorkFlowDefine struct {

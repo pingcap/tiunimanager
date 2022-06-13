@@ -20,13 +20,13 @@ import (
 	"os"
 	"testing"
 
-	cl "github.com/pingcap-inc/tiem/models/cluster/management"
-	mm "github.com/pingcap-inc/tiem/models/resource/management"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	cl "github.com/pingcap/tiunimanager/models/cluster/management"
+	mm "github.com/pingcap/tiunimanager/models/resource/management"
+	resourcePool "github.com/pingcap/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/resource"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/resource"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

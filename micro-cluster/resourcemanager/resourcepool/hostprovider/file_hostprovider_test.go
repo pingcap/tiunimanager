@@ -21,19 +21,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap/tiunimanager/models/platform/product"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/models"
-	cluster_rw "github.com/pingcap-inc/tiem/models/cluster/management"
-	resource_models "github.com/pingcap-inc/tiem/models/resource"
-	resourcepool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
-	mock_cluster "github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_resource "github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/models"
+	cluster_rw "github.com/pingcap/tiunimanager/models/cluster/management"
+	resource_models "github.com/pingcap/tiunimanager/models/resource"
+	resourcepool "github.com/pingcap/tiunimanager/models/resource/resourcepool"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
+	mock_cluster "github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	mock_resource "github.com/pingcap/tiunimanager/test/mockmodels/mockresource"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -111,7 +111,7 @@ func Test_ImportHosts_Succeed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 
@@ -138,7 +138,7 @@ func Test_ImportHosts_Failed(t *testing.T) {
 			hostIds = append(hostIds, fake_hostId)
 			return hostIds, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -148,9 +148,9 @@ func Test_ImportHosts_Failed(t *testing.T) {
 	hosts = append(hosts, *host)
 	_, err := hostprovider.ImportHosts(context.TODO(), hosts)
 	assert.NotNil(t, err)
-	tiemErr, ok := err.(errors.EMError)
+	tiunimanagerErr, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, tiemErr.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, tiunimanagerErr.GetCode())
 
 }
 
@@ -168,7 +168,7 @@ func Test_QueryHosts_Succeed(t *testing.T) {
 			hosts = append(hosts, *dbhost)
 			return hosts, 1, nil
 		} else {
-			return nil, 0, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, 0, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 
@@ -222,7 +222,7 @@ func Test_DeleteHosts_Succeed(t *testing.T) {
 		if hostIds[0] == fake_hostId1 && hostIds[1] == fake_hostId2 {
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -249,7 +249,7 @@ func Test_UpdateHostReserved_Succeed(t *testing.T) {
 			host2.Reserved = reserved
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -278,7 +278,7 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 			host2.Status = status
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -326,7 +326,7 @@ func Test_GetHierarchy_Succeed(t *testing.T) {
 			items = append(items, item3)
 			return items, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -367,7 +367,7 @@ func Test_GetStocks_Succeed(t *testing.T) {
 			stocks = append(stocks, stocks2)
 			return stocks, nil
 		} else {
-			return nil, errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -400,12 +400,12 @@ func Test_ValidateZoneInfo_Succeed(t *testing.T) {
 	mockQueryLocalFromDB(prw.EXPECT())
 	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "Local", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.TIEM_RESOURCE_INVALID_ZONE_INFO, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_INVALID_ZONE_INFO, err.(errors.EMError).GetCode())
 
-	prw.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIEM_PARAMETER_INVALID)).Times(1)
+	prw.EXPECT().GetVendor(gomock.Any(), gomock.Any()).Return(nil, nil, nil, errors.Error(errors.TIUNIMANAGER_PARAMETER_INVALID)).Times(1)
 	err = hostProvider.ValidateZoneInfo(context.TODO(), &structs.HostInfo{Vendor: "", Region: "Fake_Region", AZ: "Fake_Zone"})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 }
 
 func Test_buildInstancesOnHost(t *testing.T) {
@@ -514,7 +514,7 @@ func Test_UpdateHost(t *testing.T) {
 		if host.ID == fakeHostId1 {
 			return nil
 		} else {
-			return errors.NewError(errors.TIEM_PARAMETER_INVALID, "BadRequest")
+			return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "BadRequest")
 		}
 	})
 	hostprovider := mockFileHostProvider(mockClient)
@@ -558,7 +558,7 @@ func Test_CreateDisks(t *testing.T) {
 	var disk structs.DiskInfo
 	_, err := hostprovider.CreateDisks(context.TODO(), fakeHostId1, []structs.DiskInfo{disk})
 	assert.NotNil(t, err)
-	assert.Equal(t, errors.NewErrorf(errors.TIEM_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
+	assert.Equal(t, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_VALIDATE_DISK_ERROR, "validate disk failed for host %s, disk name (%s) or disk path (%s) or disk capacity (%d) invalid",
 		fakeHostId1, disk.Name, disk.Path, disk.Capacity).GetMsg(), err.(errors.EMError).GetMsg())
 
 	_, err = hostprovider.CreateDisks(context.TODO(), fakeHostId1, nil)

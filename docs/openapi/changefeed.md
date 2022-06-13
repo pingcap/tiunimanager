@@ -31,7 +31,7 @@ query change feed tasks of a cluster
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
+| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | No |
 | createTime | string |  | No |
 | downstream | [cluster.TiDBDownstream](#clustertidbdownstream) OR [cluster.MysqlDownstream](#clustermysqldownstream) OR [cluster.KafkaDownstream](#clusterkafkadownstream) |  | No |
 | downstreamFetchTs | string | _Example:_ `"415241823337054209"` | No |
@@ -39,7 +39,7 @@ query change feed tasks of a cluster
 | downstreamSyncTs | string | _Example:_ `"415241823337054209"` | No |
 | downstreamSyncUnix | integer | _Example:_ `1642402879000` | No |
 | downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | No |
-| id | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
+| id | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | No |
 | name | string | _Example:_ `"my_sync_name"` | No |
 | rules | [ string ] | _Example:_ `["*.*"]` | No |
 | startTS | string | _Example:_ `"415241823337054209"` | No |
@@ -64,7 +64,7 @@ curl -X 'GET' \
 "code": 0,
 "data": [
 {
-"clusterId": "CLUSTER_ID_IN_TIEM__22",
+"clusterId": "CLUSTER_ID_IN_TIUNIMANAGER__22",
 "createTime": "string",
 "downstream": {},
 "downstreamFetchTs": "415241823337054209",
@@ -72,7 +72,7 @@ curl -X 'GET' \
 "downstreamSyncTs": "415241823337054209",
 "downstreamSyncUnix": 1642402879000,
 "downstreamType": "tidb",
-"id": "CLUSTER_ID_IN_TIEM__22",
+"id": "CLUSTER_ID_IN_TIUNIMANAGER__22",
 "name": "my_sync_name",
 "rules": [
 "*.*"
@@ -114,7 +114,7 @@ create a change feed task
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | Yes |
+| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | Yes |
 | downstream | [cluster.TiDBDownstream](#clustertidbdownstream) OR [cluster.MysqlDownstream](#clustermysqldownstream) OR [cluster.KafkaDownstream](#clusterkafkadownstream) |  | No |
 | downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | Yes |
 | name | string | _Example:_ `"my_sync_name"` | Yes |
@@ -130,7 +130,7 @@ create a change feed task
 | maxTxnRow | integer | _Example:_ `4` | No |
 | password | string | _Example:_ `"my_password"` | No |
 | port | integer | _Example:_ `4534` | No |
-| targetClusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
+| targetClusterId | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | No |
 | tls | boolean | _Example:_ `false` | No |
 | username | string | _Example:_ `"tidb"` | No |
 | workerCount | integer | _Example:_ `2` | No |
@@ -161,7 +161,7 @@ create a change feed task
 | maxTxnRow | integer | _Example:_ `4` | No |
 | password | string | _Example:_ `"my_password"` | No |
 | port | integer | _Example:_ `4534` | No |
-| targetClusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
+| targetClusterId | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | No |
 | tls | boolean | _Example:_ `false` | No |
 | username | string | _Example:_ `"tidb"` | No |
 | workerCount | integer | _Example:_ `2` | No |
@@ -186,7 +186,7 @@ create a change feed task
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| id | string | _Example:_ `"TASK_ID_IN_TIEM____22"` | No |
+| id | string | _Example:_ `"TASK_ID_IN_TIUNIMANAGER____22"` | No |
 
 #### Example
 request
@@ -197,7 +197,7 @@ curl -X 'POST' \
   -H 'Authorization: Bearer mytoken' \
   -H 'Content-Type: application/json' \
   -d '{
-  "clusterId": "CLUSTER_ID_IN_TIEM__22",
+  "clusterId": "CLUSTER_ID_IN_TIUNIMANAGER__22",
   "downstream": {},
   "downstreamType": "tidb",
   "name": "my_sync_name",
@@ -212,7 +212,7 @@ response
 {
   "code": 0,
   "data": {
-    "id": "TASK_ID_IN_TIEM____22"
+    "id": "TASK_ID_IN_TIUNIMANAGER____22"
   },
   "message": "string"
 }
@@ -248,7 +248,7 @@ delete a change feed task
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| id | string | _Example:_ `"TASK_ID_IN_TIEM____22"` | No |
+| id | string | _Example:_ `"TASK_ID_IN_TIUNIMANAGER____22"` | No |
 | status | string | _Enum:_ `"Initial"`, `"Normal"`, `"Stopped"`, `"Finished"`, `"Error"`, `"Failed"`<br>_Example:_ `"Normal"` | No |
 
 #### Example
@@ -264,7 +264,7 @@ response
 {
   "code": 0,
   "data": {
-    "id": "TASK_ID_IN_TIEM____22",
+    "id": "TASK_ID_IN_TIUNIMANAGER____22",
     "status": "Normal"
   },
   "message": "string"
@@ -301,7 +301,7 @@ get change feed detail
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
+| clusterId | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | No |
 | createTime | string |  | No |
 | downstream | [cluster.TiDBDownstream](#clustertidbdownstream) OR [cluster.MysqlDownstream](#clustermysqldownstream) OR [cluster.KafkaDownstream](#clusterkafkadownstream) |  | No |
 | downstreamFetchTs | string | _Example:_ `"415241823337054209"` | No |
@@ -309,7 +309,7 @@ get change feed detail
 | downstreamSyncTs | string | _Example:_ `"415241823337054209"` | No |
 | downstreamSyncUnix | integer | _Example:_ `1642402879000` | No |
 | downstreamType | string | _Enum:_ `"tidb"`, `"kafka"`, `"mysql"`<br>_Example:_ `"tidb"` | No |
-| id | string | _Example:_ `"CLUSTER_ID_IN_TIEM__22"` | No |
+| id | string | _Example:_ `"CLUSTER_ID_IN_TIUNIMANAGER__22"` | No |
 | name | string | _Example:_ `"my_sync_name"` | No |
 | rules | [ string ] | _Example:_ `["*.*"]` | No |
 | startTS | string | _Example:_ `"415241823337054209"` | No |
@@ -333,7 +333,7 @@ response
 {
   "code": 0,
   "data": {
-    "clusterId": "CLUSTER_ID_IN_TIEM__22",
+    "clusterId": "CLUSTER_ID_IN_TIUNIMANAGER__22",
     "createTime": "string",
     "downstream": {},
     "downstreamFetchTs": "415241823337054209",
@@ -341,7 +341,7 @@ response
     "downstreamSyncTs": "415241823337054209",
     "downstreamSyncUnix": 1642402879000,
     "downstreamType": "tidb",
-    "id": "CLUSTER_ID_IN_TIEM__22",
+    "id": "CLUSTER_ID_IN_TIUNIMANAGER__22",
     "name": "my_sync_name",
     "rules": [
       "*.*"

@@ -9,7 +9,7 @@
 package identification
 
 import (
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/models"
 	"os"
 	"testing"
 )

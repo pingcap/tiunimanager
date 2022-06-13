@@ -17,14 +17,14 @@ package workflow2
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/workflow"
 	"sync"
 	"time"
 )
@@ -157,7 +157,7 @@ func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName stri
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
-		return nil, errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*WorkFlowDefine), nil
 }
@@ -167,13 +167,13 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bi
 	defer framework.LogWithContext(ctx).Infof("begin CreateWorkFlow %s", flowName)
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return "", errors.NewErrorf(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_DEFINE_NOT_FOUND, "%s workflow definion not exist", flowName)
 	}
 
 	dataMap := map[string]string{
-		framework.TiEM_X_TRACE_ID_KEY:  framework.GetTraceIDFromContext(ctx),
-		framework.TiEM_X_USER_ID_KEY:   framework.GetUserIDFromContext(ctx),
-		framework.TiEM_X_TENANT_ID_KEY: framework.GetTenantIDFromContext(ctx),
+		framework.TiUniManager_X_TRACE_ID_KEY:  framework.GetTraceIDFromContext(ctx),
+		framework.TiUniManager_X_USER_ID_KEY:   framework.GetUserIDFromContext(ctx),
+		framework.TiUniManager_X_TENANT_ID_KEY: framework.GetTenantIDFromContext(ctx),
 	}
 	flow, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, &workflow.WorkFlow{
 		Name:    flowDefine.(*WorkFlowDefine).FlowName,
@@ -194,7 +194,7 @@ func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, bi
 func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.QueryWorkFlowsReq) (resp message.QueryWorkFlowsResp, page structs.Page, err error) {
 	flows, total, err := models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, request.BizID, request.BizType, request.FlowName, request.Status, request.Page, request.PageSize)
 	if err != nil {
-		return resp, page, errors.WrapError(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+		return resp, page, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
 
 	flowInfos := make([]*structs.WorkFlowInfo, len(flows))
@@ -222,12 +222,12 @@ func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, request message.Q
 func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, request message.QueryWorkFlowDetailReq) (resp message.QueryWorkFlowDetailResp, err error) {
 	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, request.WorkFlowID)
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_WORKFLOW_DETAIL_FAILED, err.Error(), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_DETAIL_FAILED, err.Error(), err)
 	}
 
 	define, err := mgr.GetWorkFlowDefine(ctx, flow.Name)
 	if err != nil {
-		return resp, errors.WrapError(errors.TIEM_WORKFLOW_DEFINE_NOT_FOUND, err.Error(), err)
+		return resp, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_DEFINE_NOT_FOUND, err.Error(), err)
 	}
 
 	resp = message.QueryWorkFlowDetailResp{
@@ -283,11 +283,11 @@ func (mgr *WorkFlowManager) Start(ctx context.Context, flowId string) error {
 	flow, err := models.GetWorkFlowReaderWriter().GetWorkFlow(ctx, flowId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get workflow by workflow Id %s, failed %s", flowId, err.Error())
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
 	if flow.Finished() {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_START_FAILED, "workflow Id %s is finished", flowId)
+		return errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_START_FAILED, "workflow Id %s is finished", flowId)
 	}
 
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusProcessing, "")
@@ -304,11 +304,11 @@ func (mgr *WorkFlowManager) Stop(ctx context.Context, flowId string) error {
 	flow, err := models.GetWorkFlowReaderWriter().GetWorkFlow(ctx, flowId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get workflow by workflow Id %s, failed %s", flowId, err.Error())
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
 	if flow.Finished() {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_STOP_FAILED, "workflow Id %s is finished", flowId)
+		return errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_STOP_FAILED, "workflow Id %s is finished", flowId)
 	}
 
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusStopped, "")
@@ -325,11 +325,11 @@ func (mgr *WorkFlowManager) Cancel(ctx context.Context, flowId string, reason st
 	flow, err := models.GetWorkFlowReaderWriter().GetWorkFlow(ctx, flowId)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get workflow by workflow Id %s, failed %s", flowId, err.Error())
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_QUERY_FAILED, err.Error(), err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_QUERY_FAILED, err.Error(), err)
 	}
 	if flow.Finished() || flow.Stopped() {
 		framework.LogWithContext(ctx).Infof("workflow Id %s is finished", flowId)
-		return errors.NewErrorf(errors.TIEM_WORKFLOW_CANCEL_FAILED, "workflow Id %s is finished", flowId)
+		return errors.NewErrorf(errors.TIUNIMANAGER_WORKFLOW_CANCEL_FAILED, "workflow Id %s is finished", flowId)
 	}
 
 	err = models.GetWorkFlowReaderWriter().UpdateWorkFlow(ctx, flowId, constants.WorkFlowStatusCanceling, "")

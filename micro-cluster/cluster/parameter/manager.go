@@ -31,35 +31,35 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap/tiunimanager/deployment"
 
-	tidbApi "github.com/pingcap-inc/tiem/util/api/tidb/http"
+	tidbApi "github.com/pingcap/tiunimanager/util/api/tidb/http"
 
-	"github.com/pingcap-inc/tiem/util/api/tikv"
+	"github.com/pingcap/tiunimanager/util/api/tikv"
 
-	"github.com/pingcap-inc/tiem/util/api/pd"
+	"github.com/pingcap/tiunimanager/util/api/pd"
 
-	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
 
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/models"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
 )
 
 type Manager struct{}
@@ -99,7 +99,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 	offset := (req.Page - 1) * req.PageSize
 	pgId, params, total, err := models.GetClusterParameterReaderWriter().QueryClusterParameter(ctx, req.ClusterID, req.ParamName, req.InstanceType, offset, req.PageSize)
 	if err != nil {
-		return resp, page, errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIEM_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_CLUSTER_PARAMETER_QUERY_ERROR, errors.TIUNIMANAGER_CLUSTER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 
 	resp = cluster.QueryClusterParametersResp{ParamGroupId: pgId}
@@ -109,11 +109,11 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 		ranges, err := UnmarshalCovertArray(param.Range)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("failed to convert parameter range. req: %v, err: %v", req, err)
-			return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+			return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		unitOptions, err := UnmarshalCovertArray(param.UnitOptions)
 		if err != nil {
-			return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+			return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		// convert realValue
 		realValue := structs.ParameterRealValue{}
@@ -121,7 +121,7 @@ func (m *Manager) QueryClusterParameters(ctx context.Context, req cluster.QueryC
 			err = json.Unmarshal([]byte(param.RealValue), &realValue)
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("failed to convert parameter realValue. req: %v, err: %v", req, err)
-				return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+				return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain(), err)
 			}
 		}
 		resp.Params[i] = structs.ClusterParameterInfo{
@@ -244,7 +244,7 @@ func (m *Manager) ApplyParameterGroup(ctx context.Context, req message.ApplyPara
 	_, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "", "")
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("detail parameter group %s from db error: %s", req.ParamGroupId, err.Error())
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain())
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR.Explain())
 	}
 
 	// Constructing clusterParameter.ModifyParameter objects
@@ -302,7 +302,7 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupId, "", "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR, err.Error())
 	}
 
 	// Define the list of prepared component IDs
@@ -385,7 +385,7 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 	err = models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, req.ParamGroupId, req.ClusterID, pgs)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_APPLY_ERROR, err.Error())
 	}
 	resp = message.ApplyParameterGroupResp{
 		ClusterID:    req.ClusterID,
@@ -404,7 +404,7 @@ func (m *Manager) PersistApplyParameterGroup(ctx context.Context, req message.Ap
 func appendClusterParamMapping(clusterId, paramId string, realValue structs.ParameterRealValue, pgs []*parameter.ClusterParameterMapping) error {
 	b, err := json.Marshal(realValue)
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, err.Error())
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, err.Error())
 	}
 	pgs = append(pgs, &parameter.ClusterParameterMapping{ // nolint
 		ClusterID:   clusterId,
@@ -416,7 +416,7 @@ func appendClusterParamMapping(clusterId, paramId string, realValue structs.Para
 
 func (m *Manager) InspectClusterParameters(ctx context.Context, req cluster.InspectParametersReq) (resp cluster.InspectParametersResp, err error) {
 	if req.InstanceID == "" && req.ClusterID == "" {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "both clusterID and instanceID are empty")
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "both clusterID and instanceID are empty")
 	}
 
 	// Define cluster component instance
@@ -710,13 +710,13 @@ func inspectApiParameter(ctx context.Context, instance *management.ClusterInstan
 	reqApiParams := map[string]interface{}{}
 	if err = json.Unmarshal(apiContent, &reqApiParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s api parameters, err = %v", instance.Type, err)
-		return inspectParams, instDiffParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instance.Type, err)
+		return inspectParams, instDiffParams, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instance.Type, err)
 	}
 	// Get api flattened parameter set
 	flattenedApiParams, err := FlattenedParameters(reqApiParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to flattened %s api parameters, err = %v", instance.Type, err)
-		return inspectParams, instDiffParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s api parameters, err = %v", instance.Type, err)
+		return inspectParams, instDiffParams, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to flattened %s api parameters, err = %v", instance.Type, err)
 	}
 
 	// Define the set of parameters to store that are not included in the api return
@@ -759,13 +759,13 @@ func inspectConfigParameter(ctx context.Context, instance *management.ClusterIns
 	reqConfigParams := map[string]interface{}{}
 	if err := toml.Unmarshal([]byte(configContentStr), &reqConfigParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s config file parameters, err = %v", instance.Type, err)
-		return inspectParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s config file parameters, err = %v", instance.Type, err)
+		return inspectParams, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to convert %s config file parameters, err = %v", instance.Type, err)
 	}
 	// Get config file flattened parameter set
 	flattenedConfigParams, err := FlattenedParameters(reqConfigParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to flattened %s config file parameters, err = %v", instance.Type, err)
-		return inspectParams, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s config file parameters, err = %v", instance.Type, err)
+		return inspectParams, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to flattened %s config file parameters, err = %v", instance.Type, err)
 	}
 
 	for _, param := range instDiffParams {

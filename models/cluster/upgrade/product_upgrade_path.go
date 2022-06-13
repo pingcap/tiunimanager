@@ -26,14 +26,14 @@ package upgrade
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"gorm.io/gorm"
 )
 
 type ProductUpgradePath struct {
 	ID         string         `gorm:"primaryKey;"`
 	Type       string         `gorm:"not null;comment:'in-place/migration'"`
-	ProductID  string         `gorm:"not null;size:64;comment:'TiDB/DM/TiEM'"`
+	ProductID  string         `gorm:"not null;size:64;comment:'TiDB/DM/TiUniManager'"`
 	SrcVersion string         `gorm:"not null;size:64;comment:'original version of the cluster'"`
 	DstVersion string         `gorm:"not null;size:64;comment:'available upgrade version of the cluster'"`
 	CreatedAt  time.Time      `gorm:"autoCreateTime;<-:create;->;"`

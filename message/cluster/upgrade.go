@@ -24,7 +24,7 @@
 
 package cluster
 
-import "github.com/pingcap-inc/tiem/common/structs"
+import "github.com/pingcap/tiunimanager/common/structs"
 
 // QueryUpgradePathReq Message for querying available upgrade path for given cluster ID
 type QueryUpgradePathReq struct {

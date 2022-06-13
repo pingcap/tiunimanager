@@ -19,36 +19,36 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 	"testing"
 	"time"
 
-	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	mock_allocator_recycler "github.com/pingcap-inc/tiem/test/mockresource"
+	resourceManagement "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management"
+	mock_allocator_recycler "github.com/pingcap/tiunimanager/test/mockresource"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/parameter"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	em_errors "github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	mock_br_service "github.com/pingcap-inc/tiem/test/mockbr"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockresource"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	em_errors "github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	wfModel "github.com/pingcap/tiunimanager/models/workflow"
+	mock_br_service "github.com/pingcap/tiunimanager/test/mockbr"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockresource"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/pkg/sftp"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/ssh"
@@ -679,7 +679,7 @@ func TestManager_CreateCluster(t *testing.T) {
 
 	t.Run("validate", func(t *testing.T) {
 		validator = func(ctx context.Context, req *cluster.CreateClusterReq) error {
-			return em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)
+			return em_errors.Error(em_errors.TIUNIMANAGER_PARAMETER_INVALID)
 		}
 		defer func() {
 			validator = validateCreating
@@ -2226,7 +2226,7 @@ func TestManager_DeleteMetadataPhysically(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIEM_PARAMETER_INVALID)).AnyTimes()
+	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "", gomock.Any()).Return(em_errors.Error(em_errors.TIUNIMANAGER_PARAMETER_INVALID)).AnyTimes()
 	clusterRW.EXPECT().ClearClusterPhysically(gomock.Any(), "111", gomock.Any()).Return(nil).AnyTimes()
 
 	resourceManager := mock_allocator_recycler.NewMockAllocatorRecycler(ctrl)

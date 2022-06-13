@@ -29,23 +29,23 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message/cluster"
 
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 func TestManager_BuildClusterLogConfig(t *testing.T) {
@@ -183,7 +183,7 @@ var esResult = `
     "max_score" : null,
     "hits" : [
       {
-        "_index" : "tiem-tidb-cluster-2021.12.16",
+        "_index" : "tiunimanager-tidb-cluster-2021.12.16",
         "_type" : "_doc",
         "_id" : "Nu30wX0BomM1rMZIIW8w",
         "_score" : null,

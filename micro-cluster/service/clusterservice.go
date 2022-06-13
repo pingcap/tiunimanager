@@ -25,43 +25,43 @@ import (
 	"runtime/debug"
 	"time"
 
-	platformLog "github.com/pingcap-inc/tiem/micro-cluster/platform/log"
+	platformLog "github.com/pingcap/tiunimanager/micro-cluster/platform/log"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/check"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/system"
+	"github.com/pingcap/tiunimanager/micro-cluster/platform/check"
+	"github.com/pingcap/tiunimanager/micro-cluster/platform/system"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/metrics"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/rbac"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/metrics"
+	"github.com/pingcap/tiunimanager/micro-cluster/user/rbac"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/account"
-	"github.com/pingcap-inc/tiem/micro-cluster/user/identification"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/micro-cluster/platform/product"
+	"github.com/pingcap/tiunimanager/micro-cluster/user/account"
+	"github.com/pingcap/tiunimanager/micro-cluster/user/identification"
 
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/backuprestore"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/config"
+	"github.com/pingcap/tiunimanager/micro-cluster/platform/config"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
-	clusterLog "github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
-	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
-	clusterParameter "github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
-	switchoverManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/switchover"
-	"github.com/pingcap-inc/tiem/micro-cluster/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/changefeed"
+	clusterLog "github.com/pingcap/tiunimanager/micro-cluster/cluster/log"
+	clusterManager "github.com/pingcap/tiunimanager/micro-cluster/cluster/management"
+	clusterParameter "github.com/pingcap/tiunimanager/micro-cluster/cluster/parameter"
+	switchoverManager "github.com/pingcap/tiunimanager/micro-cluster/cluster/switchover"
+	"github.com/pingcap/tiunimanager/micro-cluster/datatransfer/importexport"
+	"github.com/pingcap/tiunimanager/micro-cluster/parametergroup"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
-var TiEMClusterServiceName = "go.micro.tiem.cluster"
+var TiUniManagerClusterServiceName = "go.micro.tiunimanager.cluster"
 
 type ClusterServiceHandler struct {
 	resourceManager         *resourcemanager.ResourceManager
@@ -88,12 +88,12 @@ func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *c
 		result, err := rbac.GetRBACService().CheckPermissionForUser(ctx, message.CheckPermissionForUserReq{UserID: framework.GetUserIDFromContext(ctx), Permissions: permissions})
 		if err != nil {
 			errMsg := fmt.Sprintf("check permission for user %s error, permission %+v, err = %s", framework.GetUserIDFromContext(ctx), permissions, err.Error())
-			handleResponse(ctx, resp, errors.NewError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
+			handleResponse(ctx, resp, errors.NewError(errors.TIUNIMANAGER_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
 			return false
 		}
 		if !result.Result {
 			errMsg := fmt.Sprintf("check permission for user %s has no permisson %+v", framework.GetUserIDFromContext(ctx), permissions)
-			handleResponse(ctx, resp, errors.NewError(errors.TIEM_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
+			handleResponse(ctx, resp, errors.NewError(errors.TIUNIMANAGER_RBAC_PERMISSION_CHECK_FAILED, errMsg), nil, nil)
 			return false
 		}
 	}
@@ -102,7 +102,7 @@ func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *c
 
 	if err != nil {
 		errMsg := fmt.Sprintf("unmarshal request failed, err = %s", err.Error())
-		handleResponse(ctx, resp, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
+		handleResponse(ctx, resp, errors.NewError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, errMsg), nil, nil)
 		return false
 	} else {
 		if pc, _, _, ok := runtime.Caller(1); ok {
@@ -126,13 +126,13 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 		data, getDataError := json.Marshal(responseData)
 		if getDataError != nil {
 			// deal with err uniformly later
-			err = errors.WrapError(errors.TIEM_MARSHAL_ERROR, "marshal response data failed", getDataError)
+			err = errors.WrapError(errors.TIUNIMANAGER_MARSHAL_ERROR, "marshal response data failed", getDataError)
 		} else {
 			if pc, _, _, ok := runtime.Caller(1); ok {
 				desensitizeLog(ctx, runtime.FuncForPC(pc).Name(), "end", responseData)
 			}
 			// handle data and page
-			resp.Code = int32(errors.TIEM_SUCCESS)
+			resp.Code = int32(errors.TIUNIMANAGER_SUCCESS)
 			resp.Response = string(data)
 			if page != nil {
 				resp.Page = page
@@ -148,7 +148,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 			resp.Message = finalError.Error()
 			return
 		} else {
-			resp.Code = int32(errors.TIEM_UNRECOGNIZED_ERROR)
+			resp.Code = int32(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR)
 			resp.Message = err.Error()
 		}
 
@@ -164,7 +164,7 @@ func handleResponse(ctx context.Context, resp *clusterservices.RpcResponse, err 
 func handlePanic(ctx context.Context, funcName string, resp *clusterservices.RpcResponse) {
 	if r := recover(); r != nil {
 		framework.LogWithContext(ctx).Errorf("recover from %s, stacktrace %s", funcName, string(debug.Stack()))
-		resp.Code = int32(errors.TIEM_PANIC)
+		resp.Code = int32(errors.TIUNIMANAGER_PANIC)
 		resp.Message = fmt.Sprintf("%v", r)
 	}
 }

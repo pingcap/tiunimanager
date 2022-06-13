@@ -22,17 +22,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiem/models"
-	workflow "github.com/pingcap-inc/tiem/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostinitiator"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap/tiunimanager/models"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 type ResourcePool struct {
@@ -174,7 +174,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", flowName, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, hostIds, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
 		host.SSHPort = int32(hostSSHPort)
@@ -186,7 +186,7 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 
 		flowIds = append(flowIds, flowId)
 	}
-	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
+	// Sync start each flow in a goroutine: tiup-tiunimanager/sqlite DO NOT support concurrent
 	operationName := fmt.Sprintf(
 		"%s.%s BackgroundTask",
 		framework.GetMicroServiceNameFromContext(ctx),
@@ -238,12 +238,12 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		if err != nil {
 			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+			return nil, errors.WrapError(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
 		}
 		if count == 0 {
 			errMsg := fmt.Sprintf("deleting host %s is not found", hostId)
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.NewError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg)
+			return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, errMsg)
 		}
 		flowName := p.selectDeleteFlowName(&hosts[0], force)
 		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
@@ -252,7 +252,7 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", flowName, hostId, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
 		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostIDArrayKey, []string{hostId})

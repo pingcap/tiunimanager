@@ -25,16 +25,16 @@ package meta
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
@@ -76,7 +76,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClu
 			return nil, err
 		}
 		if !cmp {
-			return nil, errors.NewError(errors.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+			return nil, errors.NewError(errors.TIUNIMANAGER_CHECK_CLUSTER_VERSION_ERROR,
 				"the specified cluster version is less than source cluster version")
 		}
 		meta.Cluster.Version = parameter.Version
@@ -230,7 +230,7 @@ func (p *ClusterMeta) BuildForTakeover(ctx context.Context, name string, dbPassw
 // @return error
 func (p *ClusterMeta) ParseTopologyFromConfig(ctx context.Context, specs *spec.Specification) error {
 	if specs == nil {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "cannot parse empty specification")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "cannot parse empty specification")
 	}
 	instances := make([]*management.ClusterInstance, 0)
 	if len(specs.PDServers) > 0 {

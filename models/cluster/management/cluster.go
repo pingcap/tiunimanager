@@ -18,9 +18,9 @@ package management
 import (
 	"encoding/json"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/models/common"
 	"gorm.io/gorm"
 	"time"
 )
@@ -58,7 +58,7 @@ func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
 	if jsonErr == nil {
 		t.TagInfo = string(b)
 	} else {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, jsonErr.Error())
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, jsonErr.Error())
 	}
 
 	if len(t.ID) == 0 {

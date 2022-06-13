@@ -17,7 +17,7 @@ package check
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 )
 
 type CheckService interface {

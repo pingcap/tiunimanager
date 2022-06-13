@@ -1,4 +1,4 @@
-# TiEM - TiDB Enterprise Manager
+# TiUniManager
 
 ## Contents
 
@@ -7,14 +7,14 @@
 - micro-cluster - Core service.
 - docs - Documentation.
 
-## Build and Run TiEM
+## Build and Run TiUniManager
 
-TiEM can be compiled and used on Linux, OSX, CentOS, It is as simple as:
+TiUniManager can be compiled and used on Linux, OSX, CentOS, It is as simple as:
 ```
 make
 ```
 
-After building TiEM, it is good idea to test it using:
+After building TiUniManager, it is good idea to test it using:
 ```
 make test
 ```
@@ -58,7 +58,7 @@ For example:
 
 ```go
 import(
-	"github.com/pingcap/tiem/addon/logger"
+	"github.com/pingcap/tiunimanager/addon/logger"
 )
 ```
 
@@ -83,7 +83,7 @@ func CheckUser(ctx context.Context, name, passwd string) error {
 ```go
 func init() {
     var err error
-    dbFile := "tiem.sqlite.db"
+    dbFile := "tiunimanager.sqlite.db"
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
     getLogger().Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})

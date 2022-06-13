@@ -17,20 +17,20 @@ package resourcepool
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/message"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	rp_consts "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/models/platform/config"
-	mock_config "github.com/pingcap-inc/tiunimanager/test/mockmodels/mockconfig"
-	mock_provider "github.com/pingcap-inc/tiunimanager/test/mockresource/mockprovider"
-	mock_workflow "github.com/pingcap-inc/tiunimanager/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	mock_config "github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_provider "github.com/pingcap/tiunimanager/test/mockresource/mockprovider"
+	mock_workflow "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 

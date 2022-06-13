@@ -21,11 +21,11 @@ import (
 
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/client"
-	"github.com/pingcap-inc/tiunimanager/metrics"
-	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/metrics"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
 	"github.com/gin-contrib/cors"
 
@@ -33,10 +33,10 @@ import (
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
-	_ "github.com/pingcap-inc/tiunimanager/docs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/micro-api/interceptor"
-	"github.com/pingcap-inc/tiunimanager/micro-api/route"
+	_ "github.com/pingcap/tiunimanager/docs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/micro-api/interceptor"
+	"github.com/pingcap/tiunimanager/micro-api/route"
 )
 
 // @title EM UI API

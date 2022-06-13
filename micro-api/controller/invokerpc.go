@@ -17,14 +17,14 @@ package controller
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 
 	"encoding/json"
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 // InvokeRpcMethod

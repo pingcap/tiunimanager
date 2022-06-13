@@ -18,13 +18,13 @@ package identification
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/message"
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 type Manager struct{}

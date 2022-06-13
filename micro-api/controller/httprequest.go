@@ -17,13 +17,13 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 // HandleJsonRequestWithBuiltReq

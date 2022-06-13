@@ -19,15 +19,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
 
-	cluster_rw "github.com/pingcap-inc/tiunimanager/models/cluster/management"
-	"github.com/pingcap-inc/tiunimanager/models/resource"
-	"github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
+	cluster_rw "github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/resource"
+	"github.com/pingcap/tiunimanager/models/resource/resourcepool"
 )
 
 type FileHostProvider struct {

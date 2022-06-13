@@ -29,7 +29,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 )
 
 const (

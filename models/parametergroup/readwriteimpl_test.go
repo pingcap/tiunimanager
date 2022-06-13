@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/message"
 
 	"github.com/stretchr/testify/assert"
 )

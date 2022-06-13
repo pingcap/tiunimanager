@@ -17,10 +17,10 @@ package config
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/message"
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/config"
 )
 
 type SystemConfigManager struct{}

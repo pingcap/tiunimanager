@@ -17,7 +17,7 @@
 package fastrand
 
 import (
-	testbridge2 "github.com/pingcap-inc/tiunimanager/util/testbridge"
+	testbridge2 "github.com/pingcap/tiunimanager/util/testbridge"
 	"testing"
 
 	"go.uber.org/goleak"

@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/bmizerany/assert"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 )
 
 func Test_ValidArchType(t *testing.T) {

@@ -27,7 +27,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 )
 
 func TestGormProductUpgradePathReadWrite_Create_Fail(t *testing.T) {

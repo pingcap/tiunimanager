@@ -18,8 +18,8 @@ package management
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 type HostInstanceItem struct {

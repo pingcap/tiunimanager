@@ -29,14 +29,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	emerr "github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
-	changefeedModel "github.com/pingcap-inc/tiunimanager/models/cluster/changefeed"
-	workflowModel "github.com/pingcap-inc/tiunimanager/models/workflow"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	emerr "github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	changefeedModel "github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 const (

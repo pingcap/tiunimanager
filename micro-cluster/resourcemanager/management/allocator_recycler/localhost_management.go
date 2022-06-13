@@ -19,9 +19,9 @@ package allocrecycle
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/models/resource"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/resource"
 )
 
 type LocalHostManagement struct {

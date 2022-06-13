@@ -27,9 +27,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

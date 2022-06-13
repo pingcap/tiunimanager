@@ -29,15 +29,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
-	common2 "github.com/pingcap-inc/tiunimanager/models/common"
+	common2 "github.com/pingcap/tiunimanager/models/common"
 
-	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
-	"github.com/pingcap-inc/tiunimanager/models/parametergroup"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/parametergroup"
 
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

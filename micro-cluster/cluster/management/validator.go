@@ -17,11 +17,11 @@ package management
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 var validator = validateCreating

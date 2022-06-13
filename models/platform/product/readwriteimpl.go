@@ -26,9 +26,9 @@ package product
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 

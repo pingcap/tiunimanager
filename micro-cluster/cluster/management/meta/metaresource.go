@@ -25,14 +25,14 @@ package meta
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	resource "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
-	"github.com/pingcap-inc/tiunimanager/models/platform/product"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	resource "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/platform/product"
 )
 
 func (p *ClusterMeta) GenerateInstanceResourceRequirements(ctx context.Context) ([]resource.AllocRequirement, []*management.ClusterInstance, error) {

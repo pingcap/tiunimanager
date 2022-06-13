@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	resource_structs "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
-	"github.com/pingcap-inc/tiunimanager/models/resource/management"
-	"github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	resource_structs "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/models/resource/management"
+	"github.com/pingcap/tiunimanager/models/resource/resourcepool"
 	"github.com/stretchr/testify/assert"
 )
 

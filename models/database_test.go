@@ -18,9 +18,9 @@ package models
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models/platform/system"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/platform/system"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"

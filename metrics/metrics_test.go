@@ -17,7 +17,7 @@
 package metrics
 
 import (
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"

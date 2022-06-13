@@ -25,17 +25,17 @@ package log
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/deployment"
-	workflowModel "github.com/pingcap-inc/tiunimanager/models/workflow"
+	"github.com/pingcap/tiunimanager/deployment"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	mock_deployment "github.com/pingcap-inc/tiunimanager/test/mockdeployment"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
 
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
 	"github.com/alecthomas/assert"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func TestExecutor_collectorClusterLogConfig(t *testing.T) {

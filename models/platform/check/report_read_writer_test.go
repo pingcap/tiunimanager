@@ -25,8 +25,8 @@ package check
 
 import (
 	ctx "context"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/structs"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

@@ -26,7 +26,7 @@ package message
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 // QueryPlatformLogReq Messages that query platform log information can be filtered based on query criteria

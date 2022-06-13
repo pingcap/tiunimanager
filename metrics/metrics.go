@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

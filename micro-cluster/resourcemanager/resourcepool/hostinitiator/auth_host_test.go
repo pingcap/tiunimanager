@@ -20,11 +20,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	mock_ssh "github.com/pingcap-inc/tiunimanager/test/mockutil/mocksshclientexecutor"
-	sshclient "github.com/pingcap-inc/tiunimanager/util/ssh"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	mock_ssh "github.com/pingcap/tiunimanager/test/mockutil/mocksshclientexecutor"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 	"github.com/stretchr/testify/assert"
 )
 

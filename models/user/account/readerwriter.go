@@ -17,7 +17,7 @@ package account
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 type ReaderWriter interface {

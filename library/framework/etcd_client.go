@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
 	clientv2 "go.etcd.io/etcd/client/v2"
 	clientv3 "go.etcd.io/etcd/client/v3"

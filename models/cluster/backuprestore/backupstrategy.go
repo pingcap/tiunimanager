@@ -15,7 +15,7 @@
 
 package backuprestore
 
-import "github.com/pingcap-inc/tiunimanager/models/common"
+import "github.com/pingcap/tiunimanager/models/common"
 
 // BackupStrategy backup strategy information
 type BackupStrategy struct {

@@ -24,9 +24,9 @@
 package check
 
 import (
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"

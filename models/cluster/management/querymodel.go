@@ -15,7 +15,7 @@
 
 package management
 
-import "github.com/pingcap-inc/tiunimanager/common/constants"
+import "github.com/pingcap/tiunimanager/common/constants"
 
 type Filters struct {
 	ClusterIDs    []string

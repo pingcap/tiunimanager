@@ -27,14 +27,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
 
 	"gorm.io/gorm"
 
-	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 )
 
 type ClusterParameterReadWrite struct {

@@ -26,7 +26,7 @@ package structs
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 )
 
 //ClusterResourceParameterComputeResource Single component resource parameters when creating a cluster

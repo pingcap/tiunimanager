@@ -20,10 +20,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 var resourceManager *ResourceManager

@@ -16,7 +16,7 @@
 package disk
 //
 //import (
-//	"github.com/pingcap-inc/tiunimanager/library/firstparty/util/memory"
+//	"github.com/pingcap/tiunimanager/library/firstparty/util/memory"
 //)
 //
 //// Tracker is used to track the disk usage during query execution.

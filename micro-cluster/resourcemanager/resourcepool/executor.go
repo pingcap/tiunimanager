@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	rp_consts "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
-	workflowModel "github.com/pingcap-inc/tiunimanager/models/workflow"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {

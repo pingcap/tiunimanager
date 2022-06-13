@@ -19,14 +19,14 @@ package interceptor
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 	"math"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 	log "github.com/sirupsen/logrus"
 )
 

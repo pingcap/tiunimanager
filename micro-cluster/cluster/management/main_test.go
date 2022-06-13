@@ -17,10 +17,10 @@ package management
 
 import (
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/models/platform/product"
-	mock_product "github.com/pingcap-inc/tiunimanager/test/mockmodels"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/product"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
 	"os"
 	"testing"
 )

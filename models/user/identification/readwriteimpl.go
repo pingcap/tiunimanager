@@ -17,7 +17,7 @@ package identification
 
 import (
 	"context"
-	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
 	"time"

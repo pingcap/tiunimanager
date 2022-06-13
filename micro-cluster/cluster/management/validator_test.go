@@ -18,11 +18,11 @@ package management
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
-	"github.com/pingcap-inc/tiunimanager/models"
-	mock_product "github.com/pingcap-inc/tiunimanager/test/mockmodels"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/models"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

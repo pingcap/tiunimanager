@@ -1,4 +1,4 @@
-module github.com/pingcap-inc/tiunimanager
+module github.com/pingcap/tiunimanager
 
 go 1.16
 

@@ -18,17 +18,17 @@ package interceptor
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/file-server/controller"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/message"
-	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
-	utils "github.com/pingcap-inc/tiunimanager/util/stringutil"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/file-server/controller"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
+	utils "github.com/pingcap/tiunimanager/util/stringutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/common/client"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"

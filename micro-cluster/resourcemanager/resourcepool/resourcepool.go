@@ -22,17 +22,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/message"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	rp_consts "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostinitiator"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiunimanager/models"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostinitiator"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap/tiunimanager/models"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 type ResourcePool struct {

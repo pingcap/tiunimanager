@@ -21,11 +21,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	rp_consts "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
-	sshclient "github.com/pingcap-inc/tiunimanager/util/ssh"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 )
 
 const (

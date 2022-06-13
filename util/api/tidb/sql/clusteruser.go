@@ -27,9 +27,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
 )
 
 func ExecCommandThruSQL(ctx context.Context, db *sql.DB, sqlCommand string) error {

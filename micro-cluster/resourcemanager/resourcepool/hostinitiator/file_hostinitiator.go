@@ -21,16 +21,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiunimanager/deployment"
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/models"
 
-	sshclient "github.com/pingcap-inc/tiunimanager/util/ssh"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	rp_consts "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
 )
 
 type FileHostInitiator struct {

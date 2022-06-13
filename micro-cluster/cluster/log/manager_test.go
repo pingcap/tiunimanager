@@ -29,23 +29,23 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockconfig"
-	mock_workflow_service "github.com/pingcap-inc/tiunimanager/test/mockworkflow"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
-	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
-	"github.com/pingcap-inc/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message/cluster"
 
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 func TestManager_BuildClusterLogConfig(t *testing.T) {

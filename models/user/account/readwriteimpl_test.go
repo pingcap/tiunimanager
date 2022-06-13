@@ -18,7 +18,7 @@ package account
 import (
 	ctx "context"
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

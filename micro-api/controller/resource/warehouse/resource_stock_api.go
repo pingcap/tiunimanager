@@ -18,15 +18,15 @@ package warehouse
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/common/client"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiunimanager/micro-api/controller"
+	"github.com/pingcap/tiunimanager/micro-api/controller"
 )
 
 func setGinContextForInvalidParam(c *gin.Context, errmsg string) {

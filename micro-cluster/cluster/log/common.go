@@ -26,7 +26,7 @@ package log
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 )
 
 const (

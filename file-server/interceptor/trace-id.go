@@ -18,8 +18,8 @@ package interceptor
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 )
 
 // Em-X-Trace-ID

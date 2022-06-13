@@ -19,7 +19,7 @@ package util
 import (
 	"bytes"
 	"crypto/x509/pkix"
-	"github.com/pingcap-inc/tiunimanager/util/fastrand"
+	"github.com/pingcap/tiunimanager/util/fastrand"
 	"github.com/pingcap/errors"
 	"github.com/stretchr/testify/assert"
 	"testing"

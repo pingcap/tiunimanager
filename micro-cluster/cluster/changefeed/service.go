@@ -18,15 +18,15 @@ package changefeed
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/models/cluster/changefeed"
-	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
-	"github.com/pingcap-inc/tiunimanager/util/api/cdc"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
 )
 
 type Service interface {

@@ -16,7 +16,7 @@
 package linux_test
 
 import (
-	"github.com/pingcap-inc/tiunimanager/util/sys/linux"
+	"github.com/pingcap/tiunimanager/util/sys/linux"
 	"testing"
 
 	"github.com/stretchr/testify/require"

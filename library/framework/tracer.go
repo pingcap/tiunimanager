@@ -22,7 +22,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"

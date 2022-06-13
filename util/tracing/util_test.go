@@ -18,7 +18,7 @@ package tracing_test
 
 import (
 	"context"
-	tracing2 "github.com/pingcap-inc/tiunimanager/util/tracing"
+	tracing2 "github.com/pingcap/tiunimanager/util/tracing"
 	"testing"
 
 	basictracer "github.com/opentracing/basictracer-go"

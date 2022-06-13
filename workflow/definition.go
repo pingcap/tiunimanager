@@ -19,10 +19,10 @@ package workflow
 /*
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models/common"
-	"github.com/pingcap-inc/tiunimanager/models/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/workflow"
 )
 
 type WorkFlowDefine struct {

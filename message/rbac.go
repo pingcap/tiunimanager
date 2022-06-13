@@ -15,7 +15,7 @@
 
 package message
 
-import "github.com/pingcap-inc/tiunimanager/common/structs"
+import "github.com/pingcap/tiunimanager/common/structs"
 
 type CheckPermissionForUserReq struct {
 	UserID      string                   `json:"userId"`

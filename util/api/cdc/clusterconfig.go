@@ -30,9 +30,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
-	util "github.com/pingcap-inc/tiunimanager/util/http"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	util "github.com/pingcap/tiunimanager/util/http"
 )
 
 const (

@@ -24,7 +24,7 @@
 package message
 
 import (
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 type DataExportReq struct {

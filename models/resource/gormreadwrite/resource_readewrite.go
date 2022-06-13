@@ -19,12 +19,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
-	resource_models "github.com/pingcap-inc/tiunimanager/models/resource"
-	rp "github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
+	resource_models "github.com/pingcap/tiunimanager/models/resource"
+	rp "github.com/pingcap/tiunimanager/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
 

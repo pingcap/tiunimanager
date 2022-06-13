@@ -24,8 +24,8 @@
 package models
 
 import (
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"

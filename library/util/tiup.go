@@ -26,9 +26,9 @@ package util
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiunimanager/deployment"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent deployment.TiUPComponentType) string {

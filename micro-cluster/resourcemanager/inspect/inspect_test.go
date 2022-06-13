@@ -21,10 +21,10 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	resource_models "github.com/pingcap-inc/tiunimanager/models/resource"
-	mock_resource "github.com/pingcap-inc/tiunimanager/test/mockmodels/mockresource"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/structs"
+	resource_models "github.com/pingcap/tiunimanager/models/resource"
+	mock_resource "github.com/pingcap/tiunimanager/test/mockmodels/mockresource"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -16,8 +16,8 @@
 package workflow
 
 import (
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/models/common"
 )
 
 // WorkFlow work flow infomation

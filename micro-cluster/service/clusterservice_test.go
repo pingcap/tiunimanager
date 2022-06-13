@@ -17,9 +17,9 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

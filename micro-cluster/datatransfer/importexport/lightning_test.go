@@ -17,9 +17,9 @@ package importexport
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

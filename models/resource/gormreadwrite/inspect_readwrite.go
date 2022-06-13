@@ -18,11 +18,11 @@ package gormreadwrite
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	cl "github.com/pingcap-inc/tiunimanager/models/cluster/management"
-	mm "github.com/pingcap-inc/tiunimanager/models/resource/management"
-	rp "github.com/pingcap-inc/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	cl "github.com/pingcap/tiunimanager/models/cluster/management"
+	mm "github.com/pingcap/tiunimanager/models/resource/management"
+	rp "github.com/pingcap/tiunimanager/models/resource/resourcepool"
 )
 
 type UsedCores struct {

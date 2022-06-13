@@ -19,13 +19,13 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	crypto "github.com/pingcap-inc/tiunimanager/util/encrypt"
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	crypto "github.com/pingcap/tiunimanager/util/encrypt"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 	"gorm.io/gorm"
 )
 

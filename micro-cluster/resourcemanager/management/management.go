@@ -20,8 +20,8 @@ import (
 	"context"
 	"sync"
 
-	allocrecycle "github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/allocator_recycler"
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/resourcemanager/management/structs"
+	allocrecycle "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/allocator_recycler"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
 )
 
 type Management struct {

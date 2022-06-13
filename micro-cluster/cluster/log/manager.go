@@ -31,24 +31,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/proto/clusterservices"
-	"github.com/pingcap-inc/tiunimanager/util/convert"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/util/convert"
 
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	"github.com/pingcap/tiunimanager/common/constants"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
-	"github.com/pingcap-inc/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models"
 
-	"github.com/pingcap-inc/tiunimanager/common/structs"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
 
-	"github.com/pingcap-inc/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/message/cluster"
 )
 
 type Manager struct{}

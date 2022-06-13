@@ -25,7 +25,7 @@ package product
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 	"gorm.io/gorm"
 )
 

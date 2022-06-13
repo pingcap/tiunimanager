@@ -26,7 +26,7 @@ package secondparty
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
 	"gorm.io/gorm"
 )

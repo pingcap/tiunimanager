@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	"github.com/pingcap-inc/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"golang.org/x/crypto/ssh"
 )
 

@@ -26,45 +26,45 @@ package parameter
 import (
 	"context"
 	"errors"
-	workflowModel "github.com/pingcap-inc/tiunimanager/models/workflow"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
 	"math"
 	"testing"
 
-	"github.com/pingcap-inc/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/deployment"
 
-	"github.com/pingcap-inc/tiunimanager/util/api/cdc"
-	"github.com/pingcap-inc/tiunimanager/util/api/pd"
-	"github.com/pingcap-inc/tiunimanager/util/api/tidb/http"
-	"github.com/pingcap-inc/tiunimanager/util/api/tidb/sql"
-	"github.com/pingcap-inc/tiunimanager/util/api/tikv"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
+	"github.com/pingcap/tiunimanager/util/api/pd"
+	"github.com/pingcap/tiunimanager/util/api/tidb/http"
+	"github.com/pingcap/tiunimanager/util/api/tidb/sql"
+	"github.com/pingcap/tiunimanager/util/api/tikv"
 
-	"github.com/pingcap-inc/tiunimanager/test/mockutilcdc"
-	"github.com/pingcap-inc/tiunimanager/test/mockutilpd"
-	"github.com/pingcap-inc/tiunimanager/test/mockutiltidbhttp"
-	mockutiltidbsqlconfig "github.com/pingcap-inc/tiunimanager/test/mockutiltidbsql_config"
-	"github.com/pingcap-inc/tiunimanager/test/mockutiltikv"
+	"github.com/pingcap/tiunimanager/test/mockutilcdc"
+	"github.com/pingcap/tiunimanager/test/mockutilpd"
+	"github.com/pingcap/tiunimanager/test/mockutiltidbhttp"
+	mockutiltidbsqlconfig "github.com/pingcap/tiunimanager/test/mockutiltidbsql_config"
+	"github.com/pingcap/tiunimanager/test/mockutiltikv"
 
-	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockconfig"
-	mock_workflow_service "github.com/pingcap-inc/tiunimanager/test/mockworkflow"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
 
-	"github.com/pingcap-inc/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 
-	"github.com/pingcap-inc/tiunimanager/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
 
-	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockclusterparameter"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclusterparameter"
 
-	"github.com/pingcap-inc/tiunimanager/models"
-	"github.com/pingcap-inc/tiunimanager/test/mockmodels/mockparametergroup"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockparametergroup"
 
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
-	mock_deployment "github.com/pingcap-inc/tiunimanager/test/mockdeployment"
-	workflow "github.com/pingcap-inc/tiunimanager/workflow2"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func TestExecutor_asyncMaintenance_Success(t *testing.T) {

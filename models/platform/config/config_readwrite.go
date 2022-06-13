@@ -17,8 +17,8 @@ package config
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiunimanager/common/errors"
-	dbCommon "github.com/pingcap-inc/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/common/errors"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 

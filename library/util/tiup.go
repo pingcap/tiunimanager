@@ -25,9 +25,10 @@ package util
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"fmt"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent deployment.TiUPComponentType) string {
@@ -38,11 +39,11 @@ func GetTiUPHomeForComponent(ctx context.Context, tiUPComponent deployment.TiUPC
 	default:
 		component = string(deployment.TiUPComponentTypeDefault)
 	}
-	tiUPConfig, err := models.GetTiUPConfigReaderWriter().QueryByComponentType(context.Background(), component)
+	config, err := models.GetConfigReaderWriter().GetConfig(context.Background(), fmt.Sprintf("%s_tiup_home", component))
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("fail get tiup_home for %s: %s", component, err.Error())
 		return ""
 	} else {
-		return tiUPConfig.TiupHome
+		return config.ConfigValue
 	}
 }

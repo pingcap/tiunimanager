@@ -22,7 +22,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
@@ -38,24 +38,24 @@ type Tracer opentracing.Tracer
 
 // trace id:
 //    *gin.Context
-//			key $TiEM_X_TRACE_ID_KEY
+//			key $TiUniManager_X_TRACE_ID_KEY
 //    micro-ctx
-//			metadata key $TiEM_X_TRACE_ID_KEY
+//			metadata key $TiUniManager_X_TRACE_ID_KEY
 //    normal-ctx
 //			key traceIDCtxKey
-const TiEM_X_TRACE_ID_KEY = "Em-X-Trace-Id"
+const TiUniManager_X_TRACE_ID_KEY = "Em-X-Trace-Id"
 
 type traceCtxKeyType string
 
-const traceIDCtxKey = traceCtxKeyType(TiEM_X_TRACE_ID_KEY)
+const traceIDCtxKey = traceCtxKeyType(TiUniManager_X_TRACE_ID_KEY)
 const traceMicroServiceNameCtxKey = traceCtxKeyType("Em-X-Micro-Service-Name")
 const traceMicroEndpointNameCtxKey = traceCtxKeyType("Em-X-Micro-Endpoint-Name")
 
-const TiEM_X_USER_ID_KEY = "Em-X-User-Id"
+const TiUniManager_X_USER_ID_KEY = "Em-X-User-Id"
 
-const TiEM_X_USER_NAME_KEY = "Em-X-User-Name"
+const TiUniManager_X_USER_NAME_KEY = "Em-X-User-Name"
 
-const TiEM_X_TENANT_ID_KEY = "Em-X-Tenant-Id"
+const TiUniManager_X_TENANT_ID_KEY = "Em-X-Tenant-Id"
 
 func NewTracerFromArgs(args *ClientArgs) *Tracer {
 	jaegerTracer, _, err := NewJaegerTracer("em", args.TracerAddress)
@@ -119,28 +119,28 @@ func newBackgroundMicroCtx(fromMicroCtx context.Context, newTraceIDFlag bool) co
 		retCtx := NewMicroContextWithKeyValuePairs(
 			context.Background(),
 			map[string]string{
-				TiEM_X_TRACE_ID_KEY: uuidutil.GenerateID(),
+				TiUniManager_X_TRACE_ID_KEY: uuidutil.GenerateID(),
 			},
 		)
 		LogWithContext(retCtx).Warn("current ctx is created from a nil micro ctx")
 		return retCtx
 	}
-	traceID := getStringValueFromMicroContext(fromMicroCtx, TiEM_X_TRACE_ID_KEY)
+	traceID := getStringValueFromMicroContext(fromMicroCtx, TiUniManager_X_TRACE_ID_KEY)
 	if newTraceIDFlag {
 		traceID = uuidutil.GenerateID()
 	}
 	retCtx := NewMicroContextWithKeyValuePairs(
 		context.Background(),
 		map[string]string{
-			TiEM_X_TRACE_ID_KEY:  traceID,
-			TiEM_X_USER_ID_KEY:   getStringValueFromMicroContext(fromMicroCtx, TiEM_X_USER_ID_KEY),
-			TiEM_X_USER_NAME_KEY: getStringValueFromMicroContext(fromMicroCtx, TiEM_X_USER_NAME_KEY),
-			TiEM_X_TENANT_ID_KEY: getStringValueFromMicroContext(fromMicroCtx, TiEM_X_TENANT_ID_KEY),
+			TiUniManager_X_TRACE_ID_KEY:  traceID,
+			TiUniManager_X_USER_ID_KEY:   getStringValueFromMicroContext(fromMicroCtx, TiUniManager_X_USER_ID_KEY),
+			TiUniManager_X_USER_NAME_KEY: getStringValueFromMicroContext(fromMicroCtx, TiUniManager_X_USER_NAME_KEY),
+			TiUniManager_X_TENANT_ID_KEY: getStringValueFromMicroContext(fromMicroCtx, TiUniManager_X_TENANT_ID_KEY),
 		},
 	)
 	if newTraceIDFlag {
 		LogWithContext(retCtx).Infof("current ctx is created from the ctx with traceID %s",
-			getStringValueFromMicroContext(fromMicroCtx, TiEM_X_TRACE_ID_KEY))
+			getStringValueFromMicroContext(fromMicroCtx, TiUniManager_X_TRACE_ID_KEY))
 	} else {
 		LogWithContext(retCtx).Infof("new ctx is created")
 	}
@@ -181,8 +181,8 @@ func NewBackgroundTask(fromCtx context.Context, operationName string, fn func(co
 	span := getCurrentTracer().StartSpan(operationName)
 	span.LogKV("spawn-from", currentCtxInfo)
 	newCtx = opentracing.ContextWithSpan(newCtx, span)
-	span.SetTag(TiEM_X_TRACE_ID_KEY, GetTraceIDFromContext(newCtx))
-	currentTraceID := getStringValueFromMicroContext(newCtx, TiEM_X_TRACE_ID_KEY)
+	span.SetTag(TiUniManager_X_TRACE_ID_KEY, GetTraceIDFromContext(newCtx))
+	currentTraceID := getStringValueFromMicroContext(newCtx, TiUniManager_X_TRACE_ID_KEY)
 	t := &BackgroundTask{
 		fromCtx:        fromCtx,
 		fromTraceID:    fromTraceID,
@@ -269,18 +269,18 @@ func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	var ctx context.Context
 	ctx = c
 	traceID := getTraceIDFromGinContext(c)
-	userID := getStringValueFromGinContext(c, TiEM_X_USER_ID_KEY)
-	userName := getStringValueFromGinContext(c, TiEM_X_USER_NAME_KEY)
-	tenantID := getStringValueFromGinContext(c, TiEM_X_TENANT_ID_KEY)
+	userID := getStringValueFromGinContext(c, TiUniManager_X_USER_ID_KEY)
+	userName := getStringValueFromGinContext(c, TiUniManager_X_USER_NAME_KEY)
+	tenantID := getStringValueFromGinContext(c, TiUniManager_X_TENANT_ID_KEY)
 	parentSpan := getParentSpanFromGinContext(c)
 	if parentSpan != nil {
 		ctx = opentracing.ContextWithSpan(ctx, parentSpan)
 	}
 	return NewMicroContextWithKeyValuePairs(ctx, map[string]string{
-		TiEM_X_TRACE_ID_KEY:  traceID,
-		TiEM_X_USER_ID_KEY:   userID,
-		TiEM_X_USER_NAME_KEY: userName,
-		TiEM_X_TENANT_ID_KEY: tenantID,
+		TiUniManager_X_TRACE_ID_KEY:  traceID,
+		TiUniManager_X_USER_ID_KEY:   userID,
+		TiUniManager_X_USER_NAME_KEY: userName,
+		TiUniManager_X_TENANT_ID_KEY: tenantID,
 	})
 }
 
@@ -294,21 +294,21 @@ func newMicroContextWithTraceID(ctx context.Context, traceID string) context.Con
 	} else {
 		md = make(map[string]string)
 	}
-	md[TiEM_X_TRACE_ID_KEY] = traceID
+	md[TiUniManager_X_TRACE_ID_KEY] = traceID
 	return metadata.NewContext(ctx, md)
 }
 
 func getTraceIDFromMicroContext(ctx context.Context) string {
 	md, ok := metadata.FromContext(ctx)
 	if ok {
-		return md[TiEM_X_TRACE_ID_KEY]
+		return md[TiUniManager_X_TRACE_ID_KEY]
 	} else {
 		return ""
 	}
 }
 
 func getTraceIDFromGinContext(ctx *gin.Context) string {
-	id := ctx.GetString(TiEM_X_TRACE_ID_KEY)
+	id := ctx.GetString(TiUniManager_X_TRACE_ID_KEY)
 	if len(id) <= 0 {
 		return ""
 	} else {
@@ -390,12 +390,12 @@ func NewMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]stri
 
 // GetUserIDFromContext Get UserID from ctx
 func GetUserIDFromContext(ctx context.Context) string {
-	return getStringValueFromContext(ctx, TiEM_X_USER_ID_KEY)
+	return getStringValueFromContext(ctx, TiUniManager_X_USER_ID_KEY)
 }
 
 // GetTenantIDFromContext Get TenantID from ctx
 func GetTenantIDFromContext(ctx context.Context) string {
-	return getStringValueFromContext(ctx, TiEM_X_TENANT_ID_KEY)
+	return getStringValueFromContext(ctx, TiUniManager_X_TENANT_ID_KEY)
 }
 
 // GetMicroServiceNameFromContext Get MicroServiceName from ctx, something like "em.cluster"

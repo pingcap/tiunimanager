@@ -24,7 +24,7 @@
 package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 //CreateClusterReq Message for creating a new cluster
@@ -150,6 +150,10 @@ type MasterSlaveClusterSwitchoverReq struct {
 	// new master/old slave
 	TargetClusterID string `json:"targetClusterID" validate:"required,min=4,max=64"`
 	Force           bool   `json:"force"`
+	// if this field is not empty, that means this is a rollback request
+	RollbackWorkFlowID string `json:"rollbackWorkFlowID"`
+	// clear previous un-cleared "Switching" maintenance state
+	RollbackClearPreviousMaintenanceFlag bool `json:"rollbackClearPreviousMaintenanceFlag"`
 	// only check if this flag is true
 	OnlyCheck               bool `json:"onlyCheck"`
 	CheckSlaveReadOnlyFlag  bool `json:"checkSlaveReadOnlyFlag"`

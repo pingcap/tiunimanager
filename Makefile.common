@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROJECT=tiem
+PROJECT=tiunimanager
 GOPATH ?= $(shell go env GOPATH)
 P=8
 
@@ -53,11 +53,11 @@ GOBUILD         := $(GO) build $(BUILD_FLAG) -tags codes
 GOTEST          := $(GO) test -p $(P)
 OVERALLS        := GO111MODULE=on overalls
 STATICCHECK     := GO111MODULE=on staticcheck
-TIEM_EDITION    ?= Enterprise
+TIUNIMANAGER_EDITION    ?= Enterprise
 
-# Ensure TIEM_EDITION is set to Community or Enterprise before running build process.
-ifneq "$(TIEM_EDITION)" "Enterprise"
-  $(error Please set the correct environment variable TIEM_EDITION before running `make`)
+# Ensure TIUNIMANAGER_EDITION is set to Community or Enterprise before running build process.
+ifneq "$(TIUNIMANAGER_EDITION)" "Enterprise"
+  $(error Please set the correct environment variable TIUNIMANAGER_EDITION before running `make`)
 endif
 
 # use 'make <target> PREFIX=/path/for/prefix' to overwrite the PREFIX value
@@ -68,7 +68,7 @@ endif
 LINUX     := "Linux"
 MAC       := "Darwin"
 
-PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|common|message|micro-cluster/service|util|micro-cluster/registry|micro-cluster/platform/telemetry|library/framework|micro-api|file-server|test/mock|deprecated|util/scp|^github.com/pingcap-inc/tiem/micro-cluster$$|library/secondparty|micro-cluster/resourcemanager/management|models/resource/management|micro-cluster/cluster/switchover"
+PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|common|message|micro-cluster/service|util|micro-cluster/registry|micro-cluster/platform/telemetry|library/framework|micro-api|workflow|file-server|test/mock|deprecated|util/scp|^github.com/pingcap/tiunimanager/micro-cluster$$|library/secondparty|micro-cluster/resourcemanager/management|models/resource/management|micro-cluster/cluster/switchover"
 PACKAGES  ?= $$($(PACKAGE_LIST))
 LINT_PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|test"
 LINT_PACKAGES  ?= $$($(LINT_PACKAGE_LIST))
@@ -79,11 +79,11 @@ FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl disable)
 
-LDFLAGS += -X "github.com/pingcap/tiem/library/fristparty/util/versioninfo.TiEMReleaseVersion=$(shell git describe --tags --dirty --always)"
-LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMBuildTS=$(shell date -u '+%Y-%m-%d %H:%M:%S')"
-LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMGitHash=$(shell git rev-parse HEAD)"
-LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMGitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
-LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMEdition=$(TIEM_EDITION)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/library/fristparty/util/versioninfo.TiUniManagerReleaseVersion=$(shell git describe --tags --dirty --always)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/library/firstparty/util/versioninfo.TiUniManagerBuildTS=$(shell date -u '+%Y-%m-%d %H:%M:%S')"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/library/firstparty/util/versioninfo.TiUniManagerGitHash=$(shell git rev-parse HEAD)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/library/firstparty/util/versioninfo.TiUniManagerGitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/library/firstparty/util/versioninfo.TiUniManagerEdition=$(TIUNIMANAGER_EDITION)"
 
 #TODO TEST_LDFLAGS =  -X "github.com/pingcap/tidb/config.checkBeforeDropLDFlag=1"
 #TODO COVERAGE_SERVER_LDFLAGS =  -X "github.com/pingcap/tidb/tidb-server.isCoverageServer=1"

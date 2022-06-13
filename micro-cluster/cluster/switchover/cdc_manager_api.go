@@ -26,7 +26,7 @@ package switchover
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiunimanager/message/cluster"
 )
 
 type CDCManagerAPI interface {

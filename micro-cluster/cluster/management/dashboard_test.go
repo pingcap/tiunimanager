@@ -19,14 +19,14 @@ package management
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -189,7 +189,7 @@ func TestGetDashboardInfo(t *testing.T) {
 			Password:  common.PasswordInExpired{Val: "123455678", UpdateTime: time.Now().AddDate(0, -1, 0)},
 			RoleType:  string(constants.Root),
 		},
-	}, errors.Error(errors.TIEM_MARSHAL_ERROR)).Times(1)
+	}, errors.Error(errors.TIUNIMANAGER_MARSHAL_ERROR)).Times(1)
 	_, err = GetDashboardInfo(context.TODO(), cluster.GetDashboardInfoReq{ClusterID: "2145635758"})
 	assert.Error(t, err)
 }

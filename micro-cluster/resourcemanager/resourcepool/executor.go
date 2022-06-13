@@ -20,13 +20,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func validateHostInfo(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) (err error) {
@@ -242,7 +242,7 @@ func checkHostBeforeDelete(node *workflowModel.WorkFlowNode, ctx *workflow.FlowC
 	if hosts[0].Stat != string(constants.HostLoadLoadLess) {
 		errMsg := fmt.Sprintf("check before delete host failed, host %s load stat is not loadless, %s", hosts[0].ID, hosts[0].Stat)
 		log.Errorln(errMsg)
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_STILL_INUSED, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_STILL_INUSED, errMsg)
 	}
 	log.Infof("check host %s before delete succeed", hosts[0].ID)
 
@@ -315,31 +315,28 @@ func leaveEmCluster(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext)
 }
 
 func getHostInfoArrayFromFlowContext(ctx *workflow.FlowContext) (hosts []structs.HostInfo, err error) {
-	var ok bool
-	hosts, ok = ctx.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
-	if !ok {
+	err = ctx.GetData(rp_consts.ContextHostInfoArrayKey, &hosts)
+	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostInfoArrayKey)
-		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return hosts, nil
 }
 
 func getHostIDArrayFromFlowContext(ctx *workflow.FlowContext) (hostIds []string, err error) {
-	var ok bool
-	hostIds, ok = ctx.GetData(rp_consts.ContextHostIDArrayKey).([]string)
-	if !ok {
+	err = ctx.GetData(rp_consts.ContextHostIDArrayKey, &hostIds)
+	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextHostIDArrayKey)
-		return nil, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return hostIds, nil
 }
 
 func getIgnoreWarningsFromFlowContext(ctx *workflow.FlowContext) (ignoreWarnings bool, err error) {
-	var ok bool
-	ignoreWarnings, ok = ctx.GetData(rp_consts.ContextIgnoreWarnings).(bool)
-	if !ok {
+	err = ctx.GetData(rp_consts.ContextIgnoreWarnings, &ignoreWarnings)
+	if err != nil {
 		errMsg := fmt.Sprintf("get key %s from flow context failed", rp_consts.ContextIgnoreWarnings)
-		return ignoreWarnings, errors.NewError(errors.TIEM_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
+		return ignoreWarnings, errors.NewError(errors.TIUNIMANAGER_RESOURCE_EXTRACT_FLOW_CTX_ERROR, errMsg)
 	}
 	return ignoreWarnings, nil
 }

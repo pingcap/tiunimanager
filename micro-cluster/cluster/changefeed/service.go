@@ -18,15 +18,15 @@ package changefeed
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/util/api/cdc"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/changefeed"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
 )
 
 type Service interface {
@@ -180,7 +180,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 
 	if task.Status == constants.ChangeFeedStatusInitial.ToString() {
-		err = errors.NewError(errors.TIEM_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
+		err = errors.NewError(errors.TIUNIMANAGER_CHANGE_FEED_NOT_FOUND, "change feed task has not been created")
 	}
 
 	clusterMeta, err := meta.Get(ctx, task.ClusterId)
@@ -189,7 +189,7 @@ func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTa
 	}
 	cdcAddress := clusterMeta.GetCDCClientAddresses()
 	if len(cdcAddress) == 0 {
-		err = errors.NewErrorf(errors.TIEM_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_INVALID_TOPOLOGY, "CDC components required, cluster %s", clusterMeta.Cluster.ID)
 		return
 	}
 	resp.ChangeFeedTaskInfo = parse(*task)

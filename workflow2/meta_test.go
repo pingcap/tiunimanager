@@ -19,14 +19,14 @@ import (
 	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/workflow"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockworkflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/workflow"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockworkflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -77,14 +77,14 @@ func TestWorkFlowMeta_Fail(t *testing.T) {
 			FailEvent: "pause",
 		},
 	}
-	meta.Fail()
+	meta.CheckNeedPause()
 	meta2 := &WorkFlowMeta{
 		Flow: &workflow.WorkFlow{},
 		CurrentNodeDefine: &NodeDefine{
 			FailEvent: "",
 		},
 	}
-	meta2.Fail()
+	meta2.CheckNeedPause()
 }
 
 func TestWorkFlowMeta_Execute_case1(t *testing.T) {

@@ -21,16 +21,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/models"
 
-	sshclient "github.com/pingcap-inc/tiem/util/ssh"
+	sshclient "github.com/pingcap/tiunimanager/util/ssh"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
 )
 
 type FileHostInitiator struct {
@@ -60,9 +60,19 @@ func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string,
 	specifiedPublicKey := framework.GetCurrentSpecifiedPublicKeyPath()
 	log.Infof("begin to test whether skip auth host %s %s with deploy user %s, with key pair <%s, %s> and specified user %s",
 		h.HostName, h.IP, deployUser, specifiedPublicKey, specifiedPrivateKey, specifiedUser)
-	// try to test connection if user specify key pair and specified username == deployUser
-	if specifiedPrivateKey != "" && specifiedPublicKey != "" {
-		if specifiedUser == deployUser {
+	// try to test connection if user specified loginUserName == deployUser
+	if specifiedUser == deployUser {
+		defaultPrivateKey := framework.GetPrivateKeyFilePath(deployUser)
+		defaultPublicKey := framework.GetPublicKeyFilePath(deployUser)
+		if specifiedPrivateKey == "" {
+			specifiedPrivateKey = defaultPrivateKey
+		}
+		if specifiedPublicKey == "" {
+			specifiedPublicKey = defaultPublicKey
+		}
+		// do the auth check only in the case when using the default deployUser key pair, because the only way we get the private key
+		// for calling tiup commands is to call `GetPrivateKeyFilePath()`, which returns back the deployUser's default private key.
+		if specifiedPrivateKey == defaultPrivateKey && specifiedPublicKey == defaultPublicKey {
 			lsCmd := "ls -l"
 			authenticate := sshclient.HostAuthenticate{SshType: sshclient.Key, AuthenticatedUser: deployUser, AuthenticateContent: specifiedPrivateKey}
 			_, err := p.sshClient.RunCommandsInRemoteHost(h.IP, int(h.SSHPort), authenticate, true, rp_consts.DefaultCopySshIDTimeOut, []string{lsCmd})
@@ -73,10 +83,11 @@ func (p *FileHostInitiator) skipAuthHost(ctx context.Context, deployUser string,
 			log.Infof("skip auth host %s %s succeed", h.HostName, h.IP)
 			return true
 		}
-		log.Infof("specified user %s is different with deploy user %s", specifiedUser, deployUser)
+		log.Infof("can not skip auth host %s %s because either public key %s or private key %s is not specified as default %s, %s",
+			h.HostName, h.IP, specifiedPublicKey, specifiedPrivateKey, defaultPublicKey, defaultPrivateKey)
 		return false
 	}
-	log.Infof("can not skip auth host %s %s because either public key %s or private key %s is not specified", h.HostName, h.IP, specifiedPublicKey, specifiedPrivateKey)
+	log.Infof("specified user %s is different with deploy user %s", specifiedUser, deployUser)
 	return false
 }
 
@@ -87,7 +98,6 @@ func (p *FileHostInitiator) AuthHost(ctx context.Context, deployUser, userGroup 
 
 	if p.skipAuthHost(ctx, deployUser, h) {
 		log.Infof("skip auth host %s %s@%s:%d with specified private key %s", h.HostName, deployUser, h.IP, h.SSHPort, framework.GetCurrentSpecifiedPrivateKeyPath())
-		framework.SetLocalConfig(framework.UsingSpecifiedKeyPair, true)
 		return nil
 	}
 
@@ -136,7 +146,7 @@ func (p *FileHostInitiator) Prepare(ctx context.Context, h *structs.HostInfo) (e
 		args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call deployment serv to apply host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 	log.Infof("apply host %s %s done, %s", h.HostName, h.IP, resultStr)
 
@@ -168,7 +178,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	}
 	ignoreWarnings, ok := ctx.Value(rp_consts.ContextIgnoreWarnings).(bool)
 	if !ok {
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, "get ignore warning flag from context failed")
 	}
 	log.Infof("verify host %s %s ignore warning (%t)", h.HostName, h.IP, ignoreWarnings)
 
@@ -181,7 +191,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 		args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		errMsg := fmt.Sprintf("call deployment serv to check host %s %s [%v] failed, %v", h.HostName, h.IP, templateStr, err)
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 	log.Infof("verify host %s %s for %v done", h.HostName, h.IP, tempateInfo)
 
@@ -194,7 +204,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 	fails, hasFails := sortedResult[string(Fail)]
 	if hasFails {
 		errMsg := fmt.Sprintf("check host %s %s has %d fails, %v", h.HostName, h.IP, len(*fails), *fails)
-		return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+		return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 	}
 
 	warnings, hasWarns := sortedResult[string(Warn)]
@@ -206,7 +216,7 @@ func (p *FileHostInitiator) Verify(ctx context.Context, h *structs.HostInfo) (er
 			if err == nil && ignoreCpuGovWarn {
 				log.Infof("ignore cpu governor warning for vm %s %s", h.HostName, h.IP)
 			} else {
-				return errors.NewError(errors.TIEM_RESOURCE_HOST_NOT_EXPECTED, errMsg)
+				return errors.NewError(errors.TIUNIMANAGER_RESOURCE_HOST_NOT_EXPECTED, errMsg)
 			}
 		}
 	}
@@ -234,31 +244,42 @@ func (p *FileHostInitiator) PreCheckHostInstallFilebeat(ctx context.Context, hos
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 
 	// Parse EM topology structure to check whether filebeat has been installed already
-	tiupHomeForTiem := framework.GetTiupHomePathForTiem()
-	result, err := p.deploymentServ.Display(ctx, deployment.TiUPComponentTypeEM, emClusterName, tiupHomeForTiem, []string{"--json"}, rp_consts.DefaultTiupTimeOut)
+	tiupHomeForEm := framework.GetTiupHomePathForEm()
+	result, err := p.deploymentServ.Display(ctx, deployment.TiUPComponentTypeEM, emClusterName, tiupHomeForEm, []string{"--json"}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
 		log.Errorf("precheck before join em cluster failed, %v", err)
-		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed, %v", emClusterName, err)
 	}
 	emTopo := new(structs.EMMetaTopo)
 	err = json.Unmarshal([]byte(result), emTopo)
 	if err != nil {
-		return false, errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
+		return false, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INIT_FILEBEAT_ERROR, "precheck join em cluster %s failed on umarshal, %v", emClusterName, err)
 	}
 	installed = false
-LOOP:
-	for _, instance := range emTopo.Instances {
-		if instance.Role == "filebeat" {
-			for _, host := range hosts {
-				if instance.Host == host.IP {
-					installed = true
-					log.Infof("host %s %s has been install filebeat", host.HostName, host.IP)
-					break LOOP
-				}
+	// []hosts only contains one host since importing each host in a async workflow
+	for _, host := range hosts {
+		installed, err = p.checkInstanceInstalled(ctx, emTopo, host.IP, constants.EMInstanceNameOfFileBeat)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return installed, nil
+}
+
+func (p *FileHostInitiator) checkInstanceInstalled(ctx context.Context, emTopo *structs.EMMetaTopo, hostIp string, instance string) (installed bool, err error) {
+	log := framework.LogWithContext(ctx)
+	for _, emInstance := range emTopo.Instances {
+		if emInstance.Role == instance && emInstance.Host == hostIp {
+			log.Infof("%s has been installed on host %s in status %s", instance, hostIp, emInstance.Status)
+			if emInstance.Status == string(constants.EMInstanceUP) {
+				return true, nil
+			} else {
+				return false, errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_BAD_INSTANCE_EXIST, "%s has been installed on host %s but in %s status", instance, hostIp, emInstance.Status)
 			}
 		}
 	}
-	return installed, nil
+	return false, nil
 }
 
 func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.HostInfo) (operationID string, err error) {
@@ -278,17 +299,17 @@ func (p *FileHostInitiator) JoinEMCluster(ctx context.Context, hosts []structs.H
 
 	workFlowID, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
 	if !ok || workFlowID == "" {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INIT_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
 	framework.LogWithContext(ctx).Infof("join em cluster %s with work flow id %s", emClusterName, workFlowID)
 	args := framework.GetTiupAuthorizaitonFlag()
-	tiupHomeForTiem := framework.GetTiupHomePathForTiem()
+	tiupHomeForEm := framework.GetTiupHomePathForEm()
 	operationID, err = deployment.M.ScaleOut(ctx, deployment.TiUPComponentTypeEM, emClusterName, templateStr,
-		tiupHomeForTiem, workFlowID, args, rp_consts.DefaultTiupTimeOut)
+		tiupHomeForEm, workFlowID, args, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INIT_FILEBEAT_ERROR, "join em cluster %s [%v] failed, %v", emClusterName, templateStr, err)
 	}
 	framework.LogWithContext(ctx).Infof("join em cluster %s for %v in operationID %s", emClusterName, tempateInfo, operationID)
 
@@ -300,17 +321,17 @@ func (p *FileHostInitiator) LeaveEMCluster(ctx context.Context, nodeId string) (
 
 	workFlowID, ok := ctx.Value(rp_consts.ContextWorkFlowIDKey).(string)
 	if !ok || workFlowID == "" {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "get work flow from context failed, %s, %v", workFlowID, ok)
 	}
 
 	emClusterName := framework.Current.GetClientArgs().EMClusterName
-	tiupHomeForTiem := framework.GetTiupHomePathForTiem()
+	tiupHomeForEm := framework.GetTiupHomePathForEm()
 	framework.LogWithContext(ctx).Infof("leave em cluster %s with work flow id %s", emClusterName, workFlowID)
 	operationID, err = deployment.M.ScaleIn(ctx, deployment.TiUPComponentTypeEM, emClusterName,
-		nodeId, tiupHomeForTiem,
+		nodeId, tiupHomeForEm,
 		workFlowID, []string{}, rp_consts.DefaultTiupTimeOut)
 	if err != nil {
-		return "", errors.NewErrorf(errors.TIEM_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
+		return "", errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_UNINSTALL_FILEBEAT_ERROR, "leave em cluster %s [%s] failed, %v", emClusterName, nodeId, err)
 	}
 	framework.LogWithContext(ctx).Infof("leave em cluster %s for %s in operationId %s", emClusterName, nodeId, operationID)
 

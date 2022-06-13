@@ -20,16 +20,19 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostinitiator"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/message"
+
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostinitiator"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	"github.com/pingcap/tiunimanager/models"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 type ResourcePool struct {
@@ -74,7 +77,7 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 			"installSoftware": {Name: "installSoftware", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: installSoftware},
 			"joinEMCluster":   {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
 			"succeed":         {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
-			"fail":            {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
+			"fail":            {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
 		},
 	})
 
@@ -94,7 +97,7 @@ func (p *ResourcePool) registerImportHostsWorkFlow(ctx context.Context, flowMana
 			"authhosts":     {Name: "authhosts", SuccessEvent: "joinEMCluster", FailEvent: "fail", ReturnType: workflow.SyncFuncNode, Executor: authHosts},
 			"joinEMCluster": {Name: "joinEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: joinEmCluster},
 			"succeed":       {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
-			"fail":          {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
+			"fail":          {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
 		},
 	})
 }
@@ -110,7 +113,7 @@ func (p *ResourcePool) registerDeleteHostsWorkFlow(ctx context.Context, flowMana
 			"leaveEMCluster": {Name: "leaveEMCluster", SuccessEvent: "succeed", FailEvent: "fail", ReturnType: workflow.PollingNode, Executor: leaveEmCluster},
 			"succeed":        {Name: "succeed", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: deleteHosts},
 			"recover":        {Name: "recover", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsOnline},
-			"fail":           {Name: "end", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
+			"fail":           {Name: "fail", SuccessEvent: "", FailEvent: "", ReturnType: workflow.SyncFuncNode, Executor: setHostsFail},
 		},
 	})
 
@@ -162,30 +165,28 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	if err != nil {
 		return flowIds, hostIds, err
 	}
-	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	flowName := p.selectImportFlowName(condition)
 	hostSSHPort := p.getSSHConfigPort(ctx)
 	framework.LogWithContext(ctx).Infof("import hosts select %s, with ssh port %d", flowName, hostSSHPort)
 	for i, host := range hosts {
-		flow, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
+		flowId, err := flowManager.CreateWorkFlow(ctx, hostIds[i], workflow.BizTypeHost, flowName)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s %s, %s", flowName, host.HostName, host.IP, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, hostIds, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, hostIds, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
 		host.SSHPort = int32(hostSSHPort)
-		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
-		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{host})
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostIDArrayKey, []string{hostIds[i]})
 		// Whether ignore warnings when verify host
 		ignoreWarnings := condition.IgnoreWarings || framework.Current.GetClientArgs().IgnoreHostWarns
-		flowManager.AddContext(flow, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextIgnoreWarnings, ignoreWarnings)
 
-		flows = append(flows, flow)
-		flowIds = append(flowIds, flow.Flow.ID)
+		flowIds = append(flowIds, flowId)
 	}
-	// Sync start each flow in a goroutine: tiup-tiem/sqlite DO NOT support concurrent
+	// Sync start each flow in a goroutine: tiup-tiunimanager/sqlite DO NOT support concurrent
 	operationName := fmt.Sprintf(
 		"%s.%s BackgroundTask",
 		framework.GetMicroServiceNameFromContext(ctx),
@@ -194,13 +195,34 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		// Unset EmTiup Using flag after all flows in this task done
 		defer framework.UnsetInEmTiupProcess()
-		for i, flow := range flows {
-			if err = flowManager.Start(ctx, flow); err != nil {
-				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP, err.Error())
+		for i, flowId := range flowIds {
+			if err = flowManager.Start(ctx, flowId); err != nil {
+				errMsg := fmt.Sprintf("async start %s workflow[%d] %s failed for host %s %s, %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP, err.Error())
 				framework.LogWithContext(ctx).Errorln(errMsg)
 				continue
 			} else {
-				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flow.Flow.ID, hosts[i].HostName, hosts[i].IP)
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for host %s %s", rp_consts.FlowImportHosts, i, flowId, hosts[i].HostName, hosts[i].IP)
+			}
+			ticker := time.NewTicker(rp_consts.BackGroundTaskCheckInterval * time.Second)
+			sequence := 0
+			for range ticker.C {
+				sequence++
+				if sequence > rp_consts.BackGroundTaskMaxTries {
+					break
+				}
+				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
+				if err != nil {
+					framework.LogWithContext(ctx).Errorln(err)
+					break
+				}
+				if constants.WorkFlowStatusError == resp.Info.Status {
+					framework.LogWithContext(ctx).Errorln(fmt.Sprintf("%s workflow %s end failed", flowName, flowId))
+					break
+				}
+				if constants.WorkFlowStatusFinished == resp.Info.Status {
+					framework.LogWithContext(ctx).Infof("%s workflow %s end success", flowName, flowId)
+					break
+				}
 			}
 		}
 		return nil
@@ -210,35 +232,33 @@ func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo
 }
 
 func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force bool) (flowIds []string, err error) {
-	var flows []*workflow.WorkFlowAggregation
 	flowManager := workflow.GetWorkFlowService()
 	for _, hostId := range hostIds {
 		hosts, count, err := p.QueryHosts(ctx, &structs.Location{}, &structs.HostFilter{HostID: hostId}, &structs.PageRequest{})
 		if err != nil {
 			errMsg := fmt.Sprintf("query host %v failed, %v", hostId, err)
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.WrapError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
+			return nil, errors.WrapError(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, errMsg, err)
 		}
 		if count == 0 {
 			errMsg := fmt.Sprintf("deleting host %s is not found", hostId)
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.NewError(errors.TIEM_RESOURCE_DELETE_HOST_ERROR, errMsg)
+			return nil, errors.NewError(errors.TIUNIMANAGER_RESOURCE_DELETE_HOST_ERROR, errMsg)
 		}
 		flowName := p.selectDeleteFlowName(&hosts[0], force)
 		framework.LogWithContext(ctx).Infof("delete host %s select %s", hostId, flowName)
 
-		flow, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, flowName)
+		flowId, err := flowManager.CreateWorkFlow(ctx, hostId, workflow.BizTypeHost, flowName)
 		if err != nil {
 			errMsg := fmt.Sprintf("create %s workflow failed for host %s, %s", flowName, hostId, err.Error())
 			framework.LogWithContext(ctx).Errorln(errMsg)
-			return nil, errors.WrapError(errors.TIEM_WORKFLOW_CREATE_FAILED, errMsg, err)
+			return nil, errors.WrapError(errors.TIUNIMANAGER_WORKFLOW_CREATE_FAILED, errMsg, err)
 		}
 
-		flowManager.AddContext(flow, rp_consts.ContextHostIDArrayKey, []string{hostId})
-		flowManager.AddContext(flow, rp_consts.ContextHostInfoArrayKey, hosts)
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostIDArrayKey, []string{hostId})
+		flowManager.InitContext(ctx, flowId, rp_consts.ContextHostInfoArrayKey, hosts)
 
-		flows = append(flows, flow)
-		flowIds = append(flowIds, flow.Flow.ID)
+		flowIds = append(flowIds, flowId)
 	}
 
 	err = p.UpdateHostStatus(ctx, hostIds, string(constants.HostDeleting))
@@ -253,12 +273,33 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string, force 
 	framework.StartBackgroundTask(ctx, operationName, func(ctx context.Context) error {
 		// Unset EmTiup Using flag after all flows in this task done
 		defer framework.UnsetInEmTiupProcess()
-		for i, flow := range flows {
-			if err = flowManager.Start(ctx, flow); err != nil {
-				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i], err.Error())
+		for i, flowId := range flowIds {
+			if err = flowManager.Start(ctx, flowId); err != nil {
+				errMsg := fmt.Sprintf("sync start %s workflow[%d] %s failed for delete host %s, %s", rp_consts.FlowDeleteHosts, i, flowId, hostIds[i], err.Error())
 				framework.LogWithContext(ctx).Errorln(errMsg)
 			} else {
-				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flow.Flow.ID, hostIds[i])
+				framework.LogWithContext(ctx).Infof("sync start %s workflow[%d] %s for delete host %s", rp_consts.FlowDeleteHosts, i, flowId, hostIds[i])
+			}
+			ticker := time.NewTicker(rp_consts.BackGroundTaskCheckInterval * time.Second)
+			sequence := 0
+			for range ticker.C {
+				sequence++
+				if sequence > rp_consts.BackGroundTaskMaxTries {
+					break
+				}
+				resp, err := flowManager.DetailWorkFlow(ctx, message.QueryWorkFlowDetailReq{WorkFlowID: flowId})
+				if err != nil {
+					framework.LogWithContext(ctx).Errorln(err)
+					break
+				}
+				if constants.WorkFlowStatusError == resp.Info.Status {
+					framework.LogWithContext(ctx).Errorln(fmt.Sprintf("deleteHosts workflow %s end failed", flowId))
+					break
+				}
+				if constants.WorkFlowStatusFinished == resp.Info.Status {
+					framework.LogWithContext(ctx).Infof("deleteHosts workflow %s end success", flowId)
+					break
+				}
 			}
 		}
 		return nil

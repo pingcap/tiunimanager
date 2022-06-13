@@ -26,12 +26,12 @@ package meta
 import (
 	"bytes"
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	resourceTemplate "github.com/pingcap-inc/tiem/resource/template"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	resourceTemplate "github.com/pingcap/tiunimanager/resource/template"
 	"text/template"
 )
 
@@ -41,17 +41,17 @@ import (
 // @Return		error
 func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error) {
 	if p.Cluster == nil || len(p.Instances) == 0 {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
+		return "", errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "cluster topology is empty, please check it!")
 	}
 
 	t, err := template.New("topology").Parse(resourceTemplate.ClusterTopology)
 	if err != nil {
-		return "", errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 	}
 
 	topology := new(bytes.Buffer)
 	if err = t.Execute(topology, NewClusterMetaRenderData(ctx, *p)); err != nil {
-		return "", errors.NewError(errors.TIEM_UNRECOGNIZED_ERROR, err.Error())
+		return "", errors.NewError(errors.TIUNIMANAGER_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
 

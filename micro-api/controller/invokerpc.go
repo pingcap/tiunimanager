@@ -17,14 +17,14 @@ package controller
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 
 	"encoding/json"
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 // InvokeRpcMethod
@@ -62,7 +62,7 @@ func InvokeRpcMethod(
 		func() (interface{}, error) {
 			marshalError := json.Unmarshal([]byte(rpcResponse.Response), response)
 			if marshalError != nil {
-				return nil, errors.NewError(errors.TIEM_UNMARSHAL_ERROR, marshalError.Error())
+				return nil, errors.NewError(errors.TIUNIMANAGER_UNMARSHAL_ERROR, marshalError.Error())
 			} else {
 				return response, nil
 			}

@@ -355,7 +355,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "CLUSTER_ID_IN_TIEM__22",
+                        "example": "CLUSTER_ID_IN_TIUNIMANAGER__22",
                         "name": "clusterId",
                         "in": "query",
                         "required": true
@@ -7196,6 +7196,144 @@ var doc = `{
                 }
             }
         },
+        "/workflow/start": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "start workflow",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "start workflow"
+                ],
+                "summary": "start workflow",
+                "parameters": [
+                    {
+                        "description": "start workflow",
+                        "name": "startReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.StartWorkFlowReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.StartWorkFlowResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/workflow/stop": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "stop workflow",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "stop workflow"
+                ],
+                "summary": "stop workflow",
+                "parameters": [
+                    {
+                        "description": "stop workflow",
+                        "name": "stopReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/message.StopWorkFlowReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/message.StopWorkFlowResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/workflow/{workFlowId}": {
             "get": {
                 "security": [
@@ -7402,7 +7540,7 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "downstream": {
                     "type": "object"
@@ -7440,7 +7578,7 @@ var doc = `{
             "properties": {
                 "id": {
                     "type": "string",
-                    "example": "TASK_ID_IN_TIEM____22"
+                    "example": "TASK_ID_IN_TIUNIMANAGER____22"
                 }
             }
         },
@@ -7538,7 +7676,7 @@ var doc = `{
             "properties": {
                 "id": {
                     "type": "string",
-                    "example": "TASK_ID_IN_TIEM____22"
+                    "example": "TASK_ID_IN_TIUNIMANAGER____22"
                 },
                 "status": {
                     "type": "string",
@@ -7599,7 +7737,7 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "createTime": {
                     "type": "string"
@@ -7634,7 +7772,7 @@ var doc = `{
                 },
                 "id": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "name": {
                     "type": "string",
@@ -7940,6 +8078,14 @@ var doc = `{
                     "description": "only check if this flag is true",
                     "type": "boolean"
                 },
+                "rollbackClearPreviousMaintenanceFlag": {
+                    "description": "clear previous un-cleared \"Switching\" maintenance state",
+                    "type": "boolean"
+                },
+                "rollbackWorkFlowID": {
+                    "description": "if this field is not empty, that means this is a rollback request",
+                    "type": "string"
+                },
                 "sourceClusterID": {
                     "description": "old master/new slave",
                     "type": "string"
@@ -8061,7 +8207,7 @@ var doc = `{
             "properties": {
                 "clusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "createTime": {
                     "type": "string"
@@ -8096,7 +8242,7 @@ var doc = `{
                 },
                 "id": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "name": {
                     "type": "string",
@@ -8516,7 +8662,7 @@ var doc = `{
                 },
                 "targetClusterId": {
                     "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
+                    "example": "CLUSTER_ID_IN_TIUNIMANAGER__22"
                 },
                 "tls": {
                     "type": "boolean",
@@ -9831,6 +9977,28 @@ var doc = `{
                     }
                 }
             }
+        },
+        "message.StartWorkFlowReq": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.StartWorkFlowResp": {
+            "type": "object"
+        },
+        "message.StopWorkFlowReq": {
+            "type": "object",
+            "properties": {
+                "workFlowId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.StopWorkFlowResp": {
+            "type": "object"
         },
         "message.UnbindRoleForUserReq": {
             "type": "object",

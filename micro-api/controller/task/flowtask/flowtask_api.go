@@ -18,9 +18,9 @@ package flowtask
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/client"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/micro-api/controller"
 )
 
 // Query query flow works
@@ -64,6 +64,48 @@ func Detail(c *gin.Context) {
 		WorkFlowID: c.Param("workFlowId"),
 	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailFlow, &message.QueryWorkFlowDetailResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// Start
+// @Summary start workflow
+// @Description start workflow
+// @Tags start workflow
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param startReq body message.StartWorkFlowReq true "start workflow"
+// @Success 200 {object} controller.CommonResult{data=message.StartWorkFlowResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /workflow/start [post]
+func Start(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.StartWorkFlowReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.StartFlow, &message.StartWorkFlowResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// Stop
+// @Summary stop workflow
+// @Description stop workflow
+// @Tags stop workflow
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param stopReq body message.StopWorkFlowReq true "stop workflow"
+// @Success 200 {object} controller.CommonResult{data=message.StopWorkFlowResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /workflow/stop [post]
+func Stop(c *gin.Context) {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &message.StopWorkFlowReq{}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.StopFlow, &message.StopWorkFlowResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

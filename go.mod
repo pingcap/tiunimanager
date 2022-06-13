@@ -1,4 +1,4 @@
-module github.com/pingcap-inc/tiem
+module github.com/pingcap/tiunimanager
 
 go 1.16
 
@@ -15,14 +15,14 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/casbin/casbin/v2 v2.40.6
 	github.com/casbin/gorm-adapter/v3 v3.4.6
-	github.com/elastic/go-elasticsearch/v7 v7.15.0
+	github.com/elastic/go-elasticsearch/v7 v7.12.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/goexpect v0.0.0-20210430020637-ab937bf7fd6f
 	github.com/google/uuid v1.3.0
 	github.com/jinzhu/now v1.1.3 // indirect
@@ -52,6 +52,7 @@ require (
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/unrolled/secure v1.0.9
+	go.etcd.io/etcd/client/pkg/v3 v3.5.2
 	go.etcd.io/etcd/client/v2 v2.305.1
 	go.etcd.io/etcd/client/v3 v3.5.2
 	go.etcd.io/etcd/server/v3 v3.5.0

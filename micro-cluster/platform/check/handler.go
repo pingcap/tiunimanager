@@ -20,18 +20,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
-	hostInspector "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/inspect"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	util "github.com/pingcap-inc/tiem/util/http"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/parameter"
+	hostInspector "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/inspect"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	util "github.com/pingcap/tiunimanager/util/http"
 	"github.com/pingcap/kvproto/pkg/metapb"
 	"github.com/pingcap/kvproto/pkg/pdpb"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -128,7 +128,7 @@ func (p *Report) ParseFrom(ctx context.Context, checkID string) error {
 	} else if reportType == string(constants.ClusterReport) {
 		p.ClusterInfo = reportInfo.(*structs.CheckClusterReportInfo)
 	} else {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 			"check report type %s not supported", reportType)
 	}
 
@@ -197,7 +197,7 @@ func (p *Report) GetClusterCopies(ctx context.Context, clusterID string) (int32,
 
 	pdAddress := clusterMeta.GetPDClientAddresses()
 	if len(pdAddress) <= 0 {
-		return 0, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+		return 0, errors.NewError(errors.TIUNIMANAGER_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 	}
 
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
@@ -210,7 +210,7 @@ func (p *Report) GetClusterCopies(ctx context.Context, clusterID string) (int32,
 
 	replication := &Replication{}
 	if err = json.Unmarshal([]byte(config), replication); err != nil {
-		return 0, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+		return 0, errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR,
 			fmt.Sprintf("parse max replicas error: %s", err.Error()), err)
 	}
 
@@ -245,7 +245,7 @@ func (p *Report) GetClusterTopology(ctx context.Context, clusterID string) (stru
 
 	db, err := meta.CreateSQLLink(ctx, clusterMeta)
 	if err != nil {
-		return topologyCheck, errors.WrapError(errors.TIEM_CONNECT_TIDB_ERROR, err.Error(), err)
+		return topologyCheck, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
 	}
 	defer db.Close()
 
@@ -306,7 +306,7 @@ func (p *Report) GetClusterRegionStatus(ctx context.Context, clusterID string) (
 
 	pdAddress := clusterMeta.GetPDClientAddresses()
 	if len(pdAddress) <= 0 {
-		return regionStatus, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+		return regionStatus, errors.NewError(errors.TIUNIMANAGER_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 	}
 
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
@@ -327,7 +327,7 @@ func (p *Report) GetClusterRegionStatus(ctx context.Context, clusterID string) (
 		}
 		regionsInfo := &RegionsInfo{}
 		if err = json.Unmarshal(body, regionsInfo); err != nil {
-			return regionStatus, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+			return regionStatus, errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR,
 				fmt.Sprintf("parse regions info error: %s", err.Error()), err)
 		}
 		if regionsInfo.Count > 0 {
@@ -356,7 +356,7 @@ func (p *Report) GetClusterHealthStatus(ctx context.Context, clusterID string) (
 
 	pdAddress := clusterMeta.GetPDClientAddresses()
 	if len(pdAddress) <= 0 {
-		return healthStatus, errors.NewError(errors.TIEM_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
+		return healthStatus, errors.NewError(errors.TIUNIMANAGER_PD_NOT_FOUND_ERROR, "cluster not found pd instance")
 	}
 
 	pdID := strings.Join([]string{pdAddress[0].IP, strconv.Itoa(pdAddress[0].Port)}, ":")
@@ -374,7 +374,7 @@ func (p *Report) GetClusterHealthStatus(ctx context.Context, clusterID string) (
 
 	healthsInfo := make([]HealthInfo, 0)
 	if err = json.Unmarshal(body, &healthsInfo); err != nil {
-		return healthStatus, errors.WrapError(errors.TIEM_UNMARSHAL_ERROR,
+		return healthStatus, errors.WrapError(errors.TIUNIMANAGER_UNMARSHAL_ERROR,
 			fmt.Sprintf("parse health info error: %s", err.Error()), err)
 	}
 

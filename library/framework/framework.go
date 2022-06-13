@@ -17,16 +17,18 @@
 package framework
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/metrics"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/metrics"
 
 	prom "github.com/prometheus/client_golang/prometheus"
 
@@ -37,8 +39,10 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
+	crypto "github.com/pingcap/tiunimanager/util/encrypt"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	transport2 "go.etcd.io/etcd/client/pkg/v3/transport"
 )
 
 var Current Framework
@@ -76,7 +80,7 @@ func Log() *log.Entry {
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_KEY, id)
+	return GetRootLogger().defaultLogEntry.WithField(TiUniManager_X_TRACE_ID_KEY, id)
 }
 
 func LogForkFile(fileName string) *log.Entry {
@@ -88,12 +92,13 @@ type ServiceHandler func(service micro.Service) error
 type ClientHandler func(service micro.Service) error
 
 type BaseFramework struct {
-	args          *ClientArgs
-	configuration *Configuration
-	log           *RootLogger
-	trace         *Tracer
-	etcdClient    *EtcdClientV3
-	certificate   *CertificateInfo
+	args           *ClientArgs
+	configuration  *Configuration
+	log            *RootLogger
+	trace          *Tracer
+	etcdClient     *EtcdClientV3
+	certificate    *CertificateInfo
+	aesKeyFilePath string
 
 	elasticsearchClient *ElasticSearchClient
 
@@ -110,6 +115,7 @@ type BaseFramework struct {
 
 func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
+	f.initAesForUT()
 
 	Current = f
 	f.args = &ClientArgs{
@@ -135,7 +141,6 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 	f.initOpts = opts
 	f.Init()
-
 	f.shutdownOpts = []Opt{
 		func(d *BaseFramework) error {
 			return os.RemoveAll(d.GetDataDir())
@@ -151,16 +156,35 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 
 	f.acceptArgs()
 	f.parseArgs(serviceName)
-
+	f.initAes()
+	f.setEtcdCertConfig()
 	f.initOpts = opts
 	f.Init()
-
 	f.initEtcdClient()
 	f.initElasticsearchClient()
 	f.initMetrics()
 	// listen prometheus metrics
 	go f.prometheusBoot()
 	return f
+}
+
+func (b *BaseFramework) setEtcdCertConfig() {
+	EtcdCert = EtcdCertTransport{
+		PeerTLSInfo:   b.genTlsInfo(constants.ETCDPeerCertFile),
+		ClientTLSInfo: b.genTlsInfo(constants.ETCDClientCertFile),
+		ServerTLSInfo: b.genTlsInfo(constants.ETCDServerCertFile),
+	}
+}
+
+func (b *BaseFramework) genTlsInfo(certFilePath constants.EtcdCertFileType) transport2.TLSInfo {
+	return transport2.TLSInfo{
+		CertFile:            b.GetClientArgs().DeployDir + constants.CertDirPrefix + certFilePath[0],
+		KeyFile:             b.GetClientArgs().DeployDir + constants.CertDirPrefix + certFilePath[1],
+		TrustedCAFile:       b.GetClientArgs().DeployDir + constants.CertDirPrefix + constants.ETCDCAFileName,
+		ClientCertAuth:      true,
+		InsecureSkipVerify:  true,
+		SkipClientSANVerify: true,
+	}
 }
 
 func (b *BaseFramework) acceptArgs() {
@@ -177,6 +201,7 @@ func (b *BaseFramework) parseArgs(serviceName ServiceNameEnum) {
 	b.serviceMeta = NewServiceMetaFromArgs(serviceName, b.args)
 	b.log = NewLogRecordFromArgs(serviceName, b.args)
 	b.certificate = NewCertificateFromArgs(b.args)
+	b.aesKeyFilePath = NewAesKeyFilePathFromArgs(b.args)
 	b.trace = NewTracerFromArgs(b.args)
 	// now empty
 	b.configuration = &Configuration{}
@@ -189,8 +214,9 @@ func (b *BaseFramework) initMicroClient() {
 			micro.Name(string(client)),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
-			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...))),
+			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert("grpc")))),
+			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...),
+				registry.Secure(true), registry.TLSConfig(b.loadCert("etcd")))),
 			micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 		)
 		srv.Init()
@@ -199,10 +225,19 @@ func (b *BaseFramework) initMicroClient() {
 	}
 }
 
-func (b *BaseFramework) loadCert() *tls.Config {
-	cert, err := tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
+func (b *BaseFramework) loadCert(crtType string) *tls.Config {
+	var cert tls.Certificate
+	var err error
+	switch crtType {
+	case "etcd":
+		cert, err = tls.LoadX509KeyPair(b.GetDeployDir()+constants.CertDirPrefix+constants.ETCDClientCertFile[0],
+			b.GetDeployDir()+constants.CertDirPrefix+constants.ETCDClientCertFile[1])
+	default:
+		cert, err = tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
+	}
+
 	if err != nil {
-		panic("load certificate file failed")
+		panic("load " + crtType + " certificate file failed")
 	}
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true} // #nosec G402
 }
@@ -213,11 +248,11 @@ func (b *BaseFramework) initMicroService() {
 		server.WrapHandler(NewMicroHandlerWrapper()),
 		server.WrapHandler(prometheus.NewHandlerWrapper()),
 		server.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
+		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert("grpc")))),
 		server.Address(b.serviceMeta.GetServiceAddress()),
-		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...))),
+		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...),
+			registry.Secure(true), registry.TLSConfig(b.loadCert("etcd")))),
 	)
-
 	srv := micro.NewService(
 		micro.Server(server),
 		micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
@@ -243,6 +278,26 @@ func (b *BaseFramework) initElasticsearchClient() {
 
 func (b *BaseFramework) initMetrics() {
 	b.metrics = metrics.GetMetrics()
+}
+
+func (b *BaseFramework) initAesForUT() {
+	err := crypto.InitKey([]byte(constants.AesKeyOnlyForUT))
+	if err != nil {
+		Log().Errorf("init aes for ut failed: %v", err)
+		panic("init aes for ut failed:" + err.Error())
+	}
+}
+
+func (b *BaseFramework) initAes() {
+	keyBs, err := ioutil.ReadFile(b.aesKeyFilePath)
+	if err == nil {
+		keyBs = bytes.TrimSuffix(keyBs, []byte("\n"))
+		err = crypto.InitKey(keyBs)
+	}
+	if err != nil {
+		Log().Errorf("init aes failed: %v", err)
+		panic("init aes failed:" + err.Error())
+	}
 }
 
 func (b *BaseFramework) GetDeployDir() string {
@@ -298,28 +353,20 @@ func GetCurrentSpecifiedPublicKeyPath() string {
 }
 
 func GetPrivateKeyFilePath(userName string) (keyPath string) {
-	useSpecifiedKeyPair := GetBoolWithDefault(UsingSpecifiedKeyPair, false)
-	if useSpecifiedKeyPair {
-		keyPath = GetCurrentSpecifiedPrivateKeyPath()
-	} else {
-		// use default private key under deploy user ssh dir
-		keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
-	}
+	// use default private key under deploy user ssh dir
+	keyPath = fmt.Sprintf("/home/%s/.ssh/tiup_rsa", userName)
+
 	return
 }
 
 func GetPublicKeyFilePath(userName string) (keyPath string) {
-	useSpecifiedKeyPair := GetBoolWithDefault(UsingSpecifiedKeyPair, false)
-	if useSpecifiedKeyPair {
-		keyPath = GetCurrentSpecifiedPublicKeyPath()
-	} else {
-		// use default public key under deploy user ssh dir
-		keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
-	}
+	// use default public key under deploy user ssh dir
+	keyPath = fmt.Sprintf("/home/%s/.ssh/id_rsa.pub", userName)
+
 	return
 }
 
-func GetTiupHomePathForTiem() string {
+func GetTiupHomePathForEm() string {
 	userName := GetCurrentDeployUser()
 	return fmt.Sprintf("/home/%s/.em", userName)
 }
@@ -353,7 +400,7 @@ func (b *BaseFramework) Log() *log.Entry {
 
 func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.Log().WithField(TiEM_X_TRACE_ID_KEY, id)
+	return b.Log().WithField(TiUniManager_X_TRACE_ID_KEY, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -399,14 +446,15 @@ func (b *BaseFramework) prometheusBoot() {
 		With(prom.Labels{metrics.ServiceLabel: b.GetServiceMeta().ServiceName.ServerName()}).
 		SetToCurrentTime()
 
-	http.Handle("/metrics", promhttp.Handler())
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
 	go func() {
 		metricsPort := b.GetClientArgs().MetricsPort
 		if metricsPort <= 0 {
 			metricsPort = constants.DefaultMetricsPort
 		}
 		LogForkFile(constants.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
-		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), nil)
+		err := http.ListenAndServe("0.0.0.0:"+strconv.Itoa(metricsPort), mux)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())

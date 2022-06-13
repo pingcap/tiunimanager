@@ -19,15 +19,15 @@ package printer
 import (
 	"bytes"
 	"fmt"
-	israce2 "github.com/pingcap-inc/tiem/util/israce"
-	versioninfo2 "github.com/pingcap-inc/tiem/util/versioninfo"
+	israce2 "github.com/pingcap/tiunimanager/util/israce"
+	versioninfo2 "github.com/pingcap/tiunimanager/util/versioninfo"
 	_ "runtime" // import link package
 	_ "unsafe"  // required by go:linkname
 )
 
-// PrintTiEMInfo prints the TiEM version information.
-func PrintTiEMInfo() {
-	/**logger.GetRootLogger(configTiem.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
+// PrintTiUniManagerInfo prints the TiUniManager version information.
+func PrintTiUniManagerInfo() {
+	/**logger.GetRootLogger(configEm.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
 		zap.String("Release Version", mysql.TiDBReleaseVersion),
 		zap.String("Edition", versioninfo.TiDBEdition),
 		zap.String("Git Commit Hash", versioninfo.TiDBGitHash),
@@ -44,8 +44,8 @@ func PrintTiEMInfo() {
 	logutil.BgLogger().Info("loaded config", zap.ByteString("config", configJSON))**/
 }
 
-// GetTiEMInfo returns the git hash and build time of this tiem servers binary.
-func GetTiEMInfo() string {
+// GetTiUniManagerInfo returns the git hash and build time of this tiunimanager servers binary.
+func GetTiUniManagerInfo() string {
 	return fmt.Sprintf("Release Version: %s\n"+
 		"Edition: %s\n"+
 		"Git Commit Hash: %s\n"+
@@ -53,11 +53,11 @@ func GetTiEMInfo() string {
 		"UTC Build Time: %s\n"+
 		"GoVersion: %s\n"+
 		"Race Enabled: %v\n",
-		versioninfo2.TiEMReleaseVersion,
-		versioninfo2.TiEMEdition,
-		versioninfo2.TiEMGitHash,
-		versioninfo2.TiEMGitBranch,
-		versioninfo2.TiEMBuildTS,
+		versioninfo2.TiUniManagerReleaseVersion,
+		versioninfo2.TiUniManagerEdition,
+		versioninfo2.TiUniManagerGitHash,
+		versioninfo2.TiUniManagerGitBranch,
+		versioninfo2.TiUniManagerBuildTS,
 		buildVersion,
 		israce2.RaceEnabled)
 }

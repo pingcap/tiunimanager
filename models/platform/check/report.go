@@ -24,7 +24,7 @@
 package check
 
 import (
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"gorm.io/gorm"
 	"time"
 )

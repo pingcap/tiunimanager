@@ -18,12 +18,12 @@ package backuprestore
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/backuprestore"
 	"github.com/robfig/cron"
 	"time"
 )
@@ -89,7 +89,7 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 		return
 	}
 
-	ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiEM_X_TENANT_ID_KEY: meta.Cluster.TenantId})
+	ctx := framework.NewMicroContextWithKeyValuePairs(context.Background(), map[string]string{framework.TiUniManager_X_TENANT_ID_KEY: meta.Cluster.TenantId})
 	_, err = GetBRService().BackupCluster(ctx, cluster.BackupClusterDataReq{
 		ClusterID:  strategy.ClusterID,
 		BackupMode: string(constants.BackupModeAuto),

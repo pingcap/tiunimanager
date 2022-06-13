@@ -17,9 +17,9 @@ package common
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -174,18 +174,23 @@ func TestPassword(t *testing.T) {
 				TenantId: "333",
 			},
 			Name:     "check",
-			Password: PasswordInExpired{Val: "abc123"},
+			Password: PasswordInExpired{
+				Val: "abc123",
+			},
 		}
 		baseDB.Create(a)
 
 		result := &TestEntity{}
 		err := baseDB.Model(&TestEntity{}).Where("name = ?", "check").First(result).Error
-		fmt.Println("time1:", result.Password.UpdateTime)
-		result.Password.UpdateTime = time.Now().AddDate(0, 0, -31)
-		fmt.Println("time1:", result.Password.UpdateTime)
 		expired, err := result.Password.CheckUpdateTimeExpired()
 		assert.NoError(t, err)
 		assert.Equal(t, "abc123", result.Password.Val)
-		assert.Equal(t, expired, true)
+		assert.Equal(t, true, expired)
+
+		result.Password.UpdateTime = time.Now()
+		expired, err = result.Password.CheckUpdateTimeExpired()
+		assert.NoError(t, err)
+		assert.Equal(t, false, expired)
+
 	})
 }

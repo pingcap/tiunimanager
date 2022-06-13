@@ -26,7 +26,7 @@ package parametergroup
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 )
 
 // ReaderWriter

@@ -29,14 +29,14 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 
 	"github.com/golang/mock/gomock"
 
 	"github.com/alecthomas/assert"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 func TestManager_prepareSearchParams_Success(t *testing.T) {
@@ -122,7 +122,7 @@ var esResult = `
           "log" : {
             "offset" : 8166163,
             "file" : {
-              "path" : "/root/tiem/logs/cluster-server.log"
+              "path" : "/root/tiunimanager/logs/cluster-server.log"
             }
           },
           "msg" : "WeekDay Friday, Hour: 18 need do auto backup for 0 clusters",

@@ -17,10 +17,10 @@ package management
 
 import (
 	"errors"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 	"time"
 
-	em_errors "github.com/pingcap-inc/tiem/common/errors"
+	em_errors "github.com/pingcap/tiunimanager/common/errors"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +55,7 @@ type UsedPort struct {
 func (d *UsedPort) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("host_id = ? and port = ?", d.HostId, d.Port).First(&UsedPort{}).Error
 	if err == nil {
-		return em_errors.NewErrorf(em_errors.TIEM_SQL_ERROR, "port %d in host(%s) is already inused", d.Port, d.HostId)
+		return em_errors.NewErrorf(em_errors.TIUNIMANAGER_SQL_ERROR, "port %d in host(%s) is already inused", d.Port, d.HostId)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		d.ID = uuidutil.GenerateID()

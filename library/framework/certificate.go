@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,7 +17,7 @@
 package framework
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 )
 
 type CertificateInfo struct {
@@ -31,4 +30,8 @@ func NewCertificateFromArgs(args *ClientArgs) *CertificateInfo {
 		CertificateCrtFilePath: args.DeployDir + constants.CertDirPrefix + constants.CertFileName,
 		CertificateKeyFilePath: args.DeployDir + constants.CertDirPrefix + constants.KeyFileName,
 	}
+}
+
+func NewAesKeyFilePathFromArgs(args *ClientArgs) string {
+	return args.DeployDir + constants.CertDirPrefix + constants.AesKeyFileName
 }

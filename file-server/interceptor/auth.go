@@ -18,17 +18,17 @@ package interceptor
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/file-server/controller"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
-	utils "github.com/pingcap-inc/tiem/util/stringutil"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/file-server/controller"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
+	utils "github.com/pingcap/tiunimanager/util/stringutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/client"
+	"github.com/pingcap/tiunimanager/common/client"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -49,13 +49,14 @@ func VerifyIdentity(c *gin.Context) {
 
 	req := message.AccessibleReq{
 		TokenString: structs.SensitiveText(tokenString),
+		CheckPassword: true,
 	}
 
 	body, err := json.Marshal(req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("marshal request error: %s", err.Error())
 		c.Error(err)
-		c.Status(errors.TIEM_MARSHAL_ERROR.GetHttpCode())
+		c.Status(errors.TIUNIMANAGER_MARSHAL_ERROR.GetHttpCode())
 		c.Abort()
 	}
 
@@ -64,7 +65,7 @@ func VerifyIdentity(c *gin.Context) {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)
 		c.Abort()
-	} else if rpcResp.Code != int32(errors.TIEM_SUCCESS) {
+	} else if rpcResp.Code != int32(errors.TIUNIMANAGER_SUCCESS) {
 		framework.LogWithContext(c).Error(rpcResp.Message)
 		c.Error(err)
 		c.Status(errors.EM_ERROR_CODE(rpcResp.Code).GetHttpCode())
@@ -75,11 +76,11 @@ func VerifyIdentity(c *gin.Context) {
 		if err != nil {
 			framework.LogWithContext(c).Errorf("unmarshal get system config rpc response error: %s", err.Error())
 			c.Error(err)
-			c.Status(errors.TIEM_UNMARSHAL_ERROR.GetHttpCode())
+			c.Status(errors.TIUNIMANAGER_UNMARSHAL_ERROR.GetHttpCode())
 			c.Abort()
 		}
-		c.Set(framework.TiEM_X_USER_ID_KEY, result.UserID)
-		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantID)
+		c.Set(framework.TiUniManager_X_USER_ID_KEY, result.UserID)
+		c.Set(framework.TiUniManager_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}
 }

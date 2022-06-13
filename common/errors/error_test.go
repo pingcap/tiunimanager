@@ -22,32 +22,32 @@ import (
 )
 
 func TestError(t *testing.T) {
-	err := Error(TIEM_MARSHAL_ERROR)
+	err := Error(TIUNIMANAGER_MARSHAL_ERROR)
 	assert.Error(t, err)
-	assert.Equal(t, TIEM_MARSHAL_ERROR, err.code)
-	assert.Equal(t, TIEM_MARSHAL_ERROR.Explain(), err.GetMsg())
-	assert.Contains(t, err.Error(), TIEM_MARSHAL_ERROR.Explain())
+	assert.Equal(t, TIUNIMANAGER_MARSHAL_ERROR, err.code)
+	assert.Equal(t, TIUNIMANAGER_MARSHAL_ERROR.Explain(), err.GetMsg())
+	assert.Contains(t, err.Error(), TIUNIMANAGER_MARSHAL_ERROR.Explain())
 	assert.Contains(t, err.Error(), "[10004]")
 	fmt.Print(err.Error())
 }
 
 func TestNewError(t *testing.T) {
-	err := NewError(TIEM_MARSHAL_ERROR, "mymessage")
+	err := NewError(TIUNIMANAGER_MARSHAL_ERROR, "mymessage")
 	assert.Error(t, err)
-	assert.Equal(t, TIEM_MARSHAL_ERROR, err.code)
+	assert.Equal(t, TIUNIMANAGER_MARSHAL_ERROR, err.code)
 	assert.Equal(t, "mymessage", err.GetMsg())
-	assert.Contains(t, err.Error(), TIEM_MARSHAL_ERROR.Explain())
+	assert.Contains(t, err.Error(), TIUNIMANAGER_MARSHAL_ERROR.Explain())
 	assert.Contains(t, err.Error(), "[10004]")
 	assert.Contains(t, err.Error(), "mymessage")
 	fmt.Print(err.Error())
 }
 
 func TestNewEMErrorf(t *testing.T) {
-	err := NewErrorf(TIEM_MARSHAL_ERROR, "mymessage %d", 3333)
+	err := NewErrorf(TIUNIMANAGER_MARSHAL_ERROR, "mymessage %d", 3333)
 	assert.Error(t, err)
-	assert.Equal(t, TIEM_MARSHAL_ERROR, err.code)
+	assert.Equal(t, TIUNIMANAGER_MARSHAL_ERROR, err.code)
 	assert.Equal(t, "mymessage 3333", err.GetMsg())
-	assert.Contains(t, err.Error(), TIEM_MARSHAL_ERROR.Explain())
+	assert.Contains(t, err.Error(), TIUNIMANAGER_MARSHAL_ERROR.Explain())
 	assert.Contains(t, err.Error(), "[10004]")
 	assert.Contains(t, err.Error(), "mymessage")
 	assert.Contains(t, err.Error(), "3333")
@@ -56,14 +56,14 @@ func TestNewEMErrorf(t *testing.T) {
 }
 
 func TestWrapError(t *testing.T) {
-	err := WrapError(TIEM_MARSHAL_ERROR, "mymessage", Error(TIEM_UNRECOGNIZED_ERROR))
+	err := WrapError(TIUNIMANAGER_MARSHAL_ERROR, "mymessage", Error(TIUNIMANAGER_UNRECOGNIZED_ERROR))
 	assert.Error(t, err)
-	assert.Equal(t, TIEM_MARSHAL_ERROR, err.code)
+	assert.Equal(t, TIUNIMANAGER_MARSHAL_ERROR, err.code)
 	assert.Equal(t, "mymessage", err.GetMsg())
-	assert.Contains(t, err.Error(), TIEM_MARSHAL_ERROR.Explain())
+	assert.Contains(t, err.Error(), TIUNIMANAGER_MARSHAL_ERROR.Explain())
 	assert.Contains(t, err.Error(), "[10004]")
 	assert.Contains(t, err.Error(), "mymessage")
 	assert.Contains(t, err.Error(), "[10000]")
-	assert.Contains(t, err.Error(), TIEM_UNRECOGNIZED_ERROR.Explain())
+	assert.Contains(t, err.Error(), TIUNIMANAGER_UNRECOGNIZED_ERROR.Explain())
 	fmt.Print(err.Error())
 }

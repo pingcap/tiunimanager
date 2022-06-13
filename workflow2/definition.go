@@ -17,7 +17,7 @@
 package workflow2
 
 import (
-	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap/tiunimanager/models/workflow"
 )
 
 type WorkFlowDefine struct {
@@ -54,6 +54,15 @@ func (define *WorkFlowDefine) getNodeDefineKeyByName(nodeName string) string {
 		}
 	}
 	return ""
+}
+
+func (define *WorkFlowDefine) isFailNode(nodeName string) bool {
+	for _, value := range define.TaskNodes {
+		if value.FailEvent == nodeName {
+			return true
+		}
+	}
+	return false
 }
 
 func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {

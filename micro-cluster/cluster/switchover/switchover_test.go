@@ -28,17 +28,16 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	clusterMgr "github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/test/mockcdcmanager"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	clusterMgr "github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/test/mockcdcmanager"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,13 +51,62 @@ func TestSwitchover(t *testing.T) {
 
 	clusterRW := mockclustermanagement.NewMockReaderWriter(ctrl)
 	models.SetClusterReaderWriter(clusterRW)
-	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(&management.Cluster{
-		Entity: common.Entity{
-			ID:       "id-xxxx",
-			TenantId: "tid-xxx",
+	clusterRW.EXPECT().GetMeta(gomock.Any(), gomock.Any()).Return(
+		&management.Cluster{
+			Entity: common.Entity{
+				ID:       "id-xxxx",
+				TenantId: "tid-xxx",
+			},
 		},
-	}, make([]*management.ClusterInstance, 0), nil).AnyTimes()
+		[]*management.ClusterInstance{
+			{
+				Entity: common.Entity{
+					ID:     "111111",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "TiDB",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+			{
+				Entity: common.Entity{
+					ID:     "222222",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "TiDB",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+			{
+				Entity: common.Entity{
+					ID:     "333333",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "TiKV",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+			{
+				Entity: common.Entity{
+					ID:     "333333",
+					Status: string(constants.ClusterRunning),
+				},
+				Type:   "CDC",
+				HostIP: []string{"127.0.0.1"},
+				Ports:  []int32{111},
+			},
+		}, make([]*management.DBUser, 0), nil).AnyTimes()
 	clusterRW.EXPECT().GetRelations(gomock.Any(), gomock.Eq("2")).Return(
+		[]*clusterMgr.ClusterRelation{
+			{
+				RelationType:         constants.ClusterRelationStandBy,
+				SubjectClusterID:     "1",
+				ObjectClusterID:      "2",
+				SyncChangeFeedTaskID: "1",
+			},
+		}, nil,
+	).AnyTimes()
+	clusterRW.EXPECT().GetSlaves(gomock.Any(), gomock.Eq("1")).Return(
 		[]*clusterMgr.ClusterRelation{
 			{
 				RelationType:         constants.ClusterRelationStandBy,
@@ -74,17 +122,14 @@ func TestSwitchover(t *testing.T) {
 	workflow.MockWorkFlowService(workflowService)
 	defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
 	workflowService.EXPECT().RegisterWorkFlow(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-		Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-		Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-	}, nil).AnyTimes()
-	workflowService.EXPECT().AddContext(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil).AnyTimes()
+	workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	cdcAPI := mockcdcmanager.NewMockCDCManagerAPI(ctrl)
 	cdcAPI.EXPECT().Create(gomock.Any(), gomock.Any()).Return(cluster.CreateChangeFeedTaskResp{}, nil).AnyTimes()
 
-	service := GetManager(cdcAPI)
+	service := GetManager()
 	resp, err := service.Switchover(context.TODO(), &cluster.MasterSlaveClusterSwitchoverReq{
 		// old master
 		SourceClusterID: "1",

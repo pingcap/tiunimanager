@@ -17,7 +17,7 @@ package account
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 type ReaderWriter interface {
@@ -30,6 +30,7 @@ type ReaderWriter interface {
 	UpdateUserPassword(ctx context.Context, userID, salt, finalHash string) error
 
 	GetUserByName(ctx context.Context, name string)(*User, error)
+	GetUserByID(ctx context.Context, id string) (*User, error)
 
 	CreateTenant(ctx context.Context, tenant *Tenant) (info *structs.TenantInfo, err error)
 	DeleteTenant(ctx context.Context, tenantID string) error

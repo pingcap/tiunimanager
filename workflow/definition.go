@@ -16,12 +16,13 @@
 
 package workflow
 
+/*
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/workflow"
 )
 
 type WorkFlowDefine struct {
@@ -80,3 +81,4 @@ func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
 		return nil
 	}
 }
+*/

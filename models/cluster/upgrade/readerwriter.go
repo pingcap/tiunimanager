@@ -26,7 +26,7 @@ package upgrade
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 )
 
 type ReaderWriter interface {

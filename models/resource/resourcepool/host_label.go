@@ -18,7 +18,7 @@ package resourcepool
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 	"gorm.io/gorm"
 )
 

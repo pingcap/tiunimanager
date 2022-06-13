@@ -28,39 +28,39 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/models/common"
 
-	"github.com/pingcap-inc/tiem/deployment"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
+	"github.com/pingcap/tiunimanager/deployment"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
 
-	"github.com/pingcap-inc/tiem/test/mockutilcdc"
-	"github.com/pingcap-inc/tiem/test/mockutilpd"
-	"github.com/pingcap-inc/tiem/test/mockutiltidbhttp"
-	"github.com/pingcap-inc/tiem/test/mockutiltikv"
-	"github.com/pingcap-inc/tiem/util/api/cdc"
-	"github.com/pingcap-inc/tiem/util/api/pd"
-	"github.com/pingcap-inc/tiem/util/api/tidb/http"
-	"github.com/pingcap-inc/tiem/util/api/tikv"
+	"github.com/pingcap/tiunimanager/test/mockutilcdc"
+	"github.com/pingcap/tiunimanager/test/mockutilpd"
+	"github.com/pingcap/tiunimanager/test/mockutiltidbhttp"
+	"github.com/pingcap/tiunimanager/test/mockutiltikv"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
+	"github.com/pingcap/tiunimanager/util/api/pd"
+	"github.com/pingcap/tiunimanager/util/api/tidb/http"
+	"github.com/pingcap/tiunimanager/util/api/tikv"
 
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockparametergroup"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockparametergroup"
 
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
 
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclusterparameter"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models/parametergroup"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclusterparameter"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func TestManager_QueryClusterParameters(t *testing.T) {
@@ -154,10 +154,11 @@ func TestManager_UpdateClusterParameters(t *testing.T) {
 			})
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), nil
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", nil
 			})
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
 		resp, err := mockManager.UpdateClusterParameters(context.TODO(), cluster.UpdateClusterParametersReq{
@@ -239,10 +240,11 @@ func TestManager_ApplyParameterGroup_Success(t *testing.T) {
 			})
 		clusterManagementRW.EXPECT().SetMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (*workflow.WorkFlowAggregation, error) {
-				return mockWorkFlowAggregation(), nil
+			DoAndReturn(func(ctx context.Context, bizId string, bizType string, flowName string) (string, error) {
+				return "flowId", nil
 			})
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).AnyTimes()
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes()
 		configRW.EXPECT().CreateConfig(gomock.Any(), gomock.Any()).AnyTimes()
 
 		resp, err := mockManager.ApplyParameterGroup(context.TODO(), message.ApplyParameterGroupReq{

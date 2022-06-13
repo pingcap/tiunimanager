@@ -20,16 +20,16 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	rp_consts "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/constants"
-	"github.com/pingcap-inc/tiem/models"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	mock_initiator "github.com/pingcap-inc/tiem/test/mockresource/mockinitiator"
-	mock_provider "github.com/pingcap-inc/tiem/test/mockresource/mockprovider"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	rp_consts "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool/constants"
+	"github.com/pingcap/tiunimanager/models"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	mock_initiator "github.com/pingcap/tiunimanager/test/mockresource/mockinitiator"
+	mock_provider "github.com/pingcap/tiunimanager/test/mockresource/mockprovider"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +46,7 @@ func Test_ValidateHost(t *testing.T) {
 
 	resourcePool.SetHostProvider(mockProvider)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -69,7 +69,7 @@ func Test_AuthHost(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -92,7 +92,7 @@ func Test_AuthHostFail(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -115,7 +115,7 @@ func Test_Prepare(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -138,7 +138,7 @@ func Test_PrepareFail(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -161,7 +161,7 @@ func Test_InstallSoftware(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -184,7 +184,7 @@ func Test_InstallSoftwareFail(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -209,7 +209,7 @@ func Test_JoinEMCluster_Normal(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -231,7 +231,7 @@ func Test_JoinEMCluster_AlreadyInstall(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -253,7 +253,7 @@ func Test_Verify(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 	flowContext.SetData(rp_consts.ContextIgnoreWarnings, false)
 
@@ -276,7 +276,7 @@ func Test_VerifyFail(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 	flowContext.SetData(rp_consts.ContextIgnoreWarnings, false)
 
@@ -299,7 +299,7 @@ func Test_SetHostOnline(t *testing.T) {
 
 	resourcePool.SetHostProvider(mockProvider)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
@@ -321,7 +321,7 @@ func Test_SetHostOnlineFail(t *testing.T) {
 
 	resourcePool.SetHostProvider(mockProvider)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
@@ -341,7 +341,7 @@ func Test_SetHostFail(t *testing.T) {
 
 	resourcePool.SetHostProvider(mockProvider)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
@@ -361,7 +361,7 @@ func Test_SetHostDeleted(t *testing.T) {
 
 	resourcePool.SetHostProvider(mockProvider)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 
 	var node workflowModel.WorkFlowNode
@@ -372,15 +372,15 @@ func Test_SetHostDeleted(t *testing.T) {
 func Test_CheckHostBeforeDeleted_Succeed(t *testing.T) {
 	models.MockDB()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{ID: "fake-host-id", HostName: "Test_Host1", IP: "192.199.254.22", Status: string(constants.HostOnline), Stat: string(constants.HostLoadLoadLess)}})
 
 	var node workflowModel.WorkFlowNode
 	err := checkHostBeforeDelete(&node, flowContext)
 	assert.Nil(t, err)
 	var hosts []structs.HostInfo
-	hosts, ok := flowContext.GetData(rp_consts.ContextHostInfoArrayKey).([]structs.HostInfo)
-	assert.True(t, ok)
+	err = flowContext.GetData(rp_consts.ContextHostInfoArrayKey, &hosts)
+	assert.Nil(t, err)
 	assert.Equal(t, 1, len(hosts))
 	t.Log(hosts)
 	assert.Equal(t, "Test_Host1", hosts[0].HostName)
@@ -389,7 +389,7 @@ func Test_CheckHostBeforeDeleted_Succeed(t *testing.T) {
 func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	models.MockDB()
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostIDArrayKey, []string{"fake-host-id"})
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{ID: "fake-host-id", HostName: "Test_Host1", IP: "192.199.254.22", Status: string(constants.HostOnline), Stat: string(constants.HostLoadInUsed)}})
 
@@ -399,7 +399,7 @@ func Test_CheckHostBeforeDeleted_Fail(t *testing.T) {
 	var emERR errors.EMError
 	emERR, ok := err.(errors.EMError)
 	assert.True(t, ok)
-	assert.Equal(t, errors.TIEM_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_RESOURCE_HOST_STILL_INUSED, emERR.GetCode())
 }
 
 func Test_LeaveEMCluster_Normal(t *testing.T) {
@@ -424,7 +424,7 @@ func Test_LeaveEMCluster_Normal(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -447,7 +447,7 @@ func Test_LeaveEMCluster_AlreadyRemove(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode
@@ -470,7 +470,7 @@ func Test_LeaveEMCluster_AlreadyRemoveFail(t *testing.T) {
 
 	resourcePool.SetHostInitiator(mockInitiator)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(rp_consts.ContextHostInfoArrayKey, []structs.HostInfo{{IP: "192.168.192.192"}})
 
 	var node workflowModel.WorkFlowNode

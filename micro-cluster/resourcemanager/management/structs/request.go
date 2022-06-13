@@ -16,7 +16,7 @@
 
 package structs
 
-import "github.com/pingcap-inc/tiem/common/structs"
+import "github.com/pingcap/tiunimanager/common/structs"
 
 ///////////////////////////////
 // Alloc Request

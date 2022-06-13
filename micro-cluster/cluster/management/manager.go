@@ -18,32 +18,32 @@ package management
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/micro-cluster/platform/product"
-	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
-	resourceStructs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/structs"
+	"github.com/pingcap/tiunimanager/micro-cluster/platform/product"
+	resourceManagement "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management"
+	resourceStructs "github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/management/structs"
 	"net"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/micro-cluster/parametergroup"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/micro-cluster/parametergroup"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/models"
 
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message/cluster"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/resourcemanager/resourcepool"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
@@ -102,8 +102,8 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 		"getTypesDone":     {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone":       {"updateClusterParameters", "updateDone", "failAfterScale", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, updateClusterParameters)},
 		"updateDone":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":             {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
-		"failAfterScale":   {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, endMaintenance)},
+		"failAfterScale":   {"failAfterScale", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -160,7 +160,7 @@ var scaleInDefine = workflow.WorkFlowDefine{
 		"scaleInDone": {"checkInstanceStatus", "checkDone", "fail", workflow.SyncFuncNode, checkInstanceStatus},
 		"checkDone":   {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
 		"freeDone":    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -238,7 +238,7 @@ var cloneDefine = workflow.WorkFlowDefine{
 		"waitRestoreDone":         {"syncIncrData", "syncIncrDataDone", "failAfterDeploy", workflow.SyncFuncNode, syncIncrData},
 		"syncIncrDataDone":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, persistCluster, endMaintenance, asyncBuildLog)},
 		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":         {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
+		"failAfterDeploy":         {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(recoverSourceClusterGCTime, setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -303,8 +303,8 @@ var createClusterFlow = workflow.WorkFlowDefine{
 		"testConnectivityDone":    {"initDatabaseData", "initDataDone", "failAfterDeploy", workflow.SyncFuncNode, initDatabaseData},
 		"initDataDone":            {"waitInitDatabaseData", "success", "failAfterDeploy", workflow.SyncFuncNode, waitInitDatabaseData},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
-		"failAfterDeploy":         {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, revertResourceAfterFailure, endMaintenance)},
+		"failAfterDeploy":         {"failAfterDeploy", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -409,7 +409,7 @@ func (p *Manager) PreviewCluster(ctx context.Context, req cluster.CreateClusterR
 		},
 	})
 	if total > 0 {
-		err = errors.Error(errors.TIEM_DUPLICATED_NAME)
+		err = errors.Error(errors.TIUNIMANAGER_DUPLICATED_NAME)
 		return
 	}
 
@@ -520,7 +520,7 @@ var stopClusterFlow = workflow.WorkFlowDefine{
 		"start":       {"clusterStop", "stopDone", "fail", workflow.PollingNode, stopCluster},
 		"stopDone":    {"setClusterOffline", "offlineDone", "fail", workflow.SyncFuncNode, setClusterOffline},
 		"offlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":        {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -556,8 +556,8 @@ var deleteClusterFlow = workflow.WorkFlowDefine{
 		"freedResourceDone":  {"clearBackupData", "clearBackupDone", "fail", workflow.SyncFuncNode, clearBackupData},
 		"clearBackupDone":    {"clearCDCLinks", "clearLinkDone", "fail", workflow.SyncFuncNode, clearCDCLinks},
 		"clearLinkDone":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(deleteCluster)},
-		"fail":               {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
-		"revert":             {"end", "", "", workflow.SyncFuncNode, endMaintenance},
+		"fail":               {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"revert":             {"revert", "", "", workflow.SyncFuncNode, endMaintenance},
 	},
 }
 
@@ -573,7 +573,7 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 
 	if len(meta.Cluster.MaintenanceStatus) > 0 && !req.Force {
 		msg := fmt.Sprintf("cluster maintenance status is '%s'", string(meta.Cluster.MaintenanceStatus))
-		err = errors.NewError(errors.TIEM_CLUSTER_MAINTENANCE_CONFLICT, msg)
+		err = errors.NewError(errors.TIUNIMANAGER_CLUSTER_MAINTENANCE_CONFLICT, msg)
 		return
 	}
 
@@ -599,7 +599,7 @@ var startClusterFlow = workflow.WorkFlowDefine{
 		"start":      {"startCluster", "startDone", "fail", workflow.PollingNode, startCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
 		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -608,8 +608,8 @@ var restartClusterFlow = workflow.WorkFlowDefine{
 	TaskNodes: map[string]*workflow.NodeDefine{
 		"start":      {"restartCluster", "startDone", "fail", workflow.PollingNode, restartCluster},
 		"startDone":  {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, setClusterOnline},
-		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":       {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"onlineDone": {"end", "", "fail", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
+		"fail":       {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -655,8 +655,8 @@ var takeoverClusterFlow = workflow.WorkFlowDefine{
 		"workingSpaceDone":        {"applyParameterGroup", "applyParameterGroupDone", "revertWithResource", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, applyParameterGroupForTakeover)},
 		"applyParameterGroupDone": {"initDatabaseAccount", "success", "revertWithResource", workflow.SyncFuncNode, initDatabaseAccount},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance, asyncBuildLog)},
-		"revert":                  {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
-		"revertWithResource":      {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
+		"revert":                  {"revert", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(takeoverRevertMeta)},
+		"revertWithResource":      {"revertWithResource", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertResourceAfterFailure, takeoverRevertMeta)},
 	},
 }
 
@@ -674,21 +674,21 @@ var openSftpClient openSftpClientFunc = func(ctx context.Context, req cluster.Ta
 	client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiUPIp, strconv.Itoa(req.TiUPPort)), &conf)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("connection error: %s", err.Error())
-		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
+		return nil, nil, errors.WrapError(errors.TIUNIMANAGER_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 
 	sftpClient, err := sftp.NewClient(client)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("new sftp client failed, error: %s", err.Error())
 		client.Close()
-		return nil, nil, errors.WrapError(errors.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client failed", err)
+		return nil, nil, errors.WrapError(errors.TIUNIMANAGER_TAKEOVER_SFTP_ERROR, "new sftp client failed", err)
 	}
 	return client, sftpClient, nil
 }
 
 func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) (resp cluster.TakeoverClusterResp, err error) {
 	if len(req.ClusterName) == 0 {
-		err = errors.NewError(errors.TIEM_PARAMETER_INVALID, "cluster name required")
+		err = errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "cluster name required")
 		return
 	}
 
@@ -738,7 +738,6 @@ func (p *Manager) Takeover(ctx context.Context, req cluster.TakeoverClusterReq) 
 func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 	status constants.ClusterMaintenanceStatus, flowName string, data map[string]interface{}) (flowID string, err error) {
 
-	var flow *workflow.WorkFlowAggregation
 	err = models.Transaction(ctx, func(transactionCtx context.Context) error {
 		return errors.OfNullable(nil).BreakIf(func() error {
 			// update maintenance statue
@@ -752,12 +751,14 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			return clusterMeta.StartMaintenance(transactionCtx, status)
 		}).BreakIf(func() error {
 			// create flow
-			if newFlow, flowError := workflow.GetWorkFlowService().
+			if newFlowId, flowError := workflow.GetWorkFlowService().
 				CreateWorkFlow(transactionCtx, clusterMeta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError == nil {
-				flow = newFlow
-				flowID = newFlow.Flow.ID
+				flowID = newFlowId
 				for key, value := range data {
-					flow.Context.SetData(key, value)
+					err = workflow.GetWorkFlowService().InitContext(transactionCtx, flowID, key, value)
+					if err != nil {
+						return err
+					}
 				}
 				return nil
 			} else {
@@ -765,7 +766,7 @@ func asyncMaintenance(ctx context.Context, clusterMeta *meta.ClusterMeta,
 			}
 		}).BreakIf(func() error {
 			// async start flow
-			return workflow.GetWorkFlowService().AsyncStart(transactionCtx, flow)
+			return workflow.GetWorkFlowService().Start(transactionCtx, flowID)
 		}).If(func(err error) {
 			framework.LogWithContext(ctx).Errorf(
 				"maintenance cluster %s failed", clusterMeta.Cluster.ID)
@@ -836,20 +837,20 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 	if len(alertServers) <= 0 || len(grafanaServers) <= 0 {
 		errMsg := fmt.Sprintf("cluster %s alert server or grafana server not available", clusterMeta.Cluster.ID)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return resp, errors.NewError(errors.TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, errMsg)
+		return resp, errors.NewError(errors.TIUNIMANAGER_CLUSTER_RESOURCE_NOT_ENOUGH, errMsg)
 	}
 
 	alertPort := alertServers[0].Port
 	if alertPort <= 0 {
 		errMsg := fmt.Sprintf("cluster %s alert port %d not available", clusterMeta.Cluster.ID, alertPort)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return resp, errors.NewError(errors.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR, errMsg)
+		return resp, errors.NewError(errors.TIUNIMANAGER_CLUSTER_GET_CLUSTER_PORT_ERROR, errMsg)
 	}
 	grafanaPort := grafanaServers[0].Port
 	if grafanaPort <= 0 {
 		errMsg := fmt.Sprintf("cluster %s grafana port %d not available", clusterMeta.Cluster.ID, grafanaPort)
 		framework.LogWithContext(ctx).Errorf(errMsg)
-		return resp, errors.NewError(errors.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR, errMsg)
+		return resp, errors.NewError(errors.TIUNIMANAGER_CLUSTER_GET_CLUSTER_PORT_ERROR, errMsg)
 	}
 
 	alertUrl := fmt.Sprintf("http://%s:%d", alertServers[0].IP, alertPort)
@@ -865,7 +866,7 @@ func (p *Manager) GetMonitorInfo(ctx context.Context, req cluster.QueryMonitorIn
 
 func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.RestoreNewClusterReq) error {
 	if req.BackupID == "" {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "restore new cluster input backupId empty")
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "restore new cluster input backupId empty")
 	}
 
 	brService := backuprestore.GetBRService()
@@ -877,13 +878,13 @@ func (p *Manager) restoreNewClusterPreCheck(ctx context.Context, req cluster.Res
 		},
 	})
 	if err != nil {
-		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, err.Error())
+		return errors.NewErrorf(errors.TIUNIMANAGER_BACKUP_RECORD_QUERY_FAILED, err.Error())
 	}
 	if len(resp.BackupRecords) <= 0 {
-		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
+		return errors.NewErrorf(errors.TIUNIMANAGER_BACKUP_RECORD_QUERY_FAILED, fmt.Sprintf("backup recordId %s not found", req.BackupID))
 	}
 	if resp.BackupRecords[0].Status != string(constants.ClusterBackupFinished) {
-		return errors.NewErrorf(errors.TIEM_BACKUP_RECORD_INVALID, "backup record status invalid")
+		return errors.NewErrorf(errors.TIUNIMANAGER_BACKUP_RECORD_INVALID, "backup record status invalid")
 	}
 
 	return nil
@@ -907,8 +908,8 @@ var onlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
 		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
-		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"failAfterUpgrade", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -934,8 +935,8 @@ var offlineInPlaceUpgradeClusterFlow = workflow.WorkFlowDefine{
 		"applyParameterGroupDone": {"adjustParameters", "adjustParametersDone", "failAfterUpgrade", workflow.SyncFuncNode, adjustParametersAfterUpgrade},
 		"adjustParametersDone":    {"syncTopology", "success", "failAfterUpgrade", workflow.SyncFuncNode, syncTopology},
 		"success":                 {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(persistCluster, endMaintenance)},
-		"fail":                    {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
-		"failAfterUpgrade":        {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
+		"fail":                    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(revertConfigAfterFailure, endMaintenance)},
+		"failAfterUpgrade":        {"failAfterUpgrade", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(setClusterFailure, endMaintenance)},
 	},
 }
 
@@ -1043,7 +1044,7 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	if len(groups) == 0 {
 		msg := fmt.Sprintf("no default group found for dbtype %d, hasdefault = %d, version = %s", int(parametergroup.TiDB), int(parametergroup.DEFAULT), getMinorVersion(version))
 		framework.LogWithContext(ctx).Error(msg)
-		err = errors.NewErrorf(errors.TIEM_SYSTEM_MISSING_DATA, msg)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, msg)
 		return
 	}
 	framework.LogWithContext(ctx).Debugf("query paramgroup for version %s result: %v", version, groups)

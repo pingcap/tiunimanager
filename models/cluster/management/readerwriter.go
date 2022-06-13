@@ -18,8 +18,8 @@ package management
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 type HostInstanceItem struct {
@@ -34,6 +34,7 @@ type ReaderWriter interface {
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
 	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, []*DBUser, error)
 	GetRelations(ctx context.Context, clusterID string) ([]*ClusterRelation, error)
+	RelationsResetSyncChangeFeedTaskIDs(ctx context.Context, masterClusterID string, slavesClusterIDMapToSyncTaskID map[string]string) error
 	//
 	// GetMasters
 	// @Description: get masters for specified cluster

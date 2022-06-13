@@ -19,22 +19,22 @@ import (
 	ctx "context"
 	"fmt"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/deployment"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/models/platform/product"
-	mock_deployment "github.com/pingcap-inc/tiem/test/mockdeployment"
-	mock_product "github.com/pingcap-inc/tiem/test/mockmodels"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockclustermanagement"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/models/platform/product"
+	mock_deployment "github.com/pingcap/tiunimanager/test/mockdeployment"
+	mock_product "github.com/pingcap/tiunimanager/test/mockmodels"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockclustermanagement"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"testing"
@@ -507,7 +507,7 @@ func Test_getRetainedPortRange(t *testing.T) {
 		assert.Equal(t, []int{10, 11}, portRange)
 	})
 	t.Run("error", func(t *testing.T) {
-		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIEM_SYSTEM_MISSING_CONFIG)).Times(1)
+		rw.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{}, errors.Error(errors.TIUNIMANAGER_SYSTEM_MISSING_CONFIG)).Times(1)
 		_, err := getRetainedPortRange(context.TODO())
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "missing system config")

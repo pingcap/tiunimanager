@@ -18,7 +18,7 @@ package hostInspector
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 )
 
 type HostInspector interface {

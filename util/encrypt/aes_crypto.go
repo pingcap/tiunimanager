@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -21,7 +20,9 @@ import (
 	"crypto/aes"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"sync"
 
 	"github.com/pingcap/errors"
 	"google.golang.org/grpc/codes"
@@ -29,10 +30,34 @@ import (
 )
 
 // key should be 16、24 or 32 length [] byte, conresponding to AES-128, AES-192 或 AES-256.
-var key []byte
+// left the key blank and wait user call `InitKey` to reset it
+var key = []byte("")
+var keyRWLock sync.RWMutex
 
-func init() {
-	key = []byte(">]t1emf0rp1nGcap$t!Em@p!ngcap;[<")
+func getKey() []byte {
+	var retK []byte
+	keyRWLock.RLock()
+	retK = key
+	keyRWLock.RUnlock()
+	return retK
+}
+
+func setKey(k []byte) {
+	keyRWLock.Lock()
+	key = k
+	keyRWLock.Unlock()
+}
+
+func InitKey(k []byte) error {
+	l := len(k)
+	switch l {
+	case 16, 24, 32:
+		break
+	default:
+		return fmt.Errorf("invalid key size %d", l)
+	}
+	setKey(k)
+	return nil
 }
 
 func aesEncryptCFB(plain []byte) (encrypted []byte, err error) {
@@ -41,7 +66,7 @@ func aesEncryptCFB(plain []byte) (encrypted []byte, err error) {
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, status.Errorf(codes.Internal, "init vector err, %s", err)
 	}
-	crypted, err := AESEncryptWithCFB(plain, key, iv)
+	crypted, err := AESEncryptWithCFB(plain, getKey(), iv)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +84,7 @@ func aesDecryptCFB(encrypted []byte) (decrypted []byte, err error) {
 	iv := encrypted[:aes.BlockSize]
 	encrypted = encrypted[aes.BlockSize:]
 
-	return AESDecryptWithCFB(encrypted, key, iv)
+	return AESDecryptWithCFB(encrypted, getKey(), iv)
 }
 
 func AesEncryptCFB(plainStr string) (encryptedStr string, err error) {

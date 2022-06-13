@@ -17,12 +17,14 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/platform/system"
+	"fmt"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/platform/system"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestGetReaderWriter(t *testing.T) {
@@ -330,8 +332,12 @@ func TestTransaction(t *testing.T) {
 	})
 
 	t.Run("not in a transaction", func(t *testing.T) {
+		GetSystemReaderWriter().UpdateVersion(context.TODO(), "555")
+
 		err := Transaction(context.TODO(), func(transactionCtx context.Context) error {
-			GetSystemReaderWriter().UpdateVersion(context.TODO(), "555")
+			// timeout
+			te := GetSystemReaderWriter().UpdateVersion(context.TODO(), "666")
+			assert.Error(t, te)
 			return GetSystemReaderWriter().UpdateState(transactionCtx, "Upgrading", "Running")
 		})
 		assert.Error(t, err)
@@ -352,5 +358,33 @@ func TestTransaction(t *testing.T) {
 			return nil
 		})
 		assert.NoError(t, err)
+	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		go func() {
+			Transaction(context.TODO(), func(transactionCtx context.Context) error {
+				fmt.Println("111 begin")
+				e := GetSystemReaderWriter().UpdateVersion(transactionCtx, "111")
+				assert.NoError(t, e)
+				fmt.Println("111 update")
+
+				time.Sleep(time.Second * 2)
+				fmt.Println("111 commit")
+				return e
+			})
+		}()
+		go func() {
+			time.Sleep(time.Millisecond * 5)
+			Transaction(context.TODO(), func(transactionCtx context.Context) error {
+				fmt.Println("222 begin")
+				e := GetSystemReaderWriter().UpdateVersion(transactionCtx, "222")
+				assert.NoError(t, e)
+				fmt.Println("222 update")
+
+				fmt.Println("222 commit")
+				return e
+			})
+		}()
+		time.Sleep(time.Second * 5)
 	})
 }

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 func TestParseEtcdConfig(t *testing.T) {

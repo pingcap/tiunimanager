@@ -25,21 +25,23 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
 
-	"github.com/pingcap-inc/tiem/models/platform/product"
+	"github.com/pingcap/tiunimanager/models/platform/product"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	"github.com/pingcap-inc/tiem/models/platform/system"
-	resourcePool "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-	"github.com/pingcap-inc/tiem/models/user/account"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	"github.com/pingcap/tiunimanager/models/platform/system"
+	resourcePool "github.com/pingcap/tiunimanager/models/resource/resourcepool"
+	"github.com/pingcap/tiunimanager/models/user/account"
 	"gorm.io/gorm"
 )
 
@@ -126,7 +128,55 @@ var allVersionInitializers = []system.VersionInitializer{
 			}).Error
 		})
 	}},
-
+	{"v1.0.1", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&system.VersionInfo{
+					ID:          "v1.0.1",
+					Desc:        "",
+					ReleaseNote: "",
+				}).Error
+			}).BreakIf(func() error {
+				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.1.sql"
+				return initBySql(tx, parameterSqlFile, "parameters")
+			}).BreakIf(func() error {
+				framework.LogForkFile(constants.LogFileSystem).Info("reset admin password")
+				adminUser, _ := defaultDb.accountReaderWriter.GetUserByName(context.TODO(), "admin")
+				if adminUser != nil && adminUser.ID != "" {
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s", adminUser.ID)
+					adminUser.GenSaltAndHash("admin")
+					b, err := json.Marshal(adminUser.FinalHash)
+					if err != nil {
+						return err
+					}
+					framework.LogForkFile(constants.LogFileSystem).Infof("reset admin password for userId %s, salt: %s, finalHash: %v", adminUser.ID, adminUser.Salt, adminUser.FinalHash)
+					tx.Exec(fmt.Sprintf("update users set salt = '%s', final_hash = '%s'  where name = 'admin'", adminUser.Salt, string(b)))
+					return nil
+				}
+				framework.LogForkFile(constants.LogFileSystem).Errorf("get empty adminUser %+v", adminUser)
+				return fmt.Errorf("get empty adminUser %+v", adminUser)
+			}).Present()
+		})
+	}},
+	{"v1.0.2", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&system.VersionInfo{
+					ID:          "v1.0.2",
+					Desc:        "",
+					ReleaseNote: "",
+				}).Error
+			}).BreakIf(func() error {
+				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.2.sql"
+				return initBySql(tx, parameterSqlFile, "parameters")
+			}).ContinueIf(func() error {
+				tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
+				return initBySql(tx, tiUPSqlFile, "tiup config")
+			}).If(func(err error) {
+				framework.LogForkFile(constants.LogFileSystem).Errorf("init v1.0.2 data failed, err = %s", err.Error())
+			}).Present()
+		})
+	}},
 	{inTestingVersion, func() error {
 		return defaultDb.base.Create(&system.VersionInfo{
 			ID:          "InTesting",
@@ -233,7 +283,7 @@ func initBySql(tx *gorm.DB, file string, module string) error {
 }
 
 // initDefaultProductsAndVendors
-// @Description: init default products and vendors data for TiEM v1.0.0-beta.12
+// @Description: init default products and vendors data for TiUniManager v1.0.0-beta.12
 // @Parameter tx
 // @return error
 func initDefaultProductsAndVendors(tx *gorm.DB) error {

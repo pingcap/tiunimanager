@@ -18,6 +18,6 @@ set -euo pipefail
 
 cd -P .
 
-cp tiem_errors.toml /tmp/tiem_errors.toml.before
-bin/errdoc-gen --source . --module github.com/pingcap/tiem --output tiem_errors.toml
+cp tiunimanager_errors.toml /tmp/tiunimanager_errors.toml.before
+bin/errdoc-gen --source . --module github.com/pingcap/tiunimanager --output tiunimanager_errors.toml
 diff -q errors.toml /tmp/errors.toml.before

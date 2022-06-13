@@ -25,13 +25,14 @@ package system
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
 	"sync"
+
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 type SystemManager struct {
@@ -84,7 +85,7 @@ func getActionBindings() map[constants.SystemEvent]map[constants.SystemState]act
 
 func (p *SystemManager) AcceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 	if len(event) == 0 {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "system event is empty")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "system event is empty")
 	}
 	return acceptSystemEvent(ctx, event)
 }
@@ -98,9 +99,9 @@ func acceptSystemEvent(ctx context.Context, event constants.SystemEvent) error {
 		if actionFunc, statusOK := statusMapAction[systemInfo.State]; statusOK {
 			return actionFunc(ctx, event, systemInfo.State)
 		}
-		return errors.NewErrorf(errors.TIEM_SYSTEM_STATE_CONFLICT, "undefined action for event %s in state %s", event, systemInfo.State)
+		return errors.NewErrorf(errors.TIUNIMANAGER_SYSTEM_STATE_CONFLICT, "undefined action for event %s in state %s", event, systemInfo.State)
 	} else {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "system event %s is unrecognized", event)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "system event %s is unrecognized", event)
 	}
 }
 
@@ -128,6 +129,8 @@ var SupportedProducts = []structs.ProductWithVersions{
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.3.0"},
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.3.1"},
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.4.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.0.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.1.0"},
 		},
 	},
 }

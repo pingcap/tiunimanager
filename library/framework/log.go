@@ -18,7 +18,7 @@
 package framework
 
 import (
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 	"io"
 	"os"
 	"path"

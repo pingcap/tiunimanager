@@ -25,8 +25,8 @@ package system
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -34,7 +34,7 @@ import (
 func TestSystemReadWrite_GetSystemInfo(t *testing.T) {
 	info, err := testRW.GetSystemInfo(context.TODO())
 	assert.Error(t, err)
-	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
 		SystemName:       "EM",
@@ -78,19 +78,19 @@ func TestSystemReadWrite_VersionInfo(t *testing.T) {
 	t.Run("get empty", func(t *testing.T) {
 		_, err := testRW.GetVersion(context.TODO(), "")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_PARAMETER_INVALID, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_PARAMETER_INVALID, err.(errors.EMError).GetCode())
 	})
 	t.Run("get not found", func(t *testing.T) {
 		_, err := testRW.GetVersion(context.TODO(), "v5")
 		assert.Error(t, err)
-		assert.Equal(t, errors.TIEM_SYSTEM_INVALID_VERSION, err.(errors.EMError).GetCode())
+		assert.Equal(t, errors.TIUNIMANAGER_SYSTEM_INVALID_VERSION, err.(errors.EMError).GetCode())
 	})
 }
 
 func TestSystemReadWrite_UpdateState(t *testing.T) {
 	err := testRW.UpdateState(context.TODO(), constants.SystemUnserviceable, constants.SystemRunning)
 	assert.Error(t, err)
-	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
 		SystemName:       "EM",
@@ -127,7 +127,7 @@ func TestSystemReadWrite_UpdateState(t *testing.T) {
 func TestSystemReadWrite_UpdateVersion(t *testing.T) {
 	err := testRW.UpdateVersion(context.TODO(), "v1")
 	assert.Error(t, err)
-	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
 		SystemName:       "EM",
@@ -168,11 +168,11 @@ func TestSystemReadWrite_UpdateVersion(t *testing.T) {
 func TestSystemReadWrite_Initialized(t *testing.T) {
 	err := testRW.VendorInitialized(context.TODO())
 	assert.Error(t, err)
-	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	err = testRW.ProductInitialized(context.TODO())
 	assert.Error(t, err)
-	assert.Equal(t, errors.TIEM_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
+	assert.Equal(t, errors.TIUNIMANAGER_SYSTEM_MISSING_DATA, err.(errors.EMError).GetCode())
 
 	systemInfo := &SystemInfo{
 		SystemName:       "EM",

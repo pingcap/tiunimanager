@@ -20,18 +20,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/platform/check"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
-	mock_check "github.com/pingcap-inc/tiem/test/mockcheck"
-	mock_workflow_service "github.com/pingcap-inc/tiem/test/mockworkflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/platform/check"
+	mock_check "github.com/pingcap/tiunimanager/test/mockcheck"
+	mock_workflow_service "github.com/pingcap/tiunimanager/test/mockworkflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 	"testing"
 )
 
@@ -56,11 +53,9 @@ func TestCheckManager_CheckCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil)
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil)
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil)
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil)
 		got, err := manager.CheckCluster(ctx.TODO(), message.CheckClusterReq{ClusterID: "123"})
 		assert.NoError(t, err)
 		assert.Equal(t, got.CheckID, "111")
@@ -84,10 +79,7 @@ func TestCheckManager_CheckCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, errors.New("create workflow error"))
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", errors.New("create workflow error"))
 		_, err := manager.CheckCluster(ctx.TODO(), message.CheckClusterReq{ClusterID: "123"})
 		assert.Error(t, err)
 	})
@@ -100,11 +92,9 @@ func TestCheckManager_CheckCluster(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil)
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(errors.New("sync start error"))
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil)
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(errors.New("sync start error"))
 		_, err := manager.CheckCluster(ctx.TODO(), message.CheckClusterReq{ClusterID: "123"})
 		assert.Error(t, err)
 	})
@@ -124,11 +114,9 @@ func TestCheckManager_Check(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil)
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(nil)
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil)
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(nil)
 		got, err := manager.Check(ctx.TODO(), message.CheckPlatformReq{})
 		assert.NoError(t, err)
 		assert.Equal(t, got.CheckID, "111")
@@ -152,10 +140,7 @@ func TestCheckManager_Check(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, errors.New("create workflow error"))
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", errors.New("create workflow error"))
 		_, err := manager.Check(ctx.TODO(), message.CheckPlatformReq{})
 		assert.Error(t, err)
 	})
@@ -168,11 +153,9 @@ func TestCheckManager_Check(t *testing.T) {
 		workflowService := mock_workflow_service.NewMockWorkFlowService(ctrl)
 		workflow.MockWorkFlowService(workflowService)
 		defer workflow.MockWorkFlowService(workflow.NewWorkFlowManager())
-		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&workflow.WorkFlowAggregation{
-			Flow:    &wfModel.WorkFlow{Entity: common.Entity{ID: "flow01"}},
-			Context: workflow.FlowContext{Context: context.TODO(), FlowData: make(map[string]interface{})},
-		}, nil)
-		workflowService.EXPECT().AsyncStart(gomock.Any(), gomock.Any()).Return(errors.New("sync start error"))
+		workflowService.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("flow01", nil)
+		workflowService.EXPECT().InitContext(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		workflowService.EXPECT().Start(gomock.Any(), gomock.Any()).Return(errors.New("sync start error"))
 		_, err := manager.Check(ctx.TODO(), message.CheckPlatformReq{})
 		assert.Error(t, err)
 	})

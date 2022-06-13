@@ -19,12 +19,12 @@ import (
 	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/models"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	mock_check "github.com/pingcap-inc/tiem/test/mockcheck"
-	mock_report "github.com/pingcap-inc/tiem/test/mockreport"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/models"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	mock_check "github.com/pingcap/tiunimanager/test/mockcheck"
+	mock_report "github.com/pingcap/tiunimanager/test/mockreport"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -45,7 +45,7 @@ func TestCheckCluster(t *testing.T) {
 
 		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(nil)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		flowContext.SetData(ContextClusterID, "123")
 		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
@@ -57,7 +57,7 @@ func TestCheckCluster(t *testing.T) {
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(errors.New("parse from error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		flowContext.SetData(ContextClusterID, "123")
 		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
@@ -70,7 +70,7 @@ func TestCheckCluster(t *testing.T) {
 		reportCheck.EXPECT().CheckCluster(gomock.Any(), "123").Return(errors.New("check error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		flowContext.SetData(ContextClusterID, "123")
 		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
@@ -84,7 +84,7 @@ func TestCheckCluster(t *testing.T) {
 		reportCheck.EXPECT().Serialize(gomock.Any()).Return("", errors.New("serialize error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		flowContext.SetData(ContextClusterID, "123")
 		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
@@ -103,7 +103,7 @@ func TestCheckCluster(t *testing.T) {
 
 		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(errors.New("update report error"))
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		flowContext.SetData(ContextClusterID, "123")
 		err := checkCluster(&workflowModel.WorkFlowNode{}, flowContext)
@@ -127,7 +127,7 @@ func TestCheckTenants(t *testing.T) {
 
 		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(nil)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
@@ -138,7 +138,7 @@ func TestCheckTenants(t *testing.T) {
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(errors.New("parse from error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -150,7 +150,7 @@ func TestCheckTenants(t *testing.T) {
 		reportCheck.EXPECT().CheckTenants(gomock.Any()).Return(errors.New("check error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -163,7 +163,7 @@ func TestCheckTenants(t *testing.T) {
 		reportCheck.EXPECT().Serialize(gomock.Any()).Return("", errors.New("serialize error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -181,7 +181,7 @@ func TestCheckTenants(t *testing.T) {
 
 		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(errors.New("update report error"))
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkTenants(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -204,7 +204,7 @@ func TestCheckHosts(t *testing.T) {
 
 		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(nil)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkHosts(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
@@ -215,7 +215,7 @@ func TestCheckHosts(t *testing.T) {
 		reportCheck.EXPECT().ParseFrom(gomock.Any(), "111").Return(errors.New("parse from error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkHosts(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -227,7 +227,7 @@ func TestCheckHosts(t *testing.T) {
 		reportCheck.EXPECT().CheckHosts(gomock.Any()).Return(errors.New("check error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkHosts(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -240,7 +240,7 @@ func TestCheckHosts(t *testing.T) {
 		reportCheck.EXPECT().Serialize(gomock.Any()).Return("", errors.New("serialize error"))
 		MockReportService(reportCheck)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkHosts(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -258,7 +258,7 @@ func TestCheckHosts(t *testing.T) {
 
 		reportRW.EXPECT().UpdateReport(gomock.Any(), "111", gomock.Any()).Return(errors.New("update report error"))
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := checkHosts(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -275,7 +275,7 @@ func TestEndCheck(t *testing.T) {
 
 		reportRW.EXPECT().UpdateStatus(gomock.Any(), "111", string(constants.CheckCompleted)).Return(nil)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := endCheck(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
@@ -287,7 +287,7 @@ func TestEndCheck(t *testing.T) {
 
 		reportRW.EXPECT().UpdateStatus(gomock.Any(), "111", string(constants.CheckCompleted)).Return(errors.New("end check error"))
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := endCheck(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)
@@ -304,7 +304,7 @@ func TestHandleFail(t *testing.T) {
 
 		reportRW.EXPECT().UpdateStatus(gomock.Any(), "111", string(constants.CheckFailure)).Return(nil)
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := handleFail(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.NoError(t, err)
@@ -316,7 +316,7 @@ func TestHandleFail(t *testing.T) {
 
 		reportRW.EXPECT().UpdateStatus(gomock.Any(), "111", string(constants.CheckFailure)).Return(errors.New("handle fail error"))
 
-		flowContext := workflow.NewFlowContext(context.TODO())
+		flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 		flowContext.SetData(ContextCheckID, "111")
 		err := handleFail(&workflowModel.WorkFlowNode{}, flowContext)
 		assert.Error(t, err)

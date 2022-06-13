@@ -29,13 +29,13 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/util/uuidutil"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/util/uuidutil"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

@@ -27,15 +27,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/parameter"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/message"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/parametergroup"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/parametergroup"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 )
 
 type Manager struct{}
@@ -47,13 +47,13 @@ func NewManager() *Manager {
 func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreateParameterGroupReq) (resp message.CreateParameterGroupResp, err error) {
 	// validate parameter
 	if req.GroupType != int(Cluster) && req.GroupType != int(Instance) {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "The groupType value can only be 1 or 2")
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "The groupType value can only be 1 or 2")
 	}
 	if req.DBType != int(TiDB) && req.DBType != int(DM) {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "The dbType value can only be 1 or 2")
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "The dbType value can only be 1 or 2")
 	}
 	if req.Params == nil || len(req.Params) == 0 {
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "The params cannot be empty")
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "The params cannot be empty")
 	}
 
 	// validation parameter range
@@ -87,7 +87,7 @@ func (m *Manager) CreateParameterGroup(ctx context.Context, req message.CreatePa
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm, req.AddParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_CREATE_ERROR, errors.TIEM_PARAMETER_GROUP_CREATE_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_CREATE_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_CREATE_ERROR.Explain(), err)
 	}
 	resp = message.CreateParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
@@ -101,13 +101,13 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 	group, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || group.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 		return
 	}
 
 	// default parameter group not be modify.
 	if group.HasDefault == int(DEFAULT) {
-		return resp, errors.NewErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain())
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_DEFAULT_PARAM_GROUP_NOT_MODIFY, errors.TIUNIMANAGER_DEFAULT_PARAM_GROUP_NOT_MODIFY.Explain())
 	}
 
 	// Check for the existence of extended parameters added when creating a parameter group
@@ -130,10 +130,12 @@ func (m *Manager) UpdateParameterGroup(ctx context.Context, req message.UpdatePa
 			Note:         param.Note,
 		}
 	}
+
 	err = models.GetParameterGroupReaderWriter().UpdateParameterGroup(ctx, pg, pgm, req.AddParams, req.DelParams)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update parameter group invoke metadb err: %v", err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR, errors.TIEM_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_UPDATE_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_UPDATE_ERROR.Explain(), err)
 	}
 	resp = message.UpdateParameterGroupResp{ParamGroupID: req.ParamGroupID}
 	return resp, nil
@@ -143,18 +145,18 @@ func (m *Manager) DeleteParameterGroup(ctx context.Context, req message.DeletePa
 	pg, _, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 		return
 	}
 
 	// default parameter group not be deleted.
 	if pg.HasDefault == int(DEFAULT) {
-		return resp, errors.NewErrorf(errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, errors.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain())
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_DEFAULT_PARAM_GROUP_NOT_DEL, errors.TIUNIMANAGER_DEFAULT_PARAM_GROUP_NOT_DEL.Explain())
 	}
 	err = models.GetParameterGroupReaderWriter().DeleteParameterGroup(ctx, pg.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("delete parameter group invoke metadb err: %v", err)
-		err = errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DELETE_ERROR, errors.TIEM_PARAMETER_GROUP_DELETE_ERROR.Explain(), err)
+		err = errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DELETE_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_DELETE_ERROR.Explain(), err)
 		return
 	}
 	resp = message.DeleteParameterGroupResp{ParamGroupID: pg.ID}
@@ -166,7 +168,7 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 	pgs, total, err := models.GetParameterGroupReaderWriter().QueryParameterGroup(ctx, req.Name, req.ClusterSpec, req.ClusterVersion, req.DBType, req.HasDefault, offset, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
-		return resp, page, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_QUERY_ERROR, errors.TIEM_PARAMETER_GROUP_QUERY_ERROR.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_QUERY_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_QUERY_ERROR.Explain(), err)
 	}
 
 	resp = make([]message.QueryParameterGroupResp, len(pgs))
@@ -178,14 +180,14 @@ func (m *Manager) QueryParameterGroup(ctx context.Context, req message.QueryPara
 			pgm, err := models.GetParameterGroupReaderWriter().QueryParametersByGroupId(ctx, pg.ID, "", "")
 			if err != nil {
 				framework.LogWithContext(ctx).Errorf("query parameter group req: %v, err: %v", req, err)
-				return resp, page, errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
+				return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_QUERY_ERROR, errors.TIUNIMANAGER_PARAMETER_QUERY_ERROR.Explain(), err)
 			}
 			params := make([]structs.ParameterGroupParameterInfo, len(pgm))
 			for j, param := range pgm {
 				pgi, err := convertParameterGroupParameterInfo(param)
 				if err != nil {
 					framework.LogWithContext(ctx).Errorf("failed to convert parameter group. req: %v, err: %v", req, err)
-					return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+					return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain(), err)
 				}
 				params[j] = pgi
 			}
@@ -205,7 +207,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 	pg, pgm, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, req.ParamName, req.InstanceType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 	resp = message.DetailParameterGroupResp{ParameterGroupInfo: convertParameterGroupInfo(pg)}
 
@@ -213,7 +215,7 @@ func (m *Manager) DetailParameterGroup(ctx context.Context, req message.DetailPa
 	for i, param := range pgm {
 		pgi, err := convertParameterGroupParameterInfo(param)
 		if err != nil {
-			return resp, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain(), err)
+			return resp, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain(), err)
 		}
 		params[i] = pgi
 	}
@@ -226,13 +228,13 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	pg, params, err := models.GetParameterGroupReaderWriter().GetParameterGroup(ctx, req.ParamGroupID, "", "")
 	if err != nil || pg.ID == "" {
 		framework.LogWithContext(ctx).Errorf("get parameter group req: %v, err: %v", req, err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR, errors.TIEM_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_DETAIL_ERROR.Explain(), err)
 	}
 
 	// Determine if the name of the copy parameter group is modified
 	if pg.Name == req.Name {
 		framework.LogWithContext(ctx).Errorf("Parameter group name %s already exists", req.Name)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIEM_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain())
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_NAME_ALREADY_EXISTS, errors.TIUNIMANAGER_PARAMETER_GROUP_NAME_ALREADY_EXISTS.Explain())
 	}
 
 	pgm := make([]*parametergroup.ParameterGroupMapping, len(params))
@@ -253,7 +255,7 @@ func (m *Manager) CopyParameterGroup(ctx context.Context, req message.CopyParame
 	parameterGroup, err := models.GetParameterGroupReaderWriter().CreateParameterGroup(ctx, pg, pgm, nil)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("copy parameter group convert resp err: %v", err)
-		return resp, errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_COPY_ERROR, errors.TIEM_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
+		return resp, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_COPY_ERROR, errors.TIUNIMANAGER_PARAMETER_GROUP_COPY_ERROR.Explain(), err)
 	}
 	resp = message.CopyParameterGroupResp{ParamGroupID: parameterGroup.ID}
 	return resp, nil
@@ -272,7 +274,7 @@ func checkAddParametersExists(ctx context.Context, addParams []message.Parameter
 				return err
 			}
 			if existsParameter != nil && existsParameter.ID != "" {
-				return errors.NewErrorf(errors.TIEM_PARAMETER_ALREADY_EXISTS,
+				return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_ALREADY_EXISTS,
 					fmt.Sprintf("%s parameter `%s` already exists, parameter ID: %s", param.InstanceType, parameter.DisplayFullParameterName(param.Category, param.Name), existsParameter.ID))
 			}
 		}
@@ -290,7 +292,7 @@ func validateParameterRange(ctx context.Context, reqParams []structs.ParameterGr
 	params, total, err := models.GetParameterGroupReaderWriter().QueryParameters(ctx, 0, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query parameters list err: %v", err)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_QUERY_ERROR, errors.TIEM_PARAMETER_QUERY_ERROR.Explain(), err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_QUERY_ERROR, errors.TIUNIMANAGER_PARAMETER_QUERY_ERROR.Explain(), err)
 	}
 	framework.LogWithContext(ctx).Debugf("validate parameters query count: %v", total)
 
@@ -323,17 +325,17 @@ func validateParameterRange(ctx context.Context, reqParams []structs.ParameterGr
 				RealValue:   structs.ParameterRealValue{ClusterValue: reqParam.DefaultValue},
 			}, false) {
 				if queryParam.RangeType == int(parameter.ContinuousRange) && len(queryParam.Range) == 2 {
-					return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+					return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 						fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, can take a range of values: %v",
 							queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 				} else {
-					return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID,
+					return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID,
 						fmt.Sprintf("Validation %s parameter `%s` failed, update value: %s, optional values: %v",
 							queryParam.InstanceType, parameter.DisplayFullParameterName(queryParam.Category, queryParam.Name), reqParam.DefaultValue, ranges))
 				}
 			}
 		} else {
-			return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "No record found for parameter ID: %v", reqParam.ID)
+			return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "No record found for parameter ID: %v", reqParam.ID)
 		}
 	}
 	return nil

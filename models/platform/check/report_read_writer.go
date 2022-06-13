@@ -26,11 +26,11 @@ package check
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	dbCommon "github.com/pingcap/tiunimanager/models/common"
 	"gorm.io/gorm"
 )
 
@@ -56,7 +56,7 @@ func NewReportReadWrite(db *gorm.DB) *ReportReadWrite {
 func (rrw *ReportReadWrite) CreateReport(ctx context.Context, report *CheckReport) (*CheckReport, error) {
 	if "" == report.Report {
 		framework.LogWithContext(ctx).Errorf("create report %v, parameter invalid", report)
-		return nil, errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "create report %v, parameter invalid", report)
+		return nil, errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "create report %v, parameter invalid", report)
 	}
 	err := rrw.DB(ctx).Create(report).Error
 
@@ -66,7 +66,7 @@ func (rrw *ReportReadWrite) CreateReport(ctx context.Context, report *CheckRepor
 func (rrw *ReportReadWrite) DeleteReport(ctx context.Context, checkID string) error {
 	if "" == checkID {
 		framework.LogWithContext(ctx).Errorf("delete report checkID %s, parameter invalid", checkID)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "delete report checkID %s, parameter invalid", checkID)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "delete report checkID %s, parameter invalid", checkID)
 	}
 	return rrw.DB(ctx).Where("id = ?", checkID).Unscoped().Delete(&CheckReport{}).Error
 }
@@ -74,7 +74,7 @@ func (rrw *ReportReadWrite) DeleteReport(ctx context.Context, checkID string) er
 func (rrw *ReportReadWrite) GetReport(ctx context.Context, checkID string) (interface{}, string, error) {
 	if "" == checkID {
 		framework.LogWithContext(ctx).Errorf("get report checkID %s, parameter invalid", checkID)
-		return nil, "", errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "get report checkID %s, parameter invalid", checkID)
+		return nil, "", errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "get report checkID %s, parameter invalid", checkID)
 	}
 
 	report := &CheckReport{}
@@ -96,7 +96,7 @@ func (rrw *ReportReadWrite) GetReport(ctx context.Context, checkID string) (inte
 			return nil, "", err
 		}
 	} else {
-		return nil, "", errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "report type %s not supported", report.Type)
+		return nil, "", errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "report type %s not supported", report.Type)
 	}
 	return info, report.Type, nil
 }
@@ -133,7 +133,7 @@ func (rrw *ReportReadWrite) QueryReports(ctx context.Context) (map[string]struct
 func (rrw *ReportReadWrite) UpdateReport(ctx context.Context, checkID, report string) error {
 	if "" == checkID || "" == report {
 		framework.LogWithContext(ctx).Errorf("update %s report: %s, parameter invalid", checkID, report)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update %s report: %s, parameter invalid", checkID, report)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "update %s report: %s, parameter invalid", checkID, report)
 	}
 
 	return rrw.DB(ctx).Model(&CheckReport{}).Where("id = ?", checkID).Update("report", report).Error
@@ -142,7 +142,7 @@ func (rrw *ReportReadWrite) UpdateReport(ctx context.Context, checkID, report st
 func (rrw *ReportReadWrite) UpdateStatus(ctx context.Context, checkID, status string) error {
 	if "" == checkID || "" == status {
 		framework.LogWithContext(ctx).Errorf("update %s check report status %s, parameter invalid", checkID, status)
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "update %s check report status %s, parameter invalid", checkID, status)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "update %s check report status %s, parameter invalid", checkID, status)
 	}
 	return rrw.DB(ctx).Model(&CheckReport{}).Where("id = ?", checkID).Update("status", status).Error
 }

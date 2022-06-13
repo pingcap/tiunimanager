@@ -19,7 +19,7 @@ package kvcache
 //	"container/list"
 //
 //	"github.com/pingcap/errors"
-//	"github.com/pingcap-inc/tiem/library/firstparty/util/memory"
+//	"github.com/pingcap/tiunimanager/library/firstparty/util/memory"
 //)
 //
 //// Key is the interface that every key in LRU Cache should implement.
@@ -44,7 +44,7 @@ package kvcache
 //
 //const (
 //	// ProfileName is the function name in heap profile
-//	ProfileName = "github.com/pingcap-inc/tiem/library/firstparty/util/kvcache.(*SimpleLRUCache).Put"
+//	ProfileName = "github.com/pingcap/tiunimanager/library/firstparty/util/kvcache.(*SimpleLRUCache).Put"
 //)
 //
 //func init() {

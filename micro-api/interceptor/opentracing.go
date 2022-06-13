@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 func GinOpenTracing() gin.HandlerFunc {
@@ -44,7 +44,7 @@ func GinOpenTracing() gin.HandlerFunc {
 		}
 		c.Set("Tracer", tracer)
 		c.Set("ParentSpan", parentSpan)
-		parentSpan.SetTag(framework.TiEM_X_TRACE_ID_KEY, framework.GetTraceIDFromContext(c))
+		parentSpan.SetTag(framework.TiUniManager_X_TRACE_ID_KEY, framework.GetTraceIDFromContext(c))
 		c.Next()
 	}
 }

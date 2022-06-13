@@ -26,7 +26,7 @@ package constants
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 )
 
 const (
@@ -52,9 +52,12 @@ const (
 
 // Enterprise Manager Certificates constants
 const (
-	CertDirPrefix string = "/cert/"
-	CertFileName  string = "server.crt"
-	KeyFileName   string = "server.key"
+	CertDirPrefix  string = "/cert/"
+	CertFileName   string = "server.crt"
+	KeyFileName    string = "server.key"
+	AesKeyFileName string = "aes.key"
+	// AesKeyOnlyForUT should only be used in unit testing and NEVER in production!
+	AesKeyOnlyForUT string = ">]t1emf0rp1nGcap$t!Em@p!ngcap;[<"
 )
 
 // micro service default port
@@ -64,6 +67,16 @@ const (
 	DefaultMicroApiPort     int = 4100
 	DefaultMicroFilePort    int = 4102
 	DefaultMetricsPort      int = 4103
+)
+
+//etcd certificate file names
+type EtcdCertFileType [2]string
+
+var (
+	ETCDCAFileName     = "etcd-ca.pem"
+	ETCDServerCertFile = EtcdCertFileType{"etcd-server.pem", "etcd-server-key.pem"}
+	ETCDClientCertFile = EtcdCertFileType{"etcd-server.pem", "etcd-server-key.pem"}
+	ETCDPeerCertFile   = EtcdCertFileType{"etcd-server.pem", "etcd-server-key.pem"}
 )
 
 type EMProductIDType string
@@ -79,7 +92,7 @@ func ValidProductID(p string) error {
 	if p == string(EMProductIDTiDB) || p == string(EMProductIDDataMigration) || p == string(EMProductIDEnterpriseManager) {
 		return nil
 	}
-	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
+	return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductIDTiDB), string(EMProductIDDataMigration), string(EMProductIDEnterpriseManager))
 }
 
 type ProvidedVendor string
@@ -94,7 +107,7 @@ func ValidProvidedVendor(p string) error {
 	if p == string(Local) || p == string(AWS) {
 		return nil
 	}
-	return errors.NewErrorf(errors.TIEM_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
+	return errors.NewErrorf(errors.TIUNIMANAGER_RESOURCE_INVALID_VENDOR_NAME, "valid vendor name: [%s|%s]", string(Local), string(AWS))
 }
 
 type EMProductComponentIDType string

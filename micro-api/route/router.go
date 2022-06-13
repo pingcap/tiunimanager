@@ -18,29 +18,29 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/metrics"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
-	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
-	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
-	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
-	switchoverApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/switchover"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
-	configApi "github.com/pingcap-inc/tiem/micro-api/controller/platform/config"
-	platformdignose "github.com/pingcap-inc/tiem/micro-api/controller/platform/dignose"
-	"github.com/pingcap-inc/tiem/micro-api/controller/platform/system"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/metrics"
+	"github.com/pingcap/tiunimanager/micro-api/controller/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/micro-api/controller/cluster/changefeed"
+	logApi "github.com/pingcap/tiunimanager/micro-api/controller/cluster/log"
+	clusterApi "github.com/pingcap/tiunimanager/micro-api/controller/cluster/management"
+	parameterApi "github.com/pingcap/tiunimanager/micro-api/controller/cluster/parameter"
+	switchoverApi "github.com/pingcap/tiunimanager/micro-api/controller/cluster/switchover"
+	"github.com/pingcap/tiunimanager/micro-api/controller/cluster/upgrade"
+	configApi "github.com/pingcap/tiunimanager/micro-api/controller/platform/config"
+	platformdignose "github.com/pingcap/tiunimanager/micro-api/controller/platform/dignose"
+	"github.com/pingcap/tiunimanager/micro-api/controller/platform/system"
 
-	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
-	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
-	platformApi "github.com/pingcap-inc/tiem/micro-api/controller/platform"
-	"github.com/pingcap-inc/tiem/micro-api/controller/platform/product"
-	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
-	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
-	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
-	userApi "github.com/pingcap-inc/tiem/micro-api/controller/user"
-	rbacApi "github.com/pingcap-inc/tiem/micro-api/controller/user/rbac"
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
+	"github.com/pingcap/tiunimanager/micro-api/controller/datatransfer/importexport"
+	"github.com/pingcap/tiunimanager/micro-api/controller/parametergroup"
+	platformApi "github.com/pingcap/tiunimanager/micro-api/controller/platform"
+	"github.com/pingcap/tiunimanager/micro-api/controller/platform/product"
+	resourceApi "github.com/pingcap/tiunimanager/micro-api/controller/resource/hostresource"
+	warehouseApi "github.com/pingcap/tiunimanager/micro-api/controller/resource/warehouse"
+	flowtaskApi "github.com/pingcap/tiunimanager/micro-api/controller/task/flowtask"
+	userApi "github.com/pingcap/tiunimanager/micro-api/controller/user"
+	rbacApi "github.com/pingcap/tiunimanager/micro-api/controller/user/rbac"
+	"github.com/pingcap/tiunimanager/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -93,7 +93,7 @@ func Route(g *gin.Engine) {
 
 		user := apiV1.Group("/users")
 		{
-			user.Use(interceptor.VerifyIdentity)
+			user.Use(interceptor.VerifyIdentityForUserModule)
 			user.Use(interceptor.AuditLog)
 			user.POST("/", metrics.HandleMetrics(constants.MetricsUserCreate), userApi.CreateUser)
 			user.DELETE("/:userId", metrics.HandleMetrics(constants.MetricsUserDelete), userApi.DeleteUser)
@@ -226,6 +226,8 @@ func Route(g *gin.Engine) {
 			flowworks.Use(interceptor.AuditLog)
 			flowworks.GET("/", metrics.HandleMetrics(constants.MetricsWorkFlowQuery), flowtaskApi.Query)
 			flowworks.GET("/:workFlowId", metrics.HandleMetrics(constants.MetricsWorkFlowDetail), flowtaskApi.Detail)
+			flowworks.POST("/start", metrics.HandleMetrics(constants.MetricsWorkFlowStart), flowtaskApi.Start)
+			flowworks.POST("/stop", metrics.HandleMetrics(constants.MetricsWorkFlowStop), flowtaskApi.Stop)
 		}
 
 		host := apiV1.Group("/resources")

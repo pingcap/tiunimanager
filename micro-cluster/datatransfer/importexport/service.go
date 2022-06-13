@@ -17,8 +17,8 @@ package importexport
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/message"
 )
 
 type ImportExportService interface {

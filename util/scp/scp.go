@@ -31,7 +31,7 @@ import (
 	"time"
 
 	expect "github.com/google/goexpect"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 // CopySSHID

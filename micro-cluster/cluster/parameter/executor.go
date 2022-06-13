@@ -36,35 +36,35 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/pingcap-inc/tiem/deployment"
+	"github.com/pingcap/tiunimanager/deployment"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pingcap-inc/tiem/util/api/cdc"
+	"github.com/pingcap/tiunimanager/util/api/cdc"
 
-	"github.com/pingcap-inc/tiem/util/api/pd"
+	"github.com/pingcap/tiunimanager/util/api/pd"
 
-	"github.com/pingcap-inc/tiem/util/api/tikv"
+	"github.com/pingcap/tiunimanager/util/api/tikv"
 
-	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap/tiunimanager/message/cluster"
 
-	tidbApi "github.com/pingcap-inc/tiem/util/api/tidb/http"
+	tidbApi "github.com/pingcap/tiunimanager/util/api/tidb/http"
 
-	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
+	"github.com/pingcap/tiunimanager/util/api/tidb/sql"
 
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/parameter"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/parameter"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 
-	spec2 "github.com/pingcap-inc/tiem/library/spec"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	spec2 "github.com/pingcap/tiunimanager/library/spec"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	tiupSpec "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
@@ -86,21 +86,21 @@ func asyncMaintenance(ctx context.Context, meta *meta.ClusterMeta, data map[stri
 		}
 	}
 
-	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
+	if flowId, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, workflow.BizTypeCluster, flowName); flowError != nil {
 		framework.LogWithContext(ctx).Errorf("create flow failed, clusterID = %s, error = %s", meta.Cluster.ID, err)
 		err = flowError
 		return
 	} else {
-		flowID = flow.Flow.ID
-		flow.Context.SetData(contextClusterMeta, meta)
+		flowID = flowId
+		workflow.GetWorkFlowService().InitContext(ctx, flowId, contextClusterMeta, meta)
 		for k, v := range data {
-			flow.Context.SetData(k, v)
+			workflow.GetWorkFlowService().InitContext(ctx, flowId, k, v)
 		}
-		if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
-			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
+		if err = workflow.GetWorkFlowService().Start(ctx, flowId); err != nil {
+			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", flowName, meta.Cluster.ID, err.Error())
 			return
 		}
-		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", flow.Flow.Name, meta.Cluster.ID)
+		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", flowName, meta.Cluster.ID)
 	}
 	return
 }
@@ -111,13 +111,22 @@ func defaultEnd(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) err
 	framework.LogWithContext(ctx).Info("begin default end executor method")
 	defer framework.LogWithContext(ctx).Info("end default end executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
-	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChange).(bool)
+	var clusterMeta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
+	var maintenanceStatusChange bool
+	err = ctx.GetData(contextMaintenanceStatusChange, &maintenanceStatusChange)
+	if err != nil {
+		return err
+	}
 	if maintenanceStatusChange {
 		if err := clusterMeta.EndMaintenance(ctx, clusterMeta.Cluster.MaintenanceStatus); err != nil {
 			framework.LogWithContext(ctx).Errorf("end cluster %s maintenance status failed, %s", clusterMeta.Cluster.ID, err.Error())
 			return err
 		}
+		ctx.SetData(contextClusterMeta, &clusterMeta)
 	}
 	return nil
 }
@@ -129,16 +138,24 @@ func parameterFail(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) 
 	defer framework.LogWithContext(ctx).Info("end parameter fail executor method")
 
 	// Get tiup show-config result
-	clusterConfigStr := ctx.GetData(contextClusterConfigStr)
-	if clusterConfigStr == nil {
+	var clusterConfigStr string
+	err := ctx.GetData(contextClusterConfigStr, &clusterConfigStr)
+	if err != nil {
+		return err
+	}
+	if clusterConfigStr == "" {
 		return nil
 	}
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err = ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 	tiupHomeForTidb := framework.GetTiupHomePathForTidb()
 	// If the reload fails, then do a meta rollback
 	taskId, err := deployment.M.EditConfig(ctx, deployment.TiUPComponentTypeCluster, clusterMeta.Cluster.ID,
-		clusterConfigStr.(string), tiupHomeForTidb, node.ParentID, []string{}, 0)
+		clusterConfigStr, tiupHomeForTidb, node.ParentID, []string{}, 0)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call secondparty tiup rollback global config task id = %v, err = %s", taskId, err.Error())
 		return err
@@ -155,13 +172,17 @@ func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	framework.LogWithContext(ctx).Info("begin persist parameter executor method")
 	defer framework.LogWithContext(ctx).Info("end persist parameter executor method")
 
-	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
+	var modifyParam ModifyParameter
+	err := ctx.GetData(contextModifyParameters, &modifyParam)
+	if err != nil {
+		return err
+	}
 	params := make([]*parameter.ClusterParameterMapping, len(modifyParam.Params))
 	for i, param := range modifyParam.Params {
 		b, err := json.Marshal(param.RealValue)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("failed to convert parameter real value err: %v", err)
-			return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, errors.TIEM_CONVERT_OBJ_FAILED.Explain())
+			return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, errors.TIUNIMANAGER_CONVERT_OBJ_FAILED.Explain())
 		}
 		params[i] = &parameter.ClusterParameterMapping{
 			ClusterID:   modifyParam.ClusterID,
@@ -171,21 +192,25 @@ func persistParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	}
 
 	// Get the apply parameter object
-	hasApplyParameter := ctx.GetData(contextHasApplyParameter)
-	if hasApplyParameter != nil && hasApplyParameter.(bool) {
-		framework.LogWithContext(ctx).Infof("current has apply parameter: %v", hasApplyParameter.(bool))
+	var hasApplyParameter bool
+	err = ctx.GetData(contextHasApplyParameter, &hasApplyParameter)
+	if err != nil {
+		return err
+	}
+	if hasApplyParameter {
+		framework.LogWithContext(ctx).Infof("current has apply parameter: %v", hasApplyParameter)
 		// persist apply parameter
 		err := models.GetClusterParameterReaderWriter().ApplyClusterParameter(ctx, modifyParam.ParamGroupId, modifyParam.ClusterID, params)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("apply parameter group convert resp err: %v", err)
-			return errors.NewErrorf(errors.TIEM_PARAMETER_GROUP_APPLY_ERROR, err.Error())
+			return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_GROUP_APPLY_ERROR, err.Error())
 		}
 	} else {
 		// persist update parameter
 		err := models.GetClusterParameterReaderWriter().UpdateClusterParameter(ctx, modifyParam.ClusterID, params)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("update cluster parameter err: %v", err)
-			return errors.NewErrorf(errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIEM_CLUSTER_PARAMETER_UPDATE_ERROR.Explain(), err)
+			return errors.NewErrorf(errors.TIUNIMANAGER_CLUSTER_PARAMETER_UPDATE_ERROR, errors.TIUNIMANAGER_CLUSTER_PARAMETER_UPDATE_ERROR.Explain(), err)
 		}
 	}
 	return nil
@@ -200,7 +225,11 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 	framework.LogWithContext(ctx).Info("begin validation parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end validation parameters executor method")
 
-	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
+	var modifyParam ModifyParameter
+	err := ctx.GetData(contextModifyParameters, &modifyParam)
+	if err != nil {
+		return err
+	}
 	framework.LogWithContext(ctx).Debugf("got validation parameters size: %d", len(modifyParam.Params))
 
 	for _, param := range modifyParam.Params {
@@ -227,14 +256,30 @@ func validationParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowCon
 func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin modify parameters executor method")
 	defer framework.LogWithContext(ctx).Info("end modify parameters executor method")
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 
-	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
+	var modifyParam ModifyParameter
+	err = ctx.GetData(contextModifyParameters, &modifyParam)
+	if err != nil {
+		return err
+	}
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, parameters size: %d", modifyParam.Reboot, len(modifyParam.Params))
-	maintenanceStatusChange := ctx.GetData(contextMaintenanceStatusChange)
+	var maintenanceStatusChange bool
+	err = ctx.GetData(contextMaintenanceStatusChange, &maintenanceStatusChange)
+	if err != nil {
+		return err
+	}
 
 	// Get the apply parameter object
-	applyParameter := ctx.GetData(contextHasApplyParameter)
+	var applyParameter bool
+	err = ctx.GetData(contextHasApplyParameter, &applyParameter)
+	if err != nil {
+		return err
+	}
 	framework.LogWithContext(ctx).Debugf("modify parameter get apply parameter: %v", applyParameter)
 
 	// Define variables to determine if polling for results is required
@@ -247,7 +292,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 	for i, param := range modifyParam.Params {
 		if param.InstanceType == string(constants.ComponentIDCDC) && len(clusterMeta.GetCDCClientAddresses()) == 0 {
 			// If it is a parameter of CDC, apply the parameter without installing CDC, then skip directly
-			if applyParameter != nil {
+			if applyParameter {
 				// The real value is set to an unknown empty value
 				param.RealValue.ClusterValue = ""
 				continue
@@ -257,7 +302,7 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 		}
 		if param.InstanceType == string(constants.ComponentIDTiFlash) && len(clusterMeta.GetTiFlashClientAddresses()) == 0 {
 			// If it is a parameter of TiFlash, apply the parameter without installing TiFlash, then skip directly
-			if applyParameter != nil {
+			if applyParameter {
 				// The real value is set to an unknown empty value
 				param.RealValue.ClusterValue = ""
 				continue
@@ -266,21 +311,21 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 			}
 		}
 		// condition apply parameter and HasApply values is 0, then filter directly
-		if applyParameter != nil && param.HasApply != int(DirectApply) {
+		if applyParameter && param.HasApply != int(DirectApply) {
 			putParameterContainer(fillParamContainer, param.InstanceType, param)
 			continue
 		}
 		// If it is an apply parameter with an empty parameter value, it is skipped directly
-		if applyParameter != nil && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+		if applyParameter && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 			continue
 		}
 		// If the parameter is modified and is triggered by another workflow and the parameter value is empty, then skip directly
-		if applyParameter == nil && maintenanceStatusChange != nil && !maintenanceStatusChange.(bool) && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
+		if !applyParameter && !maintenanceStatusChange && strings.TrimSpace(param.RealValue.ClusterValue) == "" {
 			continue
 		}
 
 		// If the parameters are modified, read-only parameters are not allowed to be modified
-		if applyParameter == nil && param.ReadOnly == int(ReadOnly) {
+		if !applyParameter && param.ReadOnly == int(ReadOnly) {
 			return fmt.Errorf(fmt.Sprintf("Read-only parameters `%s` are not allowed to be modified", DisplayFullParameterName(param.Category, param.Name)))
 		}
 		framework.LogWithContext(ctx).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.ClusterValue)
@@ -328,11 +373,12 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 
 	// If it is an apply parameter, get the parameter value that is not directly applied to populate the meta database
 	// Mainly some parameter sets generated according to the example environment
-	if applyParameter != nil {
+	if applyParameter {
 		if err := fillParameters(ctx, fillParamContainer); err != nil {
 			return err
 		}
 	}
+	ctx.SetData(contextModifyParameters, &modifyParam)
 	node.Record("modify parameters")
 	return nil
 }
@@ -343,10 +389,14 @@ func modifyParameters(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContex
 // @Parameter fillParamContainer
 // @return error
 func fillParameters(ctx *workflow.FlowContext, fillParamContainer map[interface{}][]*ModifyClusterParameterInfo) error {
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 
 	for instanceType, params := range fillParamContainer {
-		if err := fillParameter(ctx, instanceType.(string), clusterMeta, params); err != nil {
+		if err := fillParameter(ctx, instanceType.(string), &clusterMeta, params); err != nil {
 			return err
 		}
 	}
@@ -444,7 +494,7 @@ func handleApiFillParams(ctx context.Context, content []byte, instanceType strin
 	d.UseNumber()
 	if err = d.Decode(&reqApiParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s api parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to convert %s api parameters, err = %v", instanceType, err)
 	}
 	// Get api flattened parameter set
 	return handleFillParamResult(ctx, reqApiParams, instanceType, params)
@@ -461,7 +511,7 @@ func handleConfigFillParams(ctx context.Context, content []byte, instanceType st
 	reqConfigParams := map[string]interface{}{}
 	if err = toml.Unmarshal(content, &reqConfigParams); err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to convert %s config parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to convert %s config parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to convert %s config parameters, err = %v", instanceType, err)
 	}
 	// Get config flattened parameter set
 	return handleFillParamResult(ctx, reqConfigParams, instanceType, params)
@@ -478,7 +528,7 @@ func handleFillParamResult(ctx context.Context, reqConfigParams map[string]inter
 	flattenedParams, err := FlattenedParameters(reqConfigParams)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to flattened %s parameters, err = %v", instanceType, err)
-		return errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "failed to flattened %s parameters, err = %v", instanceType, err)
+		return errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "failed to flattened %s parameters, err = %v", instanceType, err)
 	}
 	for _, param := range params {
 		fullName := DisplayFullParameterName(param.Category, param.Name)
@@ -537,7 +587,11 @@ func sqlEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 		}
 	}
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 	tidbServers := clusterMeta.GetClusterConnectAddresses()
 	if len(tidbServers) == 0 {
 		framework.LogWithContext(ctx).Errorf("get tidb connect address from meta failed, empty address")
@@ -604,7 +658,11 @@ func apiEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode, 
 				// display full parameter name
 				cm[configKey] = clusterValue
 			}
-			clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+			var clusterMeta meta.ClusterMeta
+			err := ctx.GetData(contextClusterMeta, &clusterMeta)
+			if err != nil {
+				return err
+			}
 
 			switch comp.(string) {
 			case string(constants.ComponentIDTiDB):
@@ -699,7 +757,11 @@ func tiupEditConfig(ctx *workflow.FlowContext, node *workflowModel.WorkFlowNode,
 	framework.LogWithContext(ctx).Info("begin tiup edit config executor method")
 	defer framework.LogWithContext(ctx).Info("end tiup edit config executor method")
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err := ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 	configs := make([]GlobalComponentConfig, len(params))
 	for i, param := range params {
 		cm := map[string]interface{}{}
@@ -882,10 +944,18 @@ func putParameterContainer(paramContainer map[interface{}][]*ModifyClusterParame
 // @Parameter ctx
 // @return error
 func refreshParameter(node *workflowModel.WorkFlowNode, ctx *workflow.FlowContext) error {
-	modifyParam := ctx.GetData(contextModifyParameters).(*ModifyParameter)
+	var modifyParam ModifyParameter
+	err := ctx.GetData(contextModifyParameters, &modifyParam)
+	if err != nil {
+		return err
+	}
 	framework.LogWithContext(ctx).Debugf("got modify need reboot: %v, params size: %d", modifyParam.Reboot, len(modifyParam.Params))
 
-	clusterMeta := ctx.GetData(contextClusterMeta).(*meta.ClusterMeta)
+	var clusterMeta meta.ClusterMeta
+	err = ctx.GetData(contextClusterMeta, &clusterMeta)
+	if err != nil {
+		return err
+	}
 	// need tiup reload config
 	if modifyParam.Reboot {
 		flags := make([]string, 0)

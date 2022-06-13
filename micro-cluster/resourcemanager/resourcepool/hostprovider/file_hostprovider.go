@@ -19,15 +19,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/common/structs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
 
-	cluster_rw "github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/resource"
-	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
+	cluster_rw "github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/resource"
+	"github.com/pingcap/tiunimanager/models/resource/resourcepool"
 )
 
 type FileHostProvider struct {
@@ -58,7 +58,7 @@ func (p *FileHostProvider) ValidateZoneInfo(ctx context.Context, host *structs.H
 		}
 	}
 	errMsg := fmt.Sprintf("can not get zone info for host %s %s, with vendor %s, region %s, zone %s", host.HostName, host.IP, host.Vendor, host.Region, host.AZ)
-	return errors.NewError(errors.TIEM_RESOURCE_INVALID_ZONE_INFO, errMsg)
+	return errors.NewError(errors.TIUNIMANAGER_RESOURCE_INVALID_ZONE_INFO, errMsg)
 
 }
 
@@ -277,13 +277,13 @@ func (p *FileHostProvider) getInstancesOnHosts(ctx context.Context, hosts []stru
 
 func (p *FileHostProvider) UpdateHostInfo(ctx context.Context, host structs.HostInfo) (err error) {
 	if host.ID == "" {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "update host failed without host id")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "update host failed without host id")
 	}
 	if host.UsedCpuCores != 0 || host.UsedMemory != 0 {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "used cpu cores or used memory field should not be set while update host %s", host.ID)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "used cpu cores or used memory field should not be set while update host %s", host.ID)
 	}
 	if host.CpuCores < 0 || host.Memory < 0 {
-		return errors.NewErrorf(errors.TIEM_PARAMETER_INVALID, "input cpu cores(%d) or memory(%d) is invalid to update host %s", host.CpuCores, host.Memory, host.ID)
+		return errors.NewErrorf(errors.TIUNIMANAGER_PARAMETER_INVALID, "input cpu cores(%d) or memory(%d) is invalid to update host %s", host.CpuCores, host.Memory, host.ID)
 	}
 	var dbHost resourcepool.Host
 	err = dbHost.ConstructFromHostInfo(&host)
@@ -313,7 +313,7 @@ func (p *FileHostProvider) DeleteDisks(ctx context.Context, diskIds []string) (e
 
 func (p *FileHostProvider) UpdateDisk(ctx context.Context, disk structs.DiskInfo) (err error) {
 	if disk.ID == "" {
-		return errors.NewError(errors.TIEM_PARAMETER_INVALID, "update disk failed without disk id")
+		return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "update disk failed without disk id")
 	}
 	var dbDisk resourcepool.Disk
 	dbDisk.ConstructFromDiskInfo(&disk)

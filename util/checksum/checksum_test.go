@@ -18,7 +18,7 @@ package checksum
 
 import (
 	"bytes"
-	encrypt3 "github.com/pingcap-inc/tiem/util/encrypt"
+	encrypt3 "github.com/pingcap/tiunimanager/util/encrypt"
 	"io"
 	"strings"
 	"testing"

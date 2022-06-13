@@ -30,16 +30,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap/tiunimanager/message"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/log"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/log"
 
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"github.com/pingcap-inc/tiem/util/convert"
+	"github.com/pingcap/tiunimanager/util/convert"
 
-	"github.com/pingcap-inc/tiem/common/errors"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/proto/clusterservices"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 )
 
 //  search log index prefix
@@ -75,7 +75,7 @@ func (m Manager) QueryPlatformLog(ctx context.Context, req message.QueryPlatform
 	esResp, err := framework.Current.GetElasticsearchClient().Search(logIndexPrefix, &buf, (req.Page-1)*req.PageSize, req.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query em platform log, search es err: %v", err)
-		return resp, page, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_LOG_QUERY_FAILED, errors.TIUNIMANAGER_LOG_QUERY_FAILED.Explain(), err)
 	}
 	return handleResult(ctx, req, esResp)
 }
@@ -85,10 +85,10 @@ func prepareSearchParams(ctx context.Context, req message.QueryPlatformLogReq) (
 	query, err := buildSearchPlatformReqParams(req)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("query em platform log, build search params err: %v", err)
-		return buf, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), err)
+		return buf, errors.NewErrorf(errors.TIUNIMANAGER_LOG_QUERY_FAILED, errors.TIUNIMANAGER_LOG_QUERY_FAILED.Explain(), err)
 	}
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
-		return buf, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, "query em platform log, prepare search param error: %v", err)
+		return buf, errors.NewErrorf(errors.TIUNIMANAGER_LOG_QUERY_FAILED, "query em platform log, prepare search param error: %v", err)
 	}
 	return buf, nil
 }
@@ -96,12 +96,12 @@ func prepareSearchParams(ctx context.Context, req message.QueryPlatformLogReq) (
 func handleResult(ctx context.Context, req message.QueryPlatformLogReq, esResp *esapi.Response) (resp message.QueryPlatformLogResp, page *clusterservices.RpcPage, err error) {
 	if esResp.IsError() || esResp.StatusCode != 200 {
 		framework.LogWithContext(ctx).Errorf("query em platform log, search es err: %v", err)
-		return resp, page, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), esResp.String())
+		return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_LOG_QUERY_FAILED, errors.TIUNIMANAGER_LOG_QUERY_FAILED.Explain(), esResp.String())
 	}
 	var esResult log.ElasticSearchResult
 	if err = json.NewDecoder(esResp.Body).Decode(&esResult); err != nil {
 		framework.LogWithContext(ctx).Errorf("query em platform log, decoder err: %v", err)
-		return resp, page, errors.NewErrorf(errors.TIEM_LOG_QUERY_FAILED, errors.TIEM_LOG_QUERY_FAILED.Explain(), err)
+		return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_LOG_QUERY_FAILED, errors.TIUNIMANAGER_LOG_QUERY_FAILED.Explain(), err)
 	}
 
 	resp = message.QueryPlatformLogResp{
@@ -111,7 +111,7 @@ func handleResult(ctx context.Context, req message.QueryPlatformLogReq, esResp *
 	for _, hit := range esResult.Hits.Hits {
 		var hitItem message.SearchPlatformLogSourceItem
 		if err := convert.ConvertObj(hit.Source, &hitItem); err != nil {
-			return resp, page, errors.NewErrorf(errors.TIEM_CONVERT_OBJ_FAILED, "query em platform log, convert obj error: %v", err)
+			return resp, page, errors.NewErrorf(errors.TIUNIMANAGER_CONVERT_OBJ_FAILED, "query em platform log, convert obj error: %v", err)
 		}
 
 		resp.Results = append(resp.Results, message.PlatformLogItem{

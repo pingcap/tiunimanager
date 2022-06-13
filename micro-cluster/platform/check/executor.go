@@ -17,20 +17,28 @@ package check
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 )
 
 func checkCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	checkID := context.GetData(ContextCheckID).(string)
-	clusterID := context.GetData(ContextClusterID).(string)
+	var checkID string
+	err := context.GetData(ContextCheckID, &checkID)
+	if err != nil {
+		return err
+	}
+	var clusterID string
+	err = context.GetData(ContextClusterID, &clusterID)
+	if err != nil {
+		return err
+	}
 
 	report := GetReportService()
 
-	err := report.ParseFrom(context.Context, checkID)
+	err = report.ParseFrom(context.Context, checkID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf("parse from report %s error: %s", checkID, err.Error())
 		return err
@@ -59,11 +67,15 @@ func checkCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 }
 
 func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	checkID := context.GetData(ContextCheckID).(string)
+	var checkID string
+	err := context.GetData(ContextCheckID, &checkID)
+	if err != nil {
+		return err
+	}
 
 	report := GetReportService()
 
-	err := report.ParseFrom(context.Context, checkID)
+	err = report.ParseFrom(context.Context, checkID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"parse from report %s error: %s", checkID, err.Error())
@@ -95,11 +107,15 @@ func checkTenants(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 }
 
 func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	checkID := context.GetData(ContextCheckID).(string)
+	var checkID string
+	err := context.GetData(ContextCheckID, &checkID)
+	if err != nil {
+		return err
+	}
 
 	report := GetReportService()
 
-	err := report.ParseFrom(context.Context, checkID)
+	err = report.ParseFrom(context.Context, checkID)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"parse from report %s error: %s", checkID, err.Error())
@@ -134,7 +150,11 @@ func checkHosts(node *workflowModel.WorkFlowNode, context *workflow.FlowContext)
 // endCheck
 // @Description: end to check platform
 func endCheck(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	checkID := context.GetData(ContextCheckID).(string)
+	var checkID string
+	err := context.GetData(ContextCheckID, &checkID)
+	if err != nil {
+		return err
+	}
 
 	if err := models.GetReportReaderWriter().UpdateStatus(context.Context,
 		checkID, string(constants.CheckCompleted)); err != nil {
@@ -147,7 +167,11 @@ func endCheck(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) e
 }
 
 func handleFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	checkID := context.GetData(ContextCheckID).(string)
+	var checkID string
+	err := context.GetData(ContextCheckID, &checkID)
+	if err != nil {
+		return err
+	}
 
 	if err := models.GetReportReaderWriter().UpdateStatus(context.Context,
 		checkID, string(constants.CheckFailure)); err != nil {

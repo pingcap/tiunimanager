@@ -27,8 +27,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
 )
 
 var mockManager = NewManager()

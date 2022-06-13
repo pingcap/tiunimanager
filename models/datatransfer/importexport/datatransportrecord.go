@@ -16,7 +16,7 @@
 package importexport
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap/tiunimanager/models/common"
 	"time"
 )
 

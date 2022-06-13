@@ -24,24 +24,21 @@
 package parameter
 
 import (
-	"context"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 
-	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap/tiunimanager/common/structs"
 
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/models"
 
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	workflowModels "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
 )
 
 var mockManager = NewManager()
@@ -483,66 +480,9 @@ func mockModifyParameter() *ModifyParameter {
 				Type:           0,
 				Range:          []string{"0", "1024"},
 				RangeType:      1,
-				RealValue:      structs.ParameterRealValue{ClusterValue: ""},
+				RealValue:      structs.ParameterRealValue{ClusterValue: "0"},
 			},
 		},
 		Nodes: []string{"172.16.1.12:9000", "172.16.1.12:9001"},
-	}
-}
-
-func mockWorkFlowAggregation() *workflow.WorkFlowAggregation {
-	return &workflow.WorkFlowAggregation{
-		Flow: &workflowModels.WorkFlow{
-			Entity: common.Entity{
-				ID:       "1",
-				TenantId: "1",
-				Status:   "1",
-			},
-		},
-		Define: &workflow.WorkFlowDefine{
-			FlowName: "test",
-			TaskNodes: map[string]*workflow.NodeDefine{
-				"start": {
-					Name:         "testNode",
-					SuccessEvent: "",
-					FailEvent:    "",
-					ReturnType:   "",
-					Executor:     nil,
-				},
-			},
-		},
-		CurrentNode: &workflowModels.WorkFlowNode{
-			Entity: common.Entity{
-				ID:       "1",
-				TenantId: "1",
-				Status:   "1",
-			},
-			BizID:      "1",
-			ParentID:   "1",
-			Name:       "start",
-			ReturnType: "1",
-			Parameters: "1",
-			Result:     "1",
-		},
-		Nodes: []*workflowModels.WorkFlowNode{
-			{
-				Entity: common.Entity{
-					ID:       "1",
-					TenantId: "1",
-					Status:   "1",
-				},
-				BizID:      "1",
-				ParentID:   "1",
-				Name:       "start",
-				ReturnType: "1",
-				Parameters: "1",
-				Result:     "1",
-			},
-		},
-		Context: workflow.FlowContext{
-			Context:  context.TODO(),
-			FlowData: map[string]interface{}{},
-		},
-		FlowError: nil,
 	}
 }

@@ -18,19 +18,19 @@ package backuprestore
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/common/constants"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/meta"
-	"github.com/pingcap-inc/tiem/models"
-	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
-	"github.com/pingcap-inc/tiem/models/cluster/management"
-	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/models/platform/config"
-	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockbr"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockconfig"
-	"github.com/pingcap-inc/tiem/test/mockmodels/mockmanagement"
-	"github.com/pingcap-inc/tiem/util/api/tidb/sql"
-	"github.com/pingcap-inc/tiem/workflow"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/cluster/backuprestore"
+	"github.com/pingcap/tiunimanager/models/cluster/management"
+	"github.com/pingcap/tiunimanager/models/common"
+	"github.com/pingcap/tiunimanager/models/platform/config"
+	workflowModel "github.com/pingcap/tiunimanager/models/workflow"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockbr"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockconfig"
+	"github.com/pingcap/tiunimanager/test/mockmodels/mockmanagement"
+	"github.com/pingcap/tiunimanager/util/api/tidb/sql"
+	workflow "github.com/pingcap/tiunimanager/workflow2"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -49,7 +49,7 @@ func TestExecutor_backupCluster(t *testing.T) {
 	confingRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "test"}, nil).AnyTimes()
 	models.SetConfigReaderWriter(confingRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		StorageType: "nfs",
 		FilePath:    "./testdata",
@@ -59,7 +59,7 @@ func TestExecutor_backupCluster(t *testing.T) {
 			Entity: common.Entity{
 				ID: "cls-test",
 			},
-			Name: "cls-test",
+			Name:    "cls-test",
 			Version: "v5.2.2",
 		},
 		Instances: map[string][]*management.ClusterInstance{
@@ -103,7 +103,7 @@ func TestExecutor_updateBackupRecord(t *testing.T) {
 	brRW.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
 			ID: "record-xxxx",
@@ -133,7 +133,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 	confingRW.EXPECT().GetConfig(gomock.Any(), gomock.Any()).Return(&config.SystemConfig{ConfigValue: "test"}, nil).AnyTimes()
 	models.SetConfigReaderWriter(confingRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		StorageType: "s3",
 	})
@@ -142,7 +142,7 @@ func TestExecutor_restoreFromSrcCluster(t *testing.T) {
 			Entity: common.Entity{
 				ID: "cls-test",
 			},
-			Name: "cls-test",
+			Name:    "cls-test",
 			Version: "v5.2.2",
 		},
 		Instances: map[string][]*management.ClusterInstance{
@@ -182,7 +182,7 @@ func TestExecutor_backupFail(t *testing.T) {
 	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetClusterReaderWriter(clusterRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
 			ID: "record-xxxx",
@@ -201,7 +201,7 @@ func TestExecutor_backupFail(t *testing.T) {
 }
 
 func TestExecutor_restoreFail(t *testing.T) {
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
 			ID: "record-xxxx",
@@ -227,7 +227,7 @@ func TestExecutor_defaultEnd(t *testing.T) {
 	clusterRW.EXPECT().ClearMaintenanceStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetClusterReaderWriter(clusterRW)
 
-	flowContext := workflow.NewFlowContext(context.TODO())
+	flowContext := workflow.NewFlowContext(context.TODO(), make(map[string]string))
 	flowContext.SetData(contextBackupRecordKey, &backuprestore.BackupRecord{
 		Entity: common.Entity{
 			ID: "record-xxxx",

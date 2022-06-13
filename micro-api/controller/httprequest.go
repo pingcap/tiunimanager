@@ -17,13 +17,13 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/errors"
+	"github.com/pingcap/tiunimanager/common/errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap/tiunimanager/library/framework"
 )
 
 // HandleJsonRequestWithBuiltReq
@@ -146,14 +146,14 @@ func HandleRequest(c *gin.Context,
 		BreakIf(func() error {
 			return errors.OfNullable(builder(c, req)).
 				Map(func(err error) error {
-					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
+					return errors.NewError(errors.TIUNIMANAGER_MARSHAL_ERROR, err.Error())
 				}).
 				Present()
 		}).
 		BreakIf(func() error {
 			return errors.OfNullable(validator(req)).
 				Map(func(err error) error {
-					return errors.NewError(errors.TIEM_PARAMETER_INVALID, err.Error())
+					return errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, err.Error())
 				}).
 				Present()
 		}).
@@ -161,7 +161,7 @@ func HandleRequest(c *gin.Context,
 			bytes, err := serializer(req)
 			return errors.OfNullable(err).
 				Map(func(err error) error {
-					return errors.NewError(errors.TIEM_MARSHAL_ERROR, err.Error())
+					return errors.NewError(errors.TIUNIMANAGER_MARSHAL_ERROR, err.Error())
 				}).
 				Else(func() {
 					requestContent = string(bytes)

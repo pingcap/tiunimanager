@@ -19,8 +19,8 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	perrs "github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/api"
 	"github.com/pingcap/tiup/pkg/logger/log"

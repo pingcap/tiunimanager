@@ -1,4 +1,4 @@
-PROJECT=tiem/tiup
+PROJECT=tiunimanager/tiup
 
 
 .PHONY: cluster
@@ -28,9 +28,9 @@ GOBUILD := $(GO) build $(BUILD_FLAGS)
 GOTEST    := CGO_ENABLED=0 $(GO) test -p 4
 OVERALLS  := CGO_ENABLED=1 GO111MODULE=on overalls
 
-PACKAGE_LIST  := go list ./...| grep -vE "cmd" | grep -vE "test"
+PACKAGE_LIST  := go list ./...| grep -vE "cmd|test|^github.com/pingcap/tiunimanager/tiup$$"
 PACKAGES  := $$($(PACKAGE_LIST))
-PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap-inc/$(PROJECT)/||'
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)/||'
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
@@ -39,9 +39,9 @@ FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs t
 FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
 
 LDFLAGS += -s -w
-LDFLAGS += -X "github.com/pingcap-inc/tiem/tiup/version.ReleaseVersion=$(shell git describe --tags --dirty --always)"
-LDFLAGS += -X "github.com/pingcap-inc/tiem/tiup/version.GitHash=$(shell git rev-parse HEAD)"
-LDFLAGS += -X "github.com/pingcap-inc/tiem/tiup/version.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/tiup/version.ReleaseVersion=$(shell git describe --tags --dirty --always)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/tiup/version.GitHash=$(shell git rev-parse HEAD)"
+LDFLAGS += -X "github.com/pingcap/tiunimanager/tiup/version.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
 
 all: fmt build
 

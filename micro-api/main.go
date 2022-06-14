@@ -1,28 +1,47 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package main
 
 import (
 	"fmt"
+
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/metrics"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
 
-	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap/tiunimanager/common/constants"
 
-	"github.com/pingcap-inc/tiem/micro-api/metrics"
+	"github.com/gin-contrib/cors"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
-	_ "github.com/pingcap-inc/tiem/docs"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-api/route"
-	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	_ "github.com/pingcap/tiunimanager/docs"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/micro-api/interceptor"
+	"github.com/pingcap/tiunimanager/micro-api/route"
 )
 
-// @title TiEM UI API
+// @title EM UI API
 // @version 1.0
-// @description TiEM UI API
+// @description EM UI API
 
 // @contact.name zhangpeijin
 // @contact.email zhangpeijin@pingcap.com
@@ -35,15 +54,14 @@ import (
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
+// @query.collection.format multi
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
-		loadKnowledge,
 		defaultPortForLocal,
 	)
-
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
-			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
+			client.ClusterClient = clusterservices.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})
@@ -59,8 +77,8 @@ func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 
-	monitor := metrics.NewPrometheusMonitor(common.TiEM, d.GetServiceMeta().ServiceName.ServerName())
-	g.Use(monitor.PromMiddleware())
+	// enable cors access
+	g.Use(cors.New(corsConfig()))
 
 	route.Route(g)
 
@@ -70,37 +88,57 @@ func initGinEngine(d *framework.BaseFramework) error {
 	// openapi-server service registry
 	serviceRegistry(d)
 
-	if err := g.Run(addr); err != nil {
-		d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+	d.GetMetrics().ServerStartTimeGaugeMetric.
+		With(prometheus.Labels{metrics.ServiceLabel: d.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
+
+	if d.GetClientArgs().EnableHttps {
+		g.Use(interceptor.TlsHandler(addr))
+		if err := g.RunTLS(addr, d.GetCertificateInfo().CertificateCrtFilePath, d.GetCertificateInfo().CertificateKeyFilePath); err != nil {
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
+		}
+	} else {
+		if err := g.Run(addr); err != nil {
+			d.GetRootLogger().ForkFile(constants.LogFileSystem).Fatal(err)
+		}
 	}
 
 	return nil
 }
 
+// corsConfig
+// @Description: build cors config
+// @return cors.Config
+func corsConfig() cors.Config {
+	config := cors.DefaultConfig()
+	config.AllowHeaders = []string{"*"}
+	config.AllowCredentials = true
+	config.AllowOriginFunc = func(origin string) bool {
+		return true
+	}
+	return config
+}
+
 // serviceRegistry registry openapi-server service
 func serviceRegistry(f *framework.BaseFramework) {
-	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
+	etcdClient := framework.InitEtcdClientV2(f.GetServiceMeta().RegistryAddress)
 	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
-	key := common.RegistryMicroServicePrefix + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
+	key := "/micro/registry/" + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
 	// Register openapi-server every TTL-2 seconds, default TTL is 5s
 	go func() {
 		for {
 			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
 			if err != nil {
-				f.Log().Errorf("regitry openapi-server failed! error: %v", err)
+				framework.LogForkFile(constants.LogFileSystem).Errorf("regitry openapi-server failed! error: %v", err)
 			}
 			time.Sleep(time.Second * 3)
 		}
 	}()
 }
-func loadKnowledge(f *framework.BaseFramework) error {
-	knowledge.LoadKnowledge()
-	return nil
-}
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroApiPort
+		f.GetServiceMeta().ServicePort = constants.DefaultMicroApiPort
 	}
 	return nil
 }

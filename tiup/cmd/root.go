@@ -20,11 +20,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
-	"github.com/pingcap-inc/tiem/tiup/manager"
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
-	cspec "github.com/pingcap-inc/tiem/tiup/spec"
-	"github.com/pingcap-inc/tiem/tiup/version"
+	"github.com/pingcap/tiunimanager/tiup/manager"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
+	cspec "github.com/pingcap/tiunimanager/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/version"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	tiupmeta "github.com/pingcap/tiup/pkg/environment"
 	"github.com/pingcap/tiup/pkg/localdata"
@@ -73,7 +73,7 @@ func init() {
 
 			emspec = spec.GetSpecManager()
 			logger.EnableAuditLog(cspec.AuditDir())
-			cm = manager.NewManager("em", emspec, spec.TiEMComponentVersion)
+			cm = manager.NewManager("em", emspec, spec.TiUniManagerComponentVersion)
 
 			// Running in other OS/ARCH Should be fine we only download manifest file.
 			env, err = tiupmeta.InitEnv(repository.Options{

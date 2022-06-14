@@ -21,8 +21,8 @@ import (
 	"os"
 
 	"github.com/fatih/color"
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	perrs "github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"

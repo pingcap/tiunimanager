@@ -18,9 +18,9 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap/errors"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 )
 
 // ClusterOperate represents the cluster operation task.

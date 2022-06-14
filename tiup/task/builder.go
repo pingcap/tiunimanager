@@ -17,8 +17,8 @@ import (
 	"context"
 	"crypto/tls"
 
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	"github.com/pingcap/tiup/pkg/crypto"
 	"github.com/pingcap/tiup/pkg/meta"

@@ -22,9 +22,9 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
-	"github.com/pingcap-inc/tiem/tiup/task"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/task"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
@@ -293,7 +293,7 @@ func (m *Manager) Deploy(
 		clusterVersion,
 		gOpt,
 		topo.(*spec.Specification).ElasticSearchEndpoints(),
-		topo.(*spec.Specification).TiEMLogPaths(),
+		topo.(*spec.Specification).TiUniManagerLogPaths(),
 		sshProxyProps,
 	)
 	if err != nil {

@@ -20,11 +20,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
-// TiEMAPIServerScript represent the data to generate TiEMAPIServer config
-type TiEMAPIServerScript struct {
+// TiUniManagerAPIServerScript represent the data to generate TiUniManagerAPIServer config
+type TiUniManagerAPIServerScript struct {
 	Host                 string
 	Port                 int
 	ClientPort           int
@@ -39,9 +39,9 @@ type TiEMAPIServerScript struct {
 	EnableHttps          string
 }
 
-// NewTiEMAPIServerScript returns a TiEMAPIServerScript with given arguments
-func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMAPIServerScript {
-	return &TiEMAPIServerScript{
+// NewTiUniManagerAPIServerScript returns a TiUniManagerAPIServerScript with given arguments
+func NewTiUniManagerAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiUniManagerAPIServerScript {
+	return &TiUniManagerAPIServerScript{
 		Host:        ip,
 		Port:        4100,
 		MetricsPort: 4103,
@@ -52,44 +52,44 @@ func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *Ti
 	}
 }
 
-// WithPort set Port field of TiEMAPIServerScript
-func (c *TiEMAPIServerScript) WithPort(port int) *TiEMAPIServerScript {
+// WithPort set Port field of TiUniManagerAPIServerScript
+func (c *TiUniManagerAPIServerScript) WithPort(port int) *TiUniManagerAPIServerScript {
 	c.Port = port
 	return c
 }
 
-// WithMetricsPort set PeerPort field of TiEMAPIServerScript
-func (c *TiEMAPIServerScript) WithMetricsPort(port int) *TiEMAPIServerScript {
+// WithMetricsPort set PeerPort field of TiUniManagerAPIServerScript
+func (c *TiUniManagerAPIServerScript) WithMetricsPort(port int) *TiUniManagerAPIServerScript {
 	c.MetricsPort = port
 	return c
 }
 
 // WithRegistry set RegistryEndpoints
-func (c *TiEMAPIServerScript) WithRegistry(addr []string) *TiEMAPIServerScript {
+func (c *TiUniManagerAPIServerScript) WithRegistry(addr []string) *TiUniManagerAPIServerScript {
 	c.RegistryEndpoints = strings.Join(addr, ",")
 	return c
 }
 
 // WithTracer set TracerAddress
-func (c *TiEMAPIServerScript) WithTracer(addr []string) *TiEMAPIServerScript {
+func (c *TiUniManagerAPIServerScript) WithTracer(addr []string) *TiUniManagerAPIServerScript {
 	c.TracerAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithElasticsearch set ElasticsearchAddress
-func (c *TiEMAPIServerScript) WithElasticsearch(addr []string) *TiEMAPIServerScript {
+func (c *TiUniManagerAPIServerScript) WithElasticsearch(addr []string) *TiUniManagerAPIServerScript {
 	c.ElasticsearchAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithEnableHttps set EnableHttps
-func (c *TiEMAPIServerScript) WithEnableHttps(enableHttps string) *TiEMAPIServerScript {
+func (c *TiUniManagerAPIServerScript) WithEnableHttps(enableHttps string) *TiUniManagerAPIServerScript {
 	c.EnableHttps = enableHttps
 	return c
 }
 
 // Script generate the config file data.
-func (c *TiEMAPIServerScript) Script() ([]byte, error) {
+func (c *TiUniManagerAPIServerScript) Script() ([]byte, error) {
 	fp := path.Join("templates", "scripts", "run_em_api.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
@@ -99,7 +99,7 @@ func (c *TiEMAPIServerScript) Script() ([]byte, error) {
 }
 
 // ScriptToFile write config content to specific path
-func (c *TiEMAPIServerScript) ScriptToFile(file string) error {
+func (c *TiUniManagerAPIServerScript) ScriptToFile(file string) error {
 	config, err := c.Script()
 	if err != nil {
 		return err
@@ -107,9 +107,9 @@ func (c *TiEMAPIServerScript) ScriptToFile(file string) error {
 	return os.WriteFile(file, config, 0755)
 }
 
-// ScriptWithTemplate generate the TiEMAPIServer config content by tpl
-func (c *TiEMAPIServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
-	tmpl, err := template.New("TiEMAPIServer").Parse(tpl)
+// ScriptWithTemplate generate the TiUniManagerAPIServer config content by tpl
+func (c *TiUniManagerAPIServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
+	tmpl, err := template.New("TiUniManagerAPIServer").Parse(tpl)
 	if err != nil {
 		return nil, err
 	}

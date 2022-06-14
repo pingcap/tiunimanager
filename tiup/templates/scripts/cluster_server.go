@@ -20,11 +20,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
-// TiEMClusterServerScript represent the data to generate TiEMClusterServer config
-type TiEMClusterServerScript struct {
+// TiUniManagerClusterServerScript represent the data to generate TiUniManagerClusterServer config
+type TiUniManagerClusterServerScript struct {
 	Host                 string
 	Port                 int
 	ClientPort           int
@@ -46,9 +46,9 @@ type TiEMClusterServerScript struct {
 	LoginPublicKeyPath   string
 }
 
-// NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
-func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMClusterServerScript {
-	return &TiEMClusterServerScript{
+// NewTiUniManagerClusterServerScript returns a TiUniManagerClusterServerScript with given arguments
+func NewTiUniManagerClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiUniManagerClusterServerScript {
+	return &TiUniManagerClusterServerScript{
 		Host:        ip,
 		Port:        4101,
 		MetricsPort: 4104,
@@ -61,92 +61,92 @@ func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string)
 	}
 }
 
-// WithPort set Port field of TiEMClusterServerScript
-func (c *TiEMClusterServerScript) WithPort(port int) *TiEMClusterServerScript {
+// WithPort set Port field of TiUniManagerClusterServerScript
+func (c *TiUniManagerClusterServerScript) WithPort(port int) *TiUniManagerClusterServerScript {
 	c.Port = port
 	return c
 }
 
-// WithMetricsPort set PeerPort field of TiEMClusterServerScript
-func (c *TiEMClusterServerScript) WithMetricsPort(port int) *TiEMClusterServerScript {
+// WithMetricsPort set PeerPort field of TiUniManagerClusterServerScript
+func (c *TiUniManagerClusterServerScript) WithMetricsPort(port int) *TiUniManagerClusterServerScript {
 	c.MetricsPort = port
 	return c
 }
 
-// WithClientPort set ClientPort field of TiEMMetaDBScript
-func (c *TiEMClusterServerScript) WithClientPort(port int) *TiEMClusterServerScript {
+// WithClientPort set ClientPort field of TiUniManagerMetaDBScript
+func (c *TiUniManagerClusterServerScript) WithClientPort(port int) *TiUniManagerClusterServerScript {
 	c.ClientPort = port
 	return c
 }
 
-// WithPeerPort set PeerPort field of TiEMMetaDBScript
-func (c *TiEMClusterServerScript) WithPeerPort(port int) *TiEMClusterServerScript {
+// WithPeerPort set PeerPort field of TiUniManagerMetaDBScript
+func (c *TiUniManagerClusterServerScript) WithPeerPort(port int) *TiUniManagerClusterServerScript {
 	c.PeerPort = port
 	return c
 }
 
 // WithRegistry set RegistryEndpoints
-func (c *TiEMClusterServerScript) WithRegistry(addr []string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithRegistry(addr []string) *TiUniManagerClusterServerScript {
 	c.RegistryEndpoints = strings.Join(addr, ",")
 	return c
 }
 
 // WithElasticsearch set ElasticsearchAddress
-func (c *TiEMClusterServerScript) WithElasticsearch(addr []string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithElasticsearch(addr []string) *TiUniManagerClusterServerScript {
 	c.ElasticsearchAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithTracer set TracerAddress
-func (c *TiEMClusterServerScript) WithTracer(addr []string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithTracer(addr []string) *TiUniManagerClusterServerScript {
 	c.TracerAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithClusterName set ClusterName
-func (c *TiEMClusterServerScript) WithClusterName(clusterName string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithClusterName(clusterName string) *TiUniManagerClusterServerScript {
 	c.ClusterName = clusterName
 	return c
 }
 
 // WithClusterVersion set ClusterVersion
-func (c *TiEMClusterServerScript) WithClusterVersion(clusterVersion string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithClusterVersion(clusterVersion string) *TiUniManagerClusterServerScript {
 	c.ClusterVersion = clusterVersion
 	return c
 }
 
 // WithDeployUser set DeployUser
-func (c *TiEMClusterServerScript) WithDeployUser(deployUser string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithDeployUser(deployUser string) *TiUniManagerClusterServerScript {
 	c.DeployUser = deployUser
 	return c
 }
 
 // WithDeployGroup set DeployGroup
-func (c *TiEMClusterServerScript) WithDeployGroup(deployGroup string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithDeployGroup(deployGroup string) *TiUniManagerClusterServerScript {
 	c.DeployGroup = deployGroup
 	return c
 }
 
 // WithLoginHostUser set LoginHostUser
-func (c *TiEMClusterServerScript) WithLoginHostUser(loginHostUser string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithLoginHostUser(loginHostUser string) *TiUniManagerClusterServerScript {
 	c.LoginHostUser = loginHostUser
 	return c
 }
 
 // WithLoginPrivateKeyPath set LoginPrivateKeyPath
-func (c *TiEMClusterServerScript) WithLoginPrivateKeyPath(loginPrivateKeyPath string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithLoginPrivateKeyPath(loginPrivateKeyPath string) *TiUniManagerClusterServerScript {
 	c.LoginPrivateKeyPath = loginPrivateKeyPath
 	return c
 }
 
 // WithLoginPublicKeyPath set LoginPublicKeyPath
-func (c *TiEMClusterServerScript) WithLoginPublicKeyPath(loginPublicKeyPath string) *TiEMClusterServerScript {
+func (c *TiUniManagerClusterServerScript) WithLoginPublicKeyPath(loginPublicKeyPath string) *TiUniManagerClusterServerScript {
 	c.LoginPublicKeyPath = loginPublicKeyPath
 	return c
 }
 
 // Script generate the config file data.
-func (c *TiEMClusterServerScript) Script() ([]byte, error) {
+func (c *TiUniManagerClusterServerScript) Script() ([]byte, error) {
 	fp := path.Join("templates", "scripts", "run_em_cluster.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
@@ -156,7 +156,7 @@ func (c *TiEMClusterServerScript) Script() ([]byte, error) {
 }
 
 // ScriptToFile write config content to specific path
-func (c *TiEMClusterServerScript) ScriptToFile(file string) error {
+func (c *TiUniManagerClusterServerScript) ScriptToFile(file string) error {
 	config, err := c.Script()
 	if err != nil {
 		return err
@@ -164,9 +164,9 @@ func (c *TiEMClusterServerScript) ScriptToFile(file string) error {
 	return os.WriteFile(file, config, 0755)
 }
 
-// ScriptWithTemplate generate the TiEMClusterServer config content by tpl
-func (c *TiEMClusterServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
-	tmpl, err := template.New("TiEMClusterServer").Parse(tpl)
+// ScriptWithTemplate generate the TiUniManagerClusterServer config content by tpl
+func (c *TiUniManagerClusterServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
+	tmpl, err := template.New("TiUniManagerClusterServer").Parse(tpl)
 	if err != nil {
 		return nil, err
 	}

@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/meta"
@@ -36,29 +36,29 @@ const (
 
 // Component names and roles
 const (
-	ComponentTiEMClusterServer   = "cluster-server" // tiem-cluster
-	ComponentTiEMAPIServer       = "openapi-server" // tiem-api
-	ComponentTiEMFileServer      = "file-server"    // tiem-file
-	ComponentTiEMTracerServer    = "jaeger"         // tiem-tracer
-	ComponentTiEMWebServer       = "nginx"          // tiem-web
-	ComponentElasticSearchServer = "elasticsearch"  // es
-	ComponentKibana              = "kibana"         // kibana
-	ComponentFilebeat            = "filebeat"       // filebeat
-	ComponentNodeExporter        = "node-exporter"  // different with in tiup-cluster (node_exporter)
-	ComponentGrafana             = "grafana"
-	ComponentAlertmanager        = "alertmanager"
-	ComponentPrometheus          = "prometheus"
+	ComponentTiUniManagerClusterServer = "cluster-server" // tiunimanager-cluster
+	ComponentTiUniManagerAPIServer     = "openapi-server" // tiunimanager-api
+	ComponentTiUniManagerFileServer    = "file-server"    // tiunimanager-file
+	ComponentTiUniManagerTracerServer  = "jaeger"         // tiunimanager-tracer
+	ComponentTiUniManagerWebServer     = "nginx"          // tiunimanager-web
+	ComponentElasticSearchServer       = "elasticsearch"  // es
+	ComponentKibana                    = "kibana"         // kibana
+	ComponentFilebeat                  = "filebeat"       // filebeat
+	ComponentNodeExporter              = "node-exporter"  // different with in tiup-cluster (node_exporter)
+	ComponentGrafana                   = "grafana"
+	ComponentAlertmanager              = "alertmanager"
+	ComponentPrometheus                = "prometheus"
 
-	RoleTiEMMetaDB  = "metadb"
-	RoleTiEMCluster = "cluster"
-	RoleTiEMAPI     = "api"
-	RoleTiEMFile    = "file"
-	RoleTiEMTracer  = "tracer"
-	RoleTiEMWeb     = "web"
-	RoleLogServer   = "log"
-	RoleMonitor     = "monitor"
+	RoleTiUniManagerMetaDB  = "metadb"
+	RoleTiUniManagerCluster = "cluster"
+	RoleTiUniManagerAPI     = "api"
+	RoleTiUniManagerFile    = "file"
+	RoleTiUniManagerTracer  = "tracer"
+	RoleTiUniManagerWeb     = "web"
+	RoleLogServer           = "log"
+	RoleMonitor             = "monitor"
 
-	TopoTypeTiEM = "em"
+	TopoTypeTiUniManager = "em"
 )
 
 // MonitoredOptions represents the monitored node configuration
@@ -153,7 +153,7 @@ func (s *Specification) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 
-	if err := fillTiEMCustomDefaults(&s.GlobalOptions, s); err != nil {
+	if err := fillTiUniManagerCustomDefaults(&s.GlobalOptions, s); err != nil {
 		return err
 	}
 
@@ -611,8 +611,8 @@ func (s *Specification) HasEnableHttps() bool {
 	return false
 }
 
-// TiEMLogPaths return a list of paths to logs of TiEM components
-func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
+// TiUniManagerLogPaths return a list of paths to logs of TiUniManager components
+func (s *Specification) TiUniManagerLogPaths() map[string]*config.LogPathInfo {
 	result := make(map[string]*config.LogPathInfo)
 
 	for _, host := range s.APIServers {
@@ -675,7 +675,7 @@ func (s *Specification) Validate() error {
 
 // Type implements Topology interface.
 func (s *Specification) Type() string {
-	return TopoTypeTiEM
+	return TopoTypeTiUniManager
 }
 
 // BaseTopo implements Topology interface.
@@ -735,13 +735,13 @@ func (s *Specification) Merge(that Topology) Topology {
 }
 
 // fillDefaults tries to fill custom fields to their default values
-func fillTiEMCustomDefaults(globalOptions *GlobalOptions, data interface{}) error {
+func fillTiUniManagerCustomDefaults(globalOptions *GlobalOptions, data interface{}) error {
 	v := reflect.ValueOf(data).Elem()
 	t := v.Type()
 
 	var err error
 	for i := 0; i < t.NumField(); i++ {
-		if err = setTiEMCustomDefaults(globalOptions, v.Field(i)); err != nil {
+		if err = setTiUniManagerCustomDefaults(globalOptions, v.Field(i)); err != nil {
 			return err
 		}
 	}
@@ -749,7 +749,7 @@ func fillTiEMCustomDefaults(globalOptions *GlobalOptions, data interface{}) erro
 	return nil
 }
 
-func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) error {
+func setTiUniManagerCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) error {
 	if !field.CanSet() || isSkipField(field) {
 		return nil
 	}
@@ -757,19 +757,19 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 	switch field.Kind() {
 	case reflect.Slice:
 		for i := 0; i < field.Len(); i++ {
-			if err := setTiEMCustomDefaults(globalOptions, field.Index(i)); err != nil {
+			if err := setTiUniManagerCustomDefaults(globalOptions, field.Index(i)); err != nil {
 				return err
 			}
 		}
 	case reflect.Struct:
 		ref := reflect.New(field.Type())
 		ref.Elem().Set(field)
-		if err := fillTiEMCustomDefaults(globalOptions, ref.Interface()); err != nil {
+		if err := fillTiUniManagerCustomDefaults(globalOptions, ref.Interface()); err != nil {
 			return err
 		}
 		field.Set(ref.Elem())
 	case reflect.Ptr:
-		if err := setTiEMCustomDefaults(globalOptions, field.Elem()); err != nil {
+		if err := setTiUniManagerCustomDefaults(globalOptions, field.Elem()); err != nil {
 			return err
 		}
 	}
@@ -791,7 +791,7 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 			}
 			host := field.FieldByName("Host").String()
 			port := field.FieldByName("Port").Int()
-			field.Field(j).Set(reflect.ValueOf(fmt.Sprintf("tiem-%s-%d", host, port)))
+			field.Field(j).Set(reflect.ValueOf(fmt.Sprintf("tiunimanager-%s-%d", host, port)))
 		case "DataDir":
 			dataDir := field.Field(j).String()
 			if dataDir != "" { // already have a value, skip filling default values

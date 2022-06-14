@@ -21,9 +21,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -69,7 +69,7 @@ func (s *FileServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *FileServerSpec) Role() string {
-	return ComponentTiEMFileServer
+	return ComponentTiUniManagerFileServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -82,7 +82,7 @@ func (s *FileServerSpec) GetMainPort() int {
 	return s.Port
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *FileServerSpec) IsImported() bool {
 	return false
 }
@@ -92,17 +92,17 @@ func (s *FileServerSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// FileServerComponent represents TiEM component.
+// FileServerComponent represents TiUniManager component.
 type FileServerComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
 func (c *FileServerComponent) Name() string {
-	return ComponentTiEMFileServer
+	return ComponentTiUniManagerFileServer
 }
 
 // Role implements Component interface.
 func (c *FileServerComponent) Role() string {
-	return RoleTiEMFile
+	return RoleTiUniManagerFile
 }
 
 // Instances implements Component interface.
@@ -138,7 +138,7 @@ func (c *FileServerComponent) Instances() []Instance {
 	return ins
 }
 
-// FileServerInstance represent the TiEM instance
+// FileServerInstance represent the TiUniManager instance
 type FileServerInstance struct {
 	BaseInstance
 	topo *Specification
@@ -176,7 +176,7 @@ func (i *FileServerInstance) InitConfig(
 		return err
 	}
 
-	scpt := scripts.NewTiEMFileServerScript(
+	scpt := scripts.NewTiUniManagerFileServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
@@ -251,7 +251,7 @@ func (i *FileServerInstance) ScaleConfig(
 		return err
 	}
 
-	scpt := scripts.NewTiEMFileServerScript(
+	scpt := scripts.NewTiUniManagerFileServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],

@@ -20,9 +20,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/meta"
 )
@@ -139,7 +139,7 @@ func (i *FilebeatInstance) InitConfig(
 		paths.Log,
 	).
 		WithElasticSearch(i.topo.ElasticSearchEndpoints()).
-		WithTiEMLogs(i.topo.TiEMLogPaths())
+		WithTiUniManagerLogs(i.topo.TiUniManagerLogPaths())
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("filebeat_%s_%d.yml", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {
 		return err
@@ -189,7 +189,7 @@ func (i *FilebeatInstance) ScaleConfig(
 		paths.Log,
 	).
 		WithElasticSearch(i.topo.ElasticSearchEndpoints()).
-		WithTiEMLogs(i.topo.TiEMLogPaths())
+		WithTiUniManagerLogs(i.topo.TiUniManagerLogPaths())
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("filebeat_%s_%d.yml", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {
 		return err

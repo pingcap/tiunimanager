@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
 	"github.com/pingcap/errors"
+	system "github.com/pingcap/tiunimanager/tiup/templates/systemd"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/module"

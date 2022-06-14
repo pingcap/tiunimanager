@@ -21,9 +21,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -69,7 +69,7 @@ func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *APIServerSpec) Role() string {
-	return ComponentTiEMAPIServer
+	return ComponentTiUniManagerAPIServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -82,7 +82,7 @@ func (s *APIServerSpec) GetMainPort() int {
 	return s.Port
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *APIServerSpec) IsImported() bool {
 	return false
 }
@@ -92,17 +92,17 @@ func (s *APIServerSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// APIServerComponent represents TiEM component.
+// APIServerComponent represents TiUniManager component.
 type APIServerComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
 func (c *APIServerComponent) Name() string {
-	return ComponentTiEMAPIServer
+	return ComponentTiUniManagerAPIServer
 }
 
 // Role implements Component interface.
 func (c *APIServerComponent) Role() string {
-	return RoleTiEMAPI
+	return RoleTiUniManagerAPI
 }
 
 // Instances implements Component interface.
@@ -138,7 +138,7 @@ func (c *APIServerComponent) Instances() []Instance {
 	return ins
 }
 
-// APIServerInstance represent the TiEM instance
+// APIServerInstance represent the TiUniManager instance
 type APIServerInstance struct {
 	BaseInstance
 	topo *Specification
@@ -176,7 +176,7 @@ func (i *APIServerInstance) InitConfig(
 		return err
 	}
 
-	scpt := scripts.NewTiEMAPIServerScript(
+	scpt := scripts.NewTiUniManagerAPIServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
@@ -257,7 +257,7 @@ func (i *APIServerInstance) ScaleConfig(
 		return err
 	}
 
-	scpt := scripts.NewTiEMAPIServerScript(
+	scpt := scripts.NewTiUniManagerAPIServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],

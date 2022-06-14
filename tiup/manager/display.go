@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	perrs "github.com/pingcap/errors"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
@@ -176,7 +176,7 @@ func (m *Manager) GetClusterTopology(name string, opt operator.Options) ([]InstI
 	filterRoles := set.NewStringSet(opt.Roles...)
 	filterNodes := set.NewStringSet(opt.Nodes...)
 	masterList := topo.BaseTopo().MasterList
-	tlsCfg := &tls.Config{} // not implemented for tiem
+	tlsCfg := &tls.Config{} // not implemented for tiunimanager
 
 	masterActive := make([]string, 0)
 	masterStatus := make(map[string]string)

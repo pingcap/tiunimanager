@@ -26,9 +26,9 @@ import (
 
 	tiuputils "github.com/pingcap/tiup/pkg/utils"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
-	"github.com/pingcap-inc/tiem/tiup/utils"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/utils"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/module"
@@ -397,7 +397,7 @@ func Stop(
 
 // NeedCheckTombstone return true if we need to check and destroy some node.
 func NeedCheckTombstone(topo *spec.Specification) bool {
-	return false // not implemented for tiem
+	return false // not implemented for tiunimanager
 }
 
 // Restart the cluster.

@@ -1,12 +1,36 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package interceptor
 
 import (
+	"encoding/json"
+	"github.com/pingcap/tiunimanager/common/structs"
 	"net/http"
 
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/common/errors"
+	"github.com/pingcap/tiunimanager/message"
+	"github.com/pingcap/tiunimanager/micro-api/controller"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
+	utils "github.com/pingcap/tiunimanager/util/stringutil"
+
+	"github.com/pingcap/tiunimanager/library/framework"
+
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
-	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -17,8 +41,7 @@ type VisitorIdentity struct {
 	TenantId    string
 }
 
-func VerifyIdentity(c *gin.Context) {
-
+func verifyIdentityOptional(c *gin.Context, checkPassword bool) {
 	bearerTokenStr := c.GetHeader("Authorization")
 
 	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
@@ -26,23 +49,49 @@ func VerifyIdentity(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
-	path := c.Request.URL
-	req := cluster.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+	req := message.AccessibleReq{
+		TokenString: structs.SensitiveText(tokenString),
+		CheckPassword: checkPassword,
+	}
 
-	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	body, err := json.Marshal(req)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("marshal request error: %s", err.Error())
+		c.Error(err)
+		c.Status(errors.TIUNIMANAGER_MARSHAL_ERROR.GetHttpCode())
+		c.Abort()
+	}
+
+	rpcResp, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &clusterservices.RpcRequest{Request: string(body)}, controller.DefaultTimeout)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)
 		c.Abort()
-	} else if result.Status.Code != 0 {
-		c.Status(int(result.Status.Code))
+	} else if rpcResp.Code != int32(errors.TIUNIMANAGER_SUCCESS) {
+		framework.LogWithContext(c).Error(rpcResp.Message)
+		code := errors.EM_ERROR_CODE(rpcResp.Code)
+		msg := rpcResp.Message
+		c.JSON(code.GetHttpCode(), controller.Fail(int(code), msg))
 		c.Abort()
 	} else {
-		c.Set(VisitorIdentityKey, &VisitorIdentity{
-			AccountId:   result.AccountId,
-			AccountName: result.AccountName,
-			TenantId:    result.TenantId,
-		})
+		var result message.AccessibleResp
+		err = json.Unmarshal([]byte(rpcResp.Response), &result)
+		if err != nil {
+			framework.LogWithContext(c).Errorf("unmarshal get system config rpc response error: %s", err.Error())
+			c.Error(err)
+			c.Status(errors.TIUNIMANAGER_UNMARSHAL_ERROR.GetHttpCode())
+			c.Abort()
+		}
+		c.Set(framework.TiUniManager_X_USER_ID_KEY, result.UserID)
+		c.Set(framework.TiUniManager_X_TENANT_ID_KEY, result.TenantID)
 		c.Next()
 	}
+}
+
+func VerifyIdentity(c *gin.Context) {
+	verifyIdentityOptional(c,true)
+}
+
+func VerifyIdentityForUserModule(c *gin.Context) {
+	verifyIdentityOptional(c,false)
 }

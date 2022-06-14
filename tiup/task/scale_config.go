@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/meta"
 )

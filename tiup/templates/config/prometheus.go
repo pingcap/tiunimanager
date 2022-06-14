@@ -20,21 +20,21 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
 // PrometheusConfig represent the data to generate Prometheus config
 type PrometheusConfig struct {
-	ClusterName           string
-	NodeExporterAddrs     []string
-	MonitoredServers      []string
-	AlertmanagerAddrs     []string
-	BlackboxExporterAddrs []string
-	TiEMAPIServers        []string
-	TiEMMetaDBServers     []string
-	TiEMClusterServers    []string
-	TiEMFileServers       []string
+	ClusterName                string
+	NodeExporterAddrs          []string
+	MonitoredServers           []string
+	AlertmanagerAddrs          []string
+	BlackboxExporterAddrs      []string
+	TiUniManagerAPIServers     []string
+	TiUniManagerMetaDBServers  []string
+	TiUniManagerClusterServers []string
+	TiUniManagerFileServers    []string
 }
 
 // NewPrometheusConfig returns a PrometheusConfig
@@ -46,25 +46,25 @@ func NewPrometheusConfig(clusterName string) *PrometheusConfig {
 
 // AddMetaDB add an alertmanager address
 func (c *PrometheusConfig) AddMetaDB(ip string, port uint64) *PrometheusConfig {
-	c.TiEMMetaDBServers = append(c.TiEMMetaDBServers, fmt.Sprintf("%s:%d", ip, port))
+	c.TiUniManagerMetaDBServers = append(c.TiUniManagerMetaDBServers, fmt.Sprintf("%s:%d", ip, port))
 	return c
 }
 
 // AddAPIServer add an alertmanager address
 func (c *PrometheusConfig) AddAPIServer(ip string, port uint64) *PrometheusConfig {
-	c.TiEMAPIServers = append(c.TiEMAPIServers, fmt.Sprintf("%s:%d", ip, port))
+	c.TiUniManagerAPIServers = append(c.TiUniManagerAPIServers, fmt.Sprintf("%s:%d", ip, port))
 	return c
 }
 
 // AddFileServer add an alertmanager address
 func (c *PrometheusConfig) AddFileServer(ip string, port uint64) *PrometheusConfig {
-	c.TiEMFileServers = append(c.TiEMFileServers, fmt.Sprintf("%s:%d", ip, port))
+	c.TiUniManagerFileServers = append(c.TiUniManagerFileServers, fmt.Sprintf("%s:%d", ip, port))
 	return c
 }
 
 // AddClusterServer add an alertmanager address
 func (c *PrometheusConfig) AddClusterServer(ip string, port uint64) *PrometheusConfig {
-	c.TiEMClusterServers = append(c.TiEMClusterServers, fmt.Sprintf("%s:%d", ip, port))
+	c.TiUniManagerClusterServers = append(c.TiUniManagerClusterServers, fmt.Sprintf("%s:%d", ip, port))
 	return c
 }
 

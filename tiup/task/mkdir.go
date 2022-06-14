@@ -46,9 +46,9 @@ func (m *Mkdir) Execute(ctx context.Context) error {
 		xs := strings.Split(dir, "/")
 		// Create directories recursively
 		// The directory /a/b/c will be flatten to:
-		// 		test -d /a || (mkdir /a && chown tiem:tiem /a)
-		//		test -d /a/b || (mkdir /a/b && chown tiem:tiem /a/b)
-		//		test -d /a/b/c || (mkdir /a/b/c && chown tiem:tiem /a/b/c)
+		// 		test -d /a || (mkdir /a && chown tiunimanager:tiunimanager /a)
+		//		test -d /a/b || (mkdir /a/b && chown tiunimanager:tiunimanager /a/b)
+		//		test -d /a/b/c || (mkdir /a/b/c && chown tiunimanager:tiunimanager /a/b/c)
 		for i := 0; i < len(xs); i++ {
 			if xs[i] == "" {
 				continue

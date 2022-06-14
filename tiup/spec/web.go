@@ -21,10 +21,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
-	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
+	system "github.com/pingcap/tiunimanager/tiup/templates/systemd"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -66,7 +66,7 @@ func (s *WebServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *WebServerSpec) Role() string {
-	return ComponentTiEMWebServer
+	return ComponentTiUniManagerWebServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -79,7 +79,7 @@ func (s *WebServerSpec) GetMainPort() int {
 	return s.Port
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *WebServerSpec) IsImported() bool {
 	return false
 }
@@ -89,17 +89,17 @@ func (s *WebServerSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// WebServerComponent represents TiEM component.
+// WebServerComponent represents TiUniManager component.
 type WebServerComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
 func (c *WebServerComponent) Name() string {
-	return ComponentTiEMWebServer
+	return ComponentTiUniManagerWebServer
 }
 
 // Role implements Component interface.
 func (c *WebServerComponent) Role() string {
-	return RoleTiEMWeb
+	return RoleTiUniManagerWeb
 }
 
 // Instances implements Component interface.
@@ -138,7 +138,7 @@ func (c *WebServerComponent) Instances() []Instance {
 	return ins
 }
 
-// WebServerInstance represent the TiEM instance
+// WebServerInstance represent the TiUniManager instance
 type WebServerInstance struct {
 	ServerName string
 	BaseInstance
@@ -195,7 +195,7 @@ func (i *WebServerInstance) InitConfig(
 
 	spec := i.InstanceSpec.(*WebServerSpec)
 	// render startup script
-	scpt := scripts.NewTiEMWebServerScript(
+	scpt := scripts.NewTiUniManagerWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Log,
@@ -295,7 +295,7 @@ func (i *WebServerInstance) ScaleConfig(
 	}
 
 	spec := i.InstanceSpec.(*WebServerSpec)
-	scpt := scripts.NewTiEMWebServerScript(
+	scpt := scripts.NewTiUniManagerWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Log,

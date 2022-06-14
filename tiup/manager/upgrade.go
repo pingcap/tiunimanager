@@ -21,10 +21,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
-	"github.com/pingcap-inc/tiem/tiup/task"
 	perrs "github.com/pingcap/errors"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/task"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -163,7 +163,7 @@ func (m *Manager) Upgrade(name string, clusterVersion string, opt operator.Optio
 		}
 	}
 
-	tlsCfg := &tls.Config{} // not implemented for tiem
+	tlsCfg := &tls.Config{} // not implemented for tiunimanager
 
 	b, err := m.sshTaskBuilder(name, topo, base.User, opt)
 	if err != nil {

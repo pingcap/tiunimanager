@@ -19,7 +19,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
 // KibanaScript represent the data to generate Kibana config

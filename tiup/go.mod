@@ -1,4 +1,4 @@
-module github.com/pingcap-inc/tiem/tiup
+module github.com/pingcap/tiunimanager/tiup
 
 go 1.16
 

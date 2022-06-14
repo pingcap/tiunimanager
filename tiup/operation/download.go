@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/utils"
 )

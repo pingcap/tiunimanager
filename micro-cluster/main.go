@@ -1,65 +1,87 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package main
 
 import (
+	"context"
 	"github.com/asim/go-micro/v3"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
-	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
-	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
-	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/common/constants"
+	"github.com/pingcap/tiunimanager/deployment"
+	"github.com/pingcap/tiunimanager/library/framework"
+	"github.com/pingcap/tiunimanager/metrics"
+	"github.com/pingcap/tiunimanager/micro-cluster/platform/system"
+	"github.com/pingcap/tiunimanager/micro-cluster/registry"
+	clusterService "github.com/pingcap/tiunimanager/micro-cluster/service"
+	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/proto/clusterservices"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
-		loadKnowledge,
 		initLibForDev,
-		initAdapter,
-		defaultPortForLocal,
+		openDatabase,
+		initEmbedEtcd,
+		notifySystemEvent,
 	)
 
-	f.PrepareService(func(service micro.Service) error {
-		return clusterPb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
-	})
-
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
-		framework.MetaDBService: func(service micro.Service) error {
-			client.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+		framework.ClusterService: func(service micro.Service) error {
+			client.ClusterClient = clusterservices.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})
+
+	f.PrepareService(func(service micro.Service) error {
+		return clusterservices.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
+	})
+
+	f.GetMetrics().ServerStartTimeGaugeMetric.
+		With(prometheus.Labels{metrics.ServiceLabel: f.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
 
 	f.StartService()
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	libtiup.MicroInit(f.GetDeployDir()+"/tiupcmd",
-		"tiup",
-		f.GetDataDir()+common.LogDirPrefix)
-	libbr.MicroInit(f.GetDeployDir()+"/brcmd",
-		f.GetDataDir()+common.LogDirPrefix)
-	return nil
-}
-
-func loadKnowledge(f *framework.BaseFramework) error {
-	knowledge.LoadKnowledge()
-	return nil
-}
-
-func initAdapter(f *framework.BaseFramework) error {
-	tenantAdapt.InjectionMetaDbRepo()
-	clusterAdapt.InjectionMetaDbRepo()
-	return nil
-}
-
-func defaultPortForLocal(f *framework.BaseFramework) error {
-	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = common.DefaultMicroClusterPort
+	deployment.M = &deployment.Manager{
+		TiUPBinPath: constants.TiUPBinPath,
 	}
+	return nil
+}
+
+func openDatabase(f *framework.BaseFramework) error {
+	return models.Open(f)
+}
+
+func notifySystemEvent(f *framework.BaseFramework) error {
+	return system.GetSystemManager().AcceptSystemEvent(context.TODO(), constants.SystemProcessStarted)
+}
+
+func initEmbedEtcd(b *framework.BaseFramework) error {
+	go func() {
+		// init embed etcd.
+		err := registry.InitEmbedEtcd(b)
+		if err != nil {
+			b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
+				Errorf("init embed etcd failed, error: %v", err)
+			return
+		}
+	}()
 	return nil
 }

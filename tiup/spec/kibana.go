@@ -21,10 +21,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
-	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
+	system "github.com/pingcap/tiunimanager/tiup/templates/systemd"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -38,7 +38,7 @@ type KibanaSpec struct {
 	Host    string `yaml:"host"`
 	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty" default:"tiem-cluster"`
+	Name            string                 `yaml:"name,omitempty" default:"tiunimanager-cluster"`
 	Port            int                    `yaml:"port,omitempty" default:"4109"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
@@ -70,7 +70,7 @@ func (s *KibanaSpec) GetMainPort() int {
 	return s.Port
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *KibanaSpec) IsImported() bool {
 	return false
 }
@@ -80,7 +80,7 @@ func (s *KibanaSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// KibanaComponent represents TiEM component.
+// KibanaComponent represents TiUniManager component.
 type KibanaComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
@@ -127,7 +127,7 @@ func (c *KibanaComponent) Instances() []Instance {
 	return ins
 }
 
-// KibanaInstance represent the TiEM instance
+// KibanaInstance represent the TiUniManager instance
 type KibanaInstance struct {
 	Name string
 	BaseInstance

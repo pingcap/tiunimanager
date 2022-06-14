@@ -29,7 +29,7 @@ var (
 type EMMeta struct {
 	User    string `yaml:"user"`                   // the user to run and manage cluster on remote
 	Group   string `yaml:"group"`                  // the group to run and manage cluster on remote
-	Version string `yaml:"tiem_version"`           // the version of TiEM
+	Version string `yaml:"tiunimanager_version"`   // the version of TiUniManager
 	OpsVer  string `yaml:"last_ops_ver,omitempty"` // the version of ourself that updated the meta last time
 
 	Topology *Specification `yaml:"topology"`
@@ -59,12 +59,12 @@ func (m *EMMeta) GetTopology() Topology {
 
 // SetTopology implements EMMeta interface.
 func (m *EMMeta) SetTopology(topo Topology) {
-	tiemTopo, ok := topo.(*Specification)
+	tiunimanagerTopo, ok := topo.(*Specification)
 	if !ok {
 		panic(fmt.Sprintln("wrong type: ", reflect.TypeOf(topo)))
 	}
 
-	m.Topology = tiemTopo
+	m.Topology = tiunimanagerTopo
 }
 
 // GetBaseMeta implements EMMeta interface.

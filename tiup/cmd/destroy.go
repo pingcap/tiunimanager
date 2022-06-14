@@ -14,7 +14,7 @@
 package main
 
 import (
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
 	"github.com/spf13/cobra"
 )
 

@@ -81,11 +81,11 @@ global:
   ssh_port: 220
   deploy_dir: "test-deploy"
   data_dir: "test-data"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     deploy_dir: "metadb-server-deploy"
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.53
     data_dir: "metadb-data"
     metrics_port: 8112
@@ -110,17 +110,17 @@ global:
   ssh_port: 220
   deploy_dir: "test-deploy"
   data_dir: "test-data"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     deploy_dir: "/test-1"
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     data_dir: "/test-1"
     metrics_port: 8112
 `), &topo)
 	assert.NotNil(t, err)
-	assert.Equal(t, "directory conflict for '/test-1' between 'tiem_metadb_servers:172.16.5.138.deploy_dir' and 'tiem_cluster_servers:172.16.5.138.data_dir'", err.Error())
+	assert.Equal(t, "directory conflict for '/test-1' between 'tiunimanager_metadb_servers:172.16.5.138.deploy_dir' and 'tiunimanager_cluster_servers:172.16.5.138.data_dir'", err.Error())
 
 	err = yaml.Unmarshal([]byte(`
 global:
@@ -128,11 +128,11 @@ global:
   ssh_port: 220
   deploy_dir: "test-deploy"
   data_dir: "/test-data"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     data_dir: "test-1"
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     data_dir: "test-1"
     metrics_port: 8112
@@ -148,17 +148,17 @@ global:
   ssh_port: 220
   deploy_dir: "test-deploy"
   data_dir: "test-data"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     registry_peer_port: 1234
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     port: 1234
     metrics_port: 8112
 `), &topo)
 	assert.NotNil(t, err)
-	assert.Equal(t, "port conflict for '1234' between 'tiem_metadb_servers:172.16.5.138.registry_peer_port,omitempty' and 'tiem_cluster_servers:172.16.5.138.port,omitempty'", err.Error())
+	assert.Equal(t, "port conflict for '1234' between 'tiunimanager_metadb_servers:172.16.5.138.registry_peer_port,omitempty' and 'tiunimanager_cluster_servers:172.16.5.138.port,omitempty'", err.Error())
 }
 
 func TestPlatformConflicts(t *testing.T) {
@@ -168,11 +168,11 @@ func TestPlatformConflicts(t *testing.T) {
 global:
   os: "linux"
   arch: "aarch64"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     arch: "arm64"
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     metrics_port: 8112
 `), &topo)
@@ -183,17 +183,17 @@ tiem_cluster_servers:
 	err = yaml.Unmarshal([]byte(`
 global:
   os: "linux"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     arch: "aarch64"
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     arch: "amd64"
     metrics_port: 8112
 `), &topo)
 	assert.NotNil(t, err)
-	assert.Equal(t, "platform mismatch for '172.16.5.138' between 'tiem_metadb_servers:linux/arm64' and 'tiem_cluster_servers:linux/amd64'", err.Error())
+	assert.Equal(t, "platform mismatch for '172.16.5.138' between 'tiunimanager_metadb_servers:linux/arm64' and 'tiunimanager_cluster_servers:linux/amd64'", err.Error())
 
 	// different os defined for the same host
 	topo = Specification{}
@@ -201,16 +201,16 @@ tiem_cluster_servers:
 global:
   os: "linux"
   arch: "aarch64"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     metrics_port: 8111
     os: "darwin"
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     metrics_port: 8112
 `), &topo)
 	assert.NotNil(t, err)
-	assert.Equal(t, "platform mismatch for '172.16.5.138' between 'tiem_metadb_servers:darwin/arm64' and 'tiem_cluster_servers:linux/arm64'", err.Error())
+	assert.Equal(t, "platform mismatch for '172.16.5.138' between 'tiunimanager_metadb_servers:darwin/arm64' and 'tiunimanager_cluster_servers:linux/arm64'", err.Error())
 }
 
 func TestCountDir(t *testing.T) {
@@ -221,12 +221,12 @@ global:
   user: "test1"
   ssh_port: 220
   deploy_dir: "test-deploy"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     metrics_port: 8111
     deploy_dir: "metadb-server-deploy"
     data_dir: "/test-data/data-1"
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.53
     metrics_port: 8112
     data_dir: "test-1"
@@ -242,12 +242,12 @@ global:
   user: "test1"
   ssh_port: 220
   deploy_dir: "/test-deploy"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     metrics_port: 8111
     deploy_dir: "metadb-server-deploy"
     data_dir: "/test-data/data-1"
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     metrics_port: 8112
     data_dir: "/test-data/data-2"
@@ -268,11 +268,11 @@ global:
   ssh_port: 220
   deploy_dir: "/test-deploy"
   data_dir: "/test-data"
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.138
     metrics_port: 8111
     data_dir: "data-1"
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.138
     metrics_port: 8112
     data_dir: "data-2"
@@ -292,10 +292,10 @@ tiem_cluster_servers:
 func TestRelativePath(t *testing.T) {
 	// base test
 	withTempFile(`
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     metrics_port: 8112
 `, func(file string) {
@@ -303,13 +303,13 @@ tiem_cluster_servers:
 		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
 		ExpandRelativeDir(&topo)
-		assert.Equal(t, "/home/tiem/deploy/metadb-server-4100", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/metadb-server-4100", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
 	})
 
 	// test data dir & log dir
 	withTempFile(`
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     deploy_dir: my-deploy
     data_dir: my-data
@@ -320,16 +320,16 @@ tiem_metadb_servers:
 		assert.Nil(t, err)
 		ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tiem/my-deploy", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/my-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tiem/my-deploy/my-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/my-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/my-log", topo.ClusterServers[0].LogDir)
 	})
 
 	// test global options, case 1
 	withTempFile(`
 global:
   deploy_dir: my-deploy
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
 `, func(file string) {
 		topo := Specification{}
@@ -337,8 +337,8 @@ tiem_metadb_servers:
 		assert.Nil(t, err)
 		ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/metadb-server-4100", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/metadb-server-4100/data", topo.ClusterServers[0].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[0].LogDir)
 	})
 
@@ -346,10 +346,10 @@ tiem_metadb_servers:
 	withTempFile(`
 global:
   deploy_dir: my-deploy
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 8112
@@ -365,21 +365,21 @@ tiem_cluster_servers:
 		assert.Equal(t, "my-deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "data", topo.GlobalOptions.DataDir)
 
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20160/data", topo.ClusterServers[0].DataDir)
 
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
 	})
 
 	// test global options, case 3
 	withTempFile(`
 global:
   deploy_dir: my-deploy
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 8112
@@ -397,12 +397,12 @@ tiem_cluster_servers:
 		assert.Equal(t, "my-deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "data", topo.GlobalOptions.DataDir)
 
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160/my-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160/my-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20160/my-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20160/my-log", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[1].LogDir)
 	})
 
@@ -411,10 +411,10 @@ tiem_cluster_servers:
 global:
   data_dir: my-global-data
   log_dir: my-global-log
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 8112
@@ -433,39 +433,39 @@ tiem_cluster_servers:
 		assert.Equal(t, "my-global-data", topo.GlobalOptions.DataDir)
 		assert.Equal(t, "my-global-log", topo.GlobalOptions.LogDir)
 
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-20160/my-local-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-20160/my-local-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-20160/my-local-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-20160/my-local-log", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-20161/my-global-data", topo.ClusterServers[1].DataDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-20161/my-global-log", topo.ClusterServers[1].LogDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-20161/my-global-data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-20161/my-global-log", topo.ClusterServers[1].LogDir)
 	})
 }
 
 func TestTopologyMerge(t *testing.T) {
 	// base test
 	with2TempFile(`
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     metrics_port: 8112
 `, `
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.139
 `, func(base, scale string) {
 		topo, err := merge4test(base, scale)
 		assert.Nil(t, err)
 		ExpandRelativeDir(topo)
 
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-4110/data", topo.ClusterServers[0].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-4110", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiunimanager/deploy/cluster-server-4110/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[1].LogDir)
 	})
 
@@ -474,10 +474,10 @@ tiem_cluster_servers:
 global:
   user: test
   deploy_dir: /my-global-deploy
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     metrics_port: 8111
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     metrics_port: 8112
     log_dir: my-local-log
@@ -486,7 +486,7 @@ tiem_cluster_servers:
     deploy_dir: flash-deploy
   - host: 172.16.5.141
 `, `
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.139
     deploy_dir: flash-deploy
   - host: 172.16.5.134

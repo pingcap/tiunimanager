@@ -19,7 +19,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
 // AlertManagerScript represent the data to generate AlertManager start script

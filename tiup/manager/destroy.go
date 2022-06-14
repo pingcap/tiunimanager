@@ -20,8 +20,8 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	perrs "github.com/pingcap/errors"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -43,7 +43,7 @@ func (m *Manager) DestroyCluster(name string, gOpt operator.Options, destroyOpt 
 	topo := metadata.GetTopology()
 	base := metadata.GetBaseMeta()
 
-	tlsCfg := &tls.Config{} // not implemented for tiem
+	tlsCfg := &tls.Config{} // not implemented for tiunimanager
 
 	if !skipConfirm {
 		if err := tui.PromptForConfirmOrAbortError(

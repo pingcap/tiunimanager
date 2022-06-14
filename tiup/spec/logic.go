@@ -134,9 +134,9 @@ func (topo *Specification) IterHost(fn func(instance Instance)) {
 	}
 }
 
-// AllTiEMComponentNames contains the names of all tiem components.
+// AllTiUniManagerComponentNames contains the names of all tiunimanager components.
 // should include all components in ComponentsByStartOrder
-func AllTiEMComponentNames() (roles []string) {
+func AllTiUniManagerComponentNames() (roles []string) {
 	tp := &Specification{}
 	tp.IterComponent(func(c Component) {
 		roles = append(roles, c.Name())

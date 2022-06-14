@@ -20,11 +20,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 	"github.com/pingcap/tiup/pkg/set"
 )
 
-// LogPathInfo is a list of TiEM log files
+// LogPathInfo is a list of TiUniManager log files
 type LogPathInfo struct {
 	GeneralLogs set.StringSet
 	AuditLogs   set.StringSet
@@ -60,8 +60,8 @@ func (c *FilebeatConfig) WithElasticSearch(esAddress []string) *FilebeatConfig {
 	return c
 }
 
-// WithTiEMLogs set log paths
-func (c *FilebeatConfig) WithTiEMLogs(paths map[string]*LogPathInfo) *FilebeatConfig {
+// WithTiUniManagerLogs set log paths
+func (c *FilebeatConfig) WithTiUniManagerLogs(paths map[string]*LogPathInfo) *FilebeatConfig {
 	if p, ok := paths[c.Host]; ok {
 		c.GeneralLogs = append(c.GeneralLogs, p.GeneralLogs.Slice()...)
 		c.AuditLogs = append(c.AuditLogs, p.AuditLogs.Slice()...)

@@ -19,19 +19,19 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
-// TiEMWebServerScript represent the data to generate TiEMWebServer config
-type TiEMWebServerScript struct {
+// TiUniManagerWebServerScript represent the data to generate TiUniManagerWebServer config
+type TiUniManagerWebServerScript struct {
 	Host      string
 	DeployDir string
 	LogDir    string
 }
 
-// NewTiEMWebServerScript returns a TiEMWebServerScript with given arguments
-func NewTiEMWebServerScript(ip, deployDir, logDir string) *TiEMWebServerScript {
-	return &TiEMWebServerScript{
+// NewTiUniManagerWebServerScript returns a TiUniManagerWebServerScript with given arguments
+func NewTiUniManagerWebServerScript(ip, deployDir, logDir string) *TiUniManagerWebServerScript {
+	return &TiUniManagerWebServerScript{
 		Host:      ip,
 		DeployDir: deployDir,
 		LogDir:    logDir,
@@ -39,7 +39,7 @@ func NewTiEMWebServerScript(ip, deployDir, logDir string) *TiEMWebServerScript {
 }
 
 // Script generate the config file data.
-func (c *TiEMWebServerScript) Script() ([]byte, error) {
+func (c *TiUniManagerWebServerScript) Script() ([]byte, error) {
 	fp := path.Join("templates", "scripts", "run_em_web.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
@@ -49,7 +49,7 @@ func (c *TiEMWebServerScript) Script() ([]byte, error) {
 }
 
 // ScriptToFile write config content to specific path
-func (c *TiEMWebServerScript) ScriptToFile(file string) error {
+func (c *TiUniManagerWebServerScript) ScriptToFile(file string) error {
 	config, err := c.Script()
 	if err != nil {
 		return err
@@ -57,9 +57,9 @@ func (c *TiEMWebServerScript) ScriptToFile(file string) error {
 	return os.WriteFile(file, config, 0755)
 }
 
-// ScriptWithTemplate generate the TiEMWebServer config content by tpl
-func (c *TiEMWebServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
-	tmpl, err := template.New("TiEMWebServer").Parse(tpl)
+// ScriptWithTemplate generate the TiUniManagerWebServer config content by tpl
+func (c *TiUniManagerWebServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
+	tmpl, err := template.New("TiUniManagerWebServer").Parse(tpl)
 	if err != nil {
 		return nil, err
 	}

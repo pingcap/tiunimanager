@@ -54,16 +54,16 @@ scrape_configs:
   - job_name: em
     static_configs:
       - targets: 
-{{- range .TiEMAPIServers}}
+{{- range .TiUniManagerAPIServers}}
         - '{{.}}'
 {{- end}}
-{{- range .TiEMMetaDBServers}}
+{{- range .TiUniManagerMetaDBServers}}
         - '{{.}}'
 {{- end}}
-{{- range .TiEMClusterServers}}
+{{- range .TiUniManagerClusterServers}}
         - '{{.}}'
 {{- end}}
-{{- range .TiEMFileServers}}
+{{- range .TiUniManagerFileServers}}
         - '{{.}}'
 {{- end}}
 
@@ -73,5 +73,5 @@ scrape_configs:
 #     'match[]':
 #       - '{job=~".*"}'
 #    http_sd_configs:
-#      - url: "http://".tiem_api_servers.host:".tiem_api_servers.port"/api/sd/metrics?address=".monitoring_servers.host":".monitoring_servers.port""
+#      - url: "http://".tiunimanager_api_servers.host:".tiunimanager_api_servers.port"/api/sd/metrics?address=".monitoring_servers.host":".monitoring_servers.port""
 #        refresh_interval: 15s

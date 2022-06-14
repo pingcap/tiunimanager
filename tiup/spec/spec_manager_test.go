@@ -83,7 +83,7 @@ func (t *TestTopology) MergeTopo(topo Topology) Topology {
 }
 
 func (t *TestTopology) Type() string {
-	return TopoTypeTiEM
+	return TopoTypeTiUniManager
 }
 
 func (t *TestTopology) BaseTopo() *BaseTopo {

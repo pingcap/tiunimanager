@@ -20,8 +20,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/meta"
 )
@@ -144,7 +144,7 @@ func (i *AlertManagerInstance) InitConfig(
 	alertmanagers := i.topo.BaseTopo().Alertmanagers
 
 	//enableTLS := gOpts.TLSEnabled
-	enableTLS := false // not implemented for tiem
+	enableTLS := false // not implemented for tiunimanager
 	// Transfer start script
 	spec := i.InstanceSpec.(*AlertmanagerSpec)
 	cfg := scripts.NewAlertManagerScript(spec.Host, paths.Deploy, paths.Data[0], paths.Log).

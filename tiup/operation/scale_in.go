@@ -17,8 +17,8 @@ import (
 	"context"
 	"crypto/tls"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/set"
 )
@@ -64,12 +64,12 @@ func ScaleInCluster(
 	}
 
 	// Cannot delete all MetaDB servers
-	if len(deletedDiff[spec.ComponentTiEMClusterServer]) == len(cluster.ClusterServers) {
+	if len(deletedDiff[spec.ComponentTiUniManagerClusterServer]) == len(cluster.ClusterServers) {
 		return errors.New("cannot delete all Cluster servers")
 	}
 
 	// Cannot delete all API servers
-	if len(deletedDiff[spec.ComponentTiEMAPIServer]) == len(cluster.APIServers) {
+	if len(deletedDiff[spec.ComponentTiUniManagerAPIServer]) == len(cluster.APIServers) {
 		return errors.New("cannot delete all API servers")
 	}
 

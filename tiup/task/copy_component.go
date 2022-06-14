@@ -17,7 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 	"github.com/pingcap/tiup/pkg/environment"
 	"github.com/pingcap/tiup/pkg/repository"
 )

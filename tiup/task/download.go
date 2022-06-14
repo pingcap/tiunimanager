@@ -17,7 +17,7 @@ import (
 	"context"
 	"fmt"
 
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
 	"github.com/pingcap/tiup/pkg/environment"
 	"github.com/pingcap/tiup/pkg/repository"
 )

@@ -1,19 +1,19 @@
 package spec
 
-// TiEMComponentVersion maps the dm version to the third components binding version
+// TiUniManagerComponentVersion maps the dm version to the third components binding version
 // Empty version means the latest stable one
-func TiEMComponentVersion(comp, version string) string {
+func TiUniManagerComponentVersion(comp, version string) string {
 	switch comp {
 	case ComponentAlertmanager,
 		ComponentGrafana,
 		ComponentPrometheus,
 		ComponentNodeExporter,
 		ComponentFilebeat,
-		ComponentTiEMTracerServer:
+		ComponentTiUniManagerTracerServer:
 		return ""
 	case ComponentElasticSearchServer,
 		ComponentKibana,
-		ComponentTiEMWebServer:
+		ComponentTiUniManagerWebServer:
 		return ""
 	default:
 		return version

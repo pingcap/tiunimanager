@@ -1,4 +1,4 @@
-module github.com/pingcap-inc/tiem/tiup/tools/check
+module github.com/pingcap/tiunimanager/tiup/tools/check
 
 go 1.17
 

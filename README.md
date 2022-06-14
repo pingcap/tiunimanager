@@ -1,124 +1,35 @@
-# TiEM - TiDB Enterprise Manager
+# TiUniManager
 
 ## Contents
 
 - library - Common components and resources.
 - micro-api - OpenAPI http handler.
 - micro-cluster - Core service.
-- micro-metadb - Client of go-micro service.
 - docs - Documentation.
 
-## Build and Run TiEM
+## Build and Run TiUniManager
 
-### Dependencies
-
-Install the protobuf stuff
-
+TiUniManager can be compiled and used on Linux, OSX, CentOS, It is as simple as:
 ```
-go get github.com/asim/go-micro/cmd/protoc-gen-micro/v3
-go get google.golang.org/protobuf/cmd/protoc-gen-go
-
-# Install protoc Refer to http://google.github.io/proto-lens/installing-protoc.html
-PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
-curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
-sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
-sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
-rm -f $PROTOC_ZIP
+make
 ```
 
-### Generate Protobuf files
-
+After building TiUniManager, it is good idea to test it using:
 ```
-cd micro-metadb/proto
-protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
-cd micro-cluster/proto
-protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
+make test
 ```
-
-### Install And Setup local etcd service
-
-Download the binary from https://github.com/etcd-io/etcd/releases/.
-
-Setup:
-
-```
-etcd --data-dir=data.etcd1 --name machine-1 \
-    --initial-advertise-peer-urls http://127.0.0.1:4102 --listen-peer-urls http://127.0.0.1:4102 \
-    --advertise-client-urls http://127.0.0.1:4101 --listen-client-urls http://127.0.0.1:4101 \
-    --initial-cluster machine-1=http://127.0.0.1:4102 \
-    --initial-cluster-state new --initial-cluster-token token-tiem \
-    &
-```
-
-### Setup Jaeger (for opentracing)
-
-Download binary from https://www.jaegertracing.io/download/.
-
-```shell
-$ jaeger-all-in-one --collector.zipkin.host-port=:9411
-```
-
-And visit the web interface from port 16686.
 
 ### Run Service
+If you want to run the service locally, try the following commands, enjoy it!
 
-start micro-metadb
+start cluster-server
 ```shell
-$ cd micro-metadb
-$ go run init.go main.go
-```
-or
-```shell
-$ cd micro-metadb
-$ go run init.go main.go \
-    --host=192.168.1.100 \
-    --port=4100 \
-    --registry-client-port=4101 \
-    --registry-peer-port=4102 \
-    --metrics-port=4121 \
-    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4123 \
-    --deploy-dir=/tiem-deploy/tiem-metadb-4100 \
-    --data-dir=/tiem-data/tiem-metadb-4100 \
-    --log-level=info
+$ ./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108
 ```
 
-start micro-cluster
+start openapi-server
 ```shell
-$ cd micro-cluster
-$ go run main.go 
-```
-or
-```shell
-$ cd micro-cluster
-$ go run init.go main.go \
-    --host=192.168.1.100 \
-    --port=4110 \
-    --metrics-port=4121 \
-    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4123 \
-    --deploy-dir=/tiem-deploy/tiem-cluster-4110 \
-    --data-dir=/tiem-data/tiem-cluster-4110 \
-    --log-level=info
-```
-
-start micro-api
-```shell
-$ cd micro-api
-$ go run main.go 
-```
-or
-```shell
-$ cd micro-api
-$ go run init.go main.go \
-    --host=192.168.1.100 \
-    --port=4116 \
-    --metrics-port=4121 \
-    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4123 \
-    --deploy-dir=/tiem-deploy/tiem-api-4115 \
-    --data-dir=/tiem-data/tiem-api-4115 \
-    --log-level=info
+$ ./bin/openapi-server --host=127.0.0.1 --port=4100 --metrics-port=4103 --registry-address=127.0.0.1:4106
 ```
 
 ### Try it out
@@ -147,7 +58,7 @@ For example:
 
 ```go
 import(
-	"github.com/pingcap/tiem/addon/logger"
+	"github.com/pingcap/tiunimanager/addon/logger"
 )
 ```
 
@@ -172,7 +83,7 @@ func CheckUser(ctx context.Context, name, passwd string) error {
 ```go
 func init() {
     var err error
-    dbFile := "tiem.sqlite.db"
+    dbFile := "tiunimanager.sqlite.db"
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
     getLogger().Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})

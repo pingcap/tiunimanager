@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
-	"github.com/pingcap-inc/tiem/tiup/version"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/version"
 	"github.com/pingcap/tiup/pkg/utils"
 	"github.com/prometheus/common/expfmt"
 	"go.etcd.io/etcd/client/pkg/v3/transport"
@@ -44,8 +44,8 @@ func SaveMetadata(clusterName string, cmeta *EMMeta) error {
 	return GetSpecManager().SaveMeta(clusterName, cmeta)
 }
 
-// TiEMMetadata tries to read the metadata of a cluster from file
-func TiEMMetadata(clusterName string) (*Metadata, error) {
+// TiUniManagerMetadata tries to read the metadata of a cluster from file
+func TiUniManagerMetadata(clusterName string) (*Metadata, error) {
 	var cm Metadata
 	err := GetSpecManager().Metadata(clusterName, &cm)
 	if err != nil {

@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -57,7 +57,7 @@ func (s *TracerServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *TracerServerSpec) Role() string {
-	return ComponentTiEMTracerServer
+	return ComponentTiUniManagerTracerServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -70,7 +70,7 @@ func (s *TracerServerSpec) GetMainPort() int {
 	return s.ZipkinHostPort
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *TracerServerSpec) IsImported() bool {
 	return false
 }
@@ -80,17 +80,17 @@ func (s *TracerServerSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// JaegerComponent represents TiEM component.
+// JaegerComponent represents TiUniManager component.
 type JaegerComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
 func (c *JaegerComponent) Name() string {
-	return ComponentTiEMTracerServer
+	return ComponentTiUniManagerTracerServer
 }
 
 // Role implements Component interface.
 func (c *JaegerComponent) Role() string {
-	return RoleTiEMTracer
+	return RoleTiUniManagerTracer
 }
 
 // Instances implements Component interface.
@@ -134,7 +134,7 @@ func (c *JaegerComponent) Instances() []Instance {
 	return ins
 }
 
-// JaegerInstance represent the TiEM instance
+// JaegerInstance represent the TiUniManager instance
 type JaegerInstance struct {
 	BaseInstance
 	topo *Specification

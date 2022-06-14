@@ -20,8 +20,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
 // APIServerConfig represent the data to generate api server config

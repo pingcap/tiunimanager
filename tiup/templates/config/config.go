@@ -16,7 +16,7 @@ package config
 import (
 	"path/filepath"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
 // GetConfig returns a raw config file from embed templates

@@ -14,7 +14,7 @@
 package main
 
 import (
-	"github.com/pingcap-inc/tiem/tiup/manager"
+	"github.com/pingcap/tiunimanager/tiup/manager"
 	"github.com/spf13/cobra"
 )
 

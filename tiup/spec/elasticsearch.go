@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
-	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
+	system "github.com/pingcap/tiunimanager/tiup/templates/systemd"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -72,7 +72,7 @@ func (s *ElasticSearchSpec) GetMainPort() int {
 	return s.Port
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *ElasticSearchSpec) IsImported() bool {
 	return false
 }
@@ -82,7 +82,7 @@ func (s *ElasticSearchSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// ElasticSearchComponent represents TiEM component.
+// ElasticSearchComponent represents TiUniManager component.
 type ElasticSearchComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
@@ -129,7 +129,7 @@ func (c *ElasticSearchComponent) Instances() []Instance {
 	return ins
 }
 
-// ElasticSearchInstance represent the TiEM instance
+// ElasticSearchInstance represent the TiUniManager instance
 type ElasticSearchInstance struct {
 	Name string
 	BaseInstance

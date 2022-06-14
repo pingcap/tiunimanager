@@ -1,13 +1,29 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package framework
 
 import (
+	"github.com/pingcap/tiunimanager/common/constants"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"strings"
-
-	common2 "github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -66,7 +82,7 @@ func DefaultRootLogger() *RootLogger {
 	lr := &RootLogger{
 		LogLevel:      "info",
 		LogOutput:     "file",
-		LogFileRoot:   "." + common2.LogDirPrefix,
+		LogFileRoot:   "." + constants.LogDirPrefix,
 		LogFileName:   "default-server",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
@@ -86,7 +102,7 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *RootLo
 	lr := &RootLogger{
 		LogLevel:      args.LogLevel,
 		LogOutput:     "file",
-		LogFileRoot:   args.DataDir + common2.LogDirPrefix,
+		LogFileRoot:   args.DataDir + constants.LogDirPrefix,
 		LogFileName:   serviceName.ServerName(),
 		LogMaxSize:    512,
 		LogMaxAge:     30,
@@ -103,18 +119,18 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *RootLo
 	return lr
 }
 
-func (lr *RootLogger) ForkFile(fileName string) *logrus.Entry {
-	if entry, ok := lr.forkFileEntry[fileName]; ok {
+func (p *RootLogger) ForkFile(fileName string) *logrus.Entry {
+	if entry, ok := p.forkFileEntry[fileName]; ok {
 		return entry
 	} else {
 
-		lr.forkFileEntry[fileName] = lr.forkEntry(fileName)
-		return lr.forkFileEntry[fileName]
+		p.forkFileEntry[fileName] = p.forkEntry(fileName)
+		return p.forkFileEntry[fileName]
 	}
 }
 
-func (lr *RootLogger) Entry() *logrus.Entry {
-	return lr.defaultLogEntry
+func (p *RootLogger) Entry() *logrus.Entry {
+	return p.defaultLogEntry
 }
 
 func Caller() logrus.Fields {
@@ -129,26 +145,26 @@ func Caller() logrus.Fields {
 	return map[string]interface{}{}
 }
 
-func (lr *RootLogger) forkEntry(fileName string) *logrus.Entry {
+func (p *RootLogger) forkEntry(fileName string) *logrus.Entry {
 	logger := logrus.New()
 
 	// Set log format
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	// Set log level
-	logger.SetLevel(getLogLevel(lr.LogLevel))
+	logger.SetLevel(getLogLevel(p.LogLevel))
 
 	// Define output type writer
 	writers := []io.Writer{os.Stdout}
 
 	// Determine whether the log output contains the file type
-	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
+	if strings.Contains(strings.ToLower(p.LogOutput), OutputFile) {
 		writers = append(writers, &lumberjack.Logger{
-			Filename:   lr.LogFileRoot + fileName + ".log",
-			MaxSize:    lr.LogMaxSize,
-			MaxAge:     lr.LogMaxAge,
-			MaxBackups: lr.LogMaxBackups,
-			LocalTime:  lr.LogLocalTime,
-			Compress:   lr.LogCompress,
+			Filename:   p.LogFileRoot + fileName + ".log",
+			MaxSize:    p.LogMaxSize,
+			MaxAge:     p.LogMaxAge,
+			MaxBackups: p.LogMaxBackups,
+			LocalTime:  p.LogLocalTime,
+			Compress:   p.LogCompress,
 		})
 	}
 	// remove the os.Stdout output
@@ -175,3 +191,4 @@ func getLogLevel(level string) logrus.Level {
 	}
 	return logrus.DebugLevel
 }
+

@@ -23,7 +23,7 @@ import (
 
 	"github.com/pingcap/errors"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -74,7 +74,7 @@ func (s *ClusterServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *ClusterServerSpec) Role() string {
-	return ComponentTiEMClusterServer
+	return ComponentTiUniManagerClusterServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -87,7 +87,7 @@ func (s *ClusterServerSpec) GetMainPort() int {
 	return s.Port
 }
 
-// IsImported implements the instance interface, not needed for tiem
+// IsImported implements the instance interface, not needed for tiunimanager
 func (s *ClusterServerSpec) IsImported() bool {
 	return false
 }
@@ -97,17 +97,17 @@ func (s *ClusterServerSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// ClusterServerComponent represents TiEM component.
+// ClusterServerComponent represents TiUniManager component.
 type ClusterServerComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
 func (c *ClusterServerComponent) Name() string {
-	return ComponentTiEMClusterServer
+	return ComponentTiUniManagerClusterServer
 }
 
 // Role implements Component interface.
 func (c *ClusterServerComponent) Role() string {
-	return RoleTiEMCluster
+	return RoleTiUniManagerCluster
 }
 
 // Instances implements Component interface.
@@ -145,7 +145,7 @@ func (c *ClusterServerComponent) Instances() []Instance {
 	return ins
 }
 
-// ClusterServerInstance represent the TiEM instance
+// ClusterServerInstance represent the TiUniManager instance
 type ClusterServerInstance struct {
 	BaseInstance
 	topo *Specification
@@ -166,7 +166,7 @@ func (i *ClusterServerInstance) InitConfig(
 	}
 
 	spec := i.InstanceSpec.(*ClusterServerSpec)
-	scpt := scripts.NewTiEMClusterServerScript(
+	scpt := scripts.NewTiUniManagerClusterServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
@@ -251,7 +251,7 @@ func (i *ClusterServerInstance) ScaleConfig(
 	}
 
 	spec := i.InstanceSpec.(*ClusterServerSpec)
-	scpt := scripts.NewTiEMClusterServerScript(
+	scpt := scripts.NewTiUniManagerClusterServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],

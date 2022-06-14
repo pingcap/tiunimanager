@@ -20,10 +20,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/spec"
-	"github.com/pingcap-inc/tiem/tiup/task"
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/task"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
 	"github.com/pingcap/tiup/pkg/meta"
 	"github.com/pingcap/tiup/pkg/set"
 	"github.com/pingcap/tiup/pkg/tui"
@@ -77,7 +77,7 @@ func buildScaleOutTask(
 	base := metadata.GetBaseMeta()
 	specManager := m.specManager
 
-	tlsCfg := &tls.Config{} // not implemented for tiem
+	tlsCfg := &tls.Config{} // not implemented for tiunimanager
 
 	// Initialize the environments
 	initializedHosts := make(map[string]hostInfo) // host -> ssh-port, os, arch
@@ -272,7 +272,7 @@ func buildScaleOutTask(
 		base.Version,
 		gOpt,
 		mergedTopo.(*spec.Specification).ElasticSearchEndpoints(),
-		mergedTopo.(*spec.Specification).TiEMLogPaths(),
+		mergedTopo.(*spec.Specification).TiUniManagerLogPaths(),
 		p,
 	)
 	if err != nil {
@@ -291,7 +291,7 @@ func buildScaleOutTask(
 		topo.BaseTopo().MonitoredOptions,
 		gOpt,
 		mergedTopo.(*spec.Specification).ElasticSearchEndpoints(),
-		mergedTopo.(*spec.Specification).TiEMLogPaths(),
+		mergedTopo.(*spec.Specification).TiUniManagerLogPaths(),
 		p,
 	)
 
@@ -353,7 +353,7 @@ func buildMonitoredDeployTask(
 	version string,
 	gOpt operator.Options,
 	esHosts []string,
-	tiemHosts map[string]*config.LogPathInfo,
+	tiunimanagerHosts map[string]*config.LogPathInfo,
 	p *tui.SSHConnectionProps,
 ) (downloadCompTasks []*task.StepDisplay, deployCompTasks []*task.StepDisplay, err error) {
 	if monitoredOptions == nil {
@@ -465,7 +465,7 @@ func buildRefreshMonitoredConfigTasks(
 	monitoredOptions *spec.MonitoredOptions,
 	gOpt operator.Options,
 	esHosts []string,
-	tiemHosts map[string]*config.LogPathInfo,
+	tiunimanagerHosts map[string]*config.LogPathInfo,
 	p *tui.SSHConnectionProps,
 ) []*task.StepDisplay {
 	if monitoredOptions == nil {

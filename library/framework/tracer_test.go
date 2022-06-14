@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package framework
 
 import (
@@ -45,7 +61,7 @@ func (m MyContext) Value(key interface{}) interface{} {
 func TestGetTraceIDFromContext(t *testing.T) {
 	t.Run("gin", func(t *testing.T) {
 		ginContext := &gin.Context{}
-		ginContext.Set(TiEM_X_TRACE_ID_NAME, "111")
+		ginContext.Set(TiUniManager_X_TRACE_ID_KEY, "111")
 		got := GetTraceIDFromContext(ginContext)
 		assert.Equal(t, "111", got)
 	})
@@ -62,16 +78,16 @@ func TestGetTraceIDFromContext(t *testing.T) {
 }
 
 func TestNewJaegerTracer(t *testing.T) {
-	_, _, err := NewJaegerTracer("tiem", "127.0.0.1:999")
+	_, _, err := NewJaegerTracer("em", "127.0.0.1:999")
 	assert.NoError(t, err)
 }
 
 func TestNewMicroCtxFromGinCtx(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_NAME, "111")
+	ctx.Set(TiUniManager_X_TRACE_ID_KEY, "111")
 	got := NewMicroCtxFromGinCtx(ctx)
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_NAME) != "")
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_NAME) == ctx.Value(TiEM_X_TRACE_ID_NAME))
+	assert.True(t, got.Value(TiUniManager_X_TRACE_ID_KEY) != "")
+	assert.True(t, got.Value(TiUniManager_X_TRACE_ID_KEY) == ctx.Value(TiUniManager_X_TRACE_ID_KEY))
 }
 
 func Test_getParentSpanFromGinContext(t *testing.T) {
@@ -105,4 +121,45 @@ func Test_getParentSpanFromGinContext1(t *testing.T) {
 		got := getParentSpanFromGinContext(micro)
 		assert.Equal(t, nil, got)
 	})
+}
+
+func Test_GetStringValuesFromContext(t *testing.T) {
+	c := &gin.Context{}
+	traceID := "traceID"
+	userID := "userID"
+	tenantID := "tenantID"
+	c.Set(TiUniManager_X_TRACE_ID_KEY, traceID)
+	c.Set(TiUniManager_X_USER_ID_KEY, userID)
+	c.Set(TiUniManager_X_TENANT_ID_KEY, tenantID)
+	assert.Equal(t, traceID, GetTraceIDFromContext(c))
+	assert.Equal(t, userID, GetUserIDFromContext(c))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(c))
+	ctx := NewMicroCtxFromGinCtx(c)
+	assert.Equal(t, traceID, GetTraceIDFromContext(ctx))
+	assert.Equal(t, userID, GetUserIDFromContext(ctx))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(ctx))
+}
+
+func Test_NewBackgroundMicroCtx(t *testing.T) {
+	c := &gin.Context{}
+	traceID := "traceID"
+	userID := "userID"
+	tenantID := "tenantID"
+	c.Set(TiUniManager_X_TRACE_ID_KEY, traceID)
+	c.Set(TiUniManager_X_USER_ID_KEY, userID)
+	c.Set(TiUniManager_X_TENANT_ID_KEY, tenantID)
+	assert.Equal(t, traceID, GetTraceIDFromContext(c))
+	assert.Equal(t, userID, GetUserIDFromContext(c))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(c))
+	ctx := NewMicroCtxFromGinCtx(c)
+	assert.Equal(t, traceID, GetTraceIDFromContext(ctx))
+	assert.Equal(t, userID, GetUserIDFromContext(ctx))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(ctx))
+	newCtxWithSameTraceID := NewBackgroundMicroCtx(ctx, false)
+	assert.Equal(t, traceID, GetTraceIDFromContext(newCtxWithSameTraceID))
+	newCtxWithDifferentTraceID := NewBackgroundMicroCtx(ctx, true)
+	assert.NotEqual(t, traceID, GetTraceIDFromContext(newCtxWithDifferentTraceID))
+	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(ctx, false))
+	assert.NotEqual(t, traceID, NewBackgroundMicroCtx(ctx, true))
+	assert.NotEqual(t, "", NewBackgroundMicroCtx(ctx, false))
 }

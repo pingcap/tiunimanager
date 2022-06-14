@@ -56,7 +56,7 @@ func with2TempFile(content1, content2 string, fn func(string, string)) {
 func (s *topoSuite) TestRelativePath(c *check.C) {
 	// test relative path
 	withTempFile(`
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     deploy_dir: my-deploy
 `, func(file string) {
@@ -64,12 +64,12 @@ tiem_cluster_servers:
 		err := ParseTopologyYaml(file, &topo)
 		c.Assert(err, check.IsNil)
 		ExpandRelativeDir(&topo)
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy")
 	})
 
 	// test data dir & log dir
 	withTempFile(`
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     deploy_dir: my-deploy
     data_dir: my-data
@@ -79,9 +79,9 @@ tiem_cluster_servers:
 		err := ParseTopologyYaml(file, &topo)
 		c.Assert(err, check.IsNil)
 		ExpandRelativeDir(&topo)
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy")
-		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/my-deploy/my-data")
-		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiem/my-deploy/my-log")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/my-deploy/my-data")
+		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiunimanager/my-deploy/my-log")
 	})
 
 	// test global options, case 1
@@ -89,7 +89,7 @@ tiem_cluster_servers:
 global:
   deploy_dir: my-deploy
 
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
 `, func(file string) {
 		topo := Specification{}
@@ -99,8 +99,8 @@ tiem_cluster_servers:
 		c.Assert(topo.GlobalOptions.DeployDir, check.Equals, "my-deploy")
 		c.Assert(topo.GlobalOptions.DataDir, check.Equals, "data")
 
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy/cluster-server-4110")
-		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/my-deploy/cluster-server-4110/data")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-4110")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-4110/data")
 	})
 
 	// test global options, case 2
@@ -108,7 +108,7 @@ tiem_cluster_servers:
 global:
   deploy_dir: my-deploy
 
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 20180
@@ -123,11 +123,11 @@ tiem_cluster_servers:
 		c.Assert(topo.GlobalOptions.DeployDir, check.Equals, "my-deploy")
 		c.Assert(topo.GlobalOptions.DataDir, check.Equals, "data")
 
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20160")
-		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20160/data")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20160")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20160/data")
 
-		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20161")
-		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20161/data")
+		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20161")
+		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20161/data")
 	})
 
 	// test global options, case 3
@@ -135,7 +135,7 @@ tiem_cluster_servers:
 global:
   deploy_dir: my-deploy
 
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 20180
@@ -153,13 +153,13 @@ tiem_cluster_servers:
 		c.Assert(topo.GlobalOptions.DeployDir, check.Equals, "my-deploy")
 		c.Assert(topo.GlobalOptions.DataDir, check.Equals, "data")
 
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20160")
-		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20160/my-data")
-		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20160/my-log")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20160")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20160/my-data")
+		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20160/my-log")
 
-		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20161")
-		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20161/data")
-		//c.Assert(topo.ClusterServers[1].LogDir, check.Equals, "/home/tiem/my-deploy/cluster-server-20161/log")
+		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20161")
+		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20161/data")
+		//c.Assert(topo.ClusterServers[1].LogDir, check.Equals, "/home/tiunimanager/my-deploy/cluster-server-20161/log")
 	})
 
 	// test global options, case 4
@@ -168,7 +168,7 @@ global:
   data_dir: my-global-data
   log_dir: my-global-log
 
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 20180
@@ -186,13 +186,13 @@ tiem_cluster_servers:
 		c.Assert(topo.GlobalOptions.DataDir, check.Equals, "my-global-data")
 		c.Assert(topo.GlobalOptions.LogDir, check.Equals, "my-global-log")
 
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/deploy/cluster-server-20160")
-		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/deploy/cluster-server-20160/my-local-data")
-		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiem/deploy/cluster-server-20160/my-local-log")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/deploy/cluster-server-20160")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/deploy/cluster-server-20160/my-local-data")
+		c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiunimanager/deploy/cluster-server-20160/my-local-log")
 
-		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiem/deploy/cluster-server-20161")
-		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiem/deploy/cluster-server-20161/my-global-data")
-		c.Assert(topo.ClusterServers[1].LogDir, check.Equals, "/home/tiem/deploy/cluster-server-20161/my-global-log")
+		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiunimanager/deploy/cluster-server-20161")
+		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiunimanager/deploy/cluster-server-20161/my-global-data")
+		c.Assert(topo.ClusterServers[1].LogDir, check.Equals, "/home/tiunimanager/deploy/cluster-server-20161/my-global-log")
 	})
 
 	// test global options, case 6
@@ -202,7 +202,7 @@ global:
   data_dir: my-global-data
   log_dir: my-global-log
 
-tiem_cluster_servers:
+tiunimanager_cluster_servers:
   - host: 172.16.5.140
     port: 20160
     metrics_port: 20180
@@ -253,10 +253,10 @@ func merge4test(base, scale string) (*Specification, error) {
 func (s *topoSuite) TestTopologyMerge(c *check.C) {
 	// base test
 	with2TempFile(`
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
 `, `
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.139
 `, func(base, scale string) {
 		topo, err := merge4test(base, scale)
@@ -264,11 +264,11 @@ tiem_metadb_servers:
 		ExpandRelativeDir(topo)
 		ExpandRelativeDir(topo) // should be idempotent
 
-		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/deploy/metadb-server-4100")
-		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/deploy/metadb-server-4100/data")
+		c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/deploy/metadb-server-4100/data")
 
-		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiem/deploy/metadb-server-4100")
-		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiem/deploy/metadb-server-4100/data")
+		c.Assert(topo.ClusterServers[1].DeployDir, check.Equals, "/home/tiunimanager/deploy/metadb-server-4100")
+		c.Assert(topo.ClusterServers[1].DataDir, check.Equals, "/home/tiunimanager/deploy/metadb-server-4100/data")
 	})
 
 	// test global option overwrite
@@ -277,7 +277,7 @@ global:
   user: test
   deploy_dir: /my-global-deploy
 
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.140
     log_dir: my-local-log-tiflash
     data_dir: my-local-data-tiflash
@@ -285,7 +285,7 @@ tiem_metadb_servers:
     deploy_dir: flash-deploy
   - host: 172.16.5.141
 `, `
-tiem_metadb_servers:
+tiunimanager_metadb_servers:
   - host: 172.16.5.139
     deploy_dir: flash-deploy
   - host: 172.16.5.134
@@ -320,8 +320,8 @@ func (s *topoSuite) TestFixRelativePath(c *check.C) {
 			},
 		},
 	}
-	expandRelativePath("tiem", &topo)
-	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy")
+	expandRelativePath("tiunimanager", &topo)
+	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy")
 
 	// test data dir & log dir
 	topo = Specification{
@@ -333,10 +333,10 @@ func (s *topoSuite) TestFixRelativePath(c *check.C) {
 			},
 		},
 	}
-	expandRelativePath("tiem", &topo)
-	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy")
-	c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/my-deploy/my-data")
-	c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiem/my-deploy/my-log")
+	expandRelativePath("tiunimanager", &topo)
+	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiunimanager/my-deploy")
+	c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiunimanager/my-deploy/my-data")
+	c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiunimanager/my-deploy/my-log")
 
 	// test global options
 	topo = Specification{
@@ -349,7 +349,7 @@ func (s *topoSuite) TestFixRelativePath(c *check.C) {
 			{},
 		},
 	}
-	expandRelativePath("tiem", &topo)
+	expandRelativePath("tiunimanager", &topo)
 	c.Assert(topo.GlobalOptions.DeployDir, check.Equals, "my-deploy")
 	c.Assert(topo.GlobalOptions.DataDir, check.Equals, "my-data")
 	c.Assert(topo.GlobalOptions.LogDir, check.Equals, "my-log")

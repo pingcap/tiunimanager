@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap/tiunimanager/tiup/spec"
 
 	"github.com/joomcode/errorx"
-	operator "github.com/pingcap-inc/tiem/tiup/operation"
-	"github.com/pingcap-inc/tiem/tiup/task"
 	perrs "github.com/pingcap/errors"
+	operator "github.com/pingcap/tiunimanager/tiup/operation"
+	"github.com/pingcap/tiunimanager/tiup/task"
 	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/set"
@@ -57,8 +57,8 @@ func (m *Manager) Restore(name string, opt RestoreOptions, gOpt operator.Options
 	uniqueHosts := map[string]set.StringSet{} // host-sshPort -> {target-path}
 	topo.IterInstance(func(inst spec.Instance) {
 		key := fmt.Sprintf("%s-%d", inst.GetHost(), inst.GetSSHPort())
-		if inst.ComponentName() == spec.ComponentTiEMClusterServer {
-			dstPath := inst.DataDir() + "/" + spec.DBName // e.g.: /tiem-data/cluster-server-4101/em.db
+		if inst.ComponentName() == spec.ComponentTiUniManagerClusterServer {
+			dstPath := inst.DataDir() + "/" + spec.DBName // e.g.: /tiunimanager-data/cluster-server-4101/em.db
 			uniqueHosts[key] = set.NewStringSet(dstPath)
 		}
 		if _, found := uniqueHosts[key]; !found {

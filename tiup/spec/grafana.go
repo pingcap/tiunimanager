@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/meta"
 )
@@ -267,7 +267,7 @@ func (i *GrafanaInstance) initDashboards(ctx context.Context, e ctxt.Executor, s
 // component. So if deploying tidb cluster, the dashboards is correct, if deploying dm cluster,
 // we should remove dashboards for tidb and install dashboards for dm.
 func (i *GrafanaInstance) installDashboards(ctx context.Context, e ctxt.Executor, deployDir, clusterName, clusterVersion string) error {
-	if i.topo.Type() != TopoTypeTiEM {
+	if i.topo.Type() != TopoTypeTiUniManager {
 		return nil
 	}
 	/*
@@ -277,7 +277,7 @@ func (i *GrafanaInstance) installDashboards(ctx context.Context, e ctxt.Executor
 			return errors.Annotatef(err, "stderr: %s", string(stderr))
 		}
 
-		srcPath := PackagePath(ComponentTiEMMetaDBServer, clusterVersion, i.OS(), i.Arch())
+		srcPath := PackagePath(ComponentTiUniManagerMetaDBServer, clusterVersion, i.OS(), i.Arch())
 		dstPath := filepath.Join(tmp, filepath.Base(srcPath))
 		err = e.Transfer(ctx, srcPath, dstPath, false, 0)
 		if err != nil {

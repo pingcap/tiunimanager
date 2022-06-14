@@ -20,11 +20,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/embed"
+	"github.com/pingcap/tiunimanager/tiup/embed"
 )
 
-// TiEMFileServerScript represent the data to generate TiEMFileServer config
-type TiEMFileServerScript struct {
+// TiUniManagerFileServerScript represent the data to generate TiUniManagerFileServer config
+type TiUniManagerFileServerScript struct {
 	Host                 string
 	Port                 int
 	ClientPort           int
@@ -39,9 +39,9 @@ type TiEMFileServerScript struct {
 	EnableHttps          string
 }
 
-// NewTiEMFileServerScript returns a TiEMFileServerScript with given arguments
-func NewTiEMFileServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMFileServerScript {
-	return &TiEMFileServerScript{
+// NewTiUniManagerFileServerScript returns a TiUniManagerFileServerScript with given arguments
+func NewTiUniManagerFileServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiUniManagerFileServerScript {
+	return &TiUniManagerFileServerScript{
 		Host:        ip,
 		Port:        4102,
 		MetricsPort: 4105,
@@ -52,44 +52,44 @@ func NewTiEMFileServerScript(ip, deployDir, dataDir, logDir, logLevel string) *T
 	}
 }
 
-// WithPort set Port field of TiEMFileServerScript
-func (c *TiEMFileServerScript) WithPort(port int) *TiEMFileServerScript {
+// WithPort set Port field of TiUniManagerFileServerScript
+func (c *TiUniManagerFileServerScript) WithPort(port int) *TiUniManagerFileServerScript {
 	c.Port = port
 	return c
 }
 
-// WithMetricsPort set PeerPort field of TiEMFileServerScript
-func (c *TiEMFileServerScript) WithMetricsPort(port int) *TiEMFileServerScript {
+// WithMetricsPort set PeerPort field of TiUniManagerFileServerScript
+func (c *TiUniManagerFileServerScript) WithMetricsPort(port int) *TiUniManagerFileServerScript {
 	c.MetricsPort = port
 	return c
 }
 
 // WithRegistry set RegistryEndpoints
-func (c *TiEMFileServerScript) WithRegistry(addr []string) *TiEMFileServerScript {
+func (c *TiUniManagerFileServerScript) WithRegistry(addr []string) *TiUniManagerFileServerScript {
 	c.RegistryEndpoints = strings.Join(addr, ",")
 	return c
 }
 
 // WithTracer set TracerAddress
-func (c *TiEMFileServerScript) WithTracer(addr []string) *TiEMFileServerScript {
+func (c *TiUniManagerFileServerScript) WithTracer(addr []string) *TiUniManagerFileServerScript {
 	c.TracerAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithElasticsearch set ElasticsearchAddress
-func (c *TiEMFileServerScript) WithElasticsearch(addr []string) *TiEMFileServerScript {
+func (c *TiUniManagerFileServerScript) WithElasticsearch(addr []string) *TiUniManagerFileServerScript {
 	c.ElasticsearchAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithEnableHttps set EnableHttps
-func (c *TiEMFileServerScript) WithEnableHttps(enableHttps string) *TiEMFileServerScript {
+func (c *TiUniManagerFileServerScript) WithEnableHttps(enableHttps string) *TiUniManagerFileServerScript {
 	c.EnableHttps = enableHttps
 	return c
 }
 
 // Script generate the config file data.
-func (c *TiEMFileServerScript) Script() ([]byte, error) {
+func (c *TiUniManagerFileServerScript) Script() ([]byte, error) {
 	fp := path.Join("templates", "scripts", "run_em_file.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
@@ -99,7 +99,7 @@ func (c *TiEMFileServerScript) Script() ([]byte, error) {
 }
 
 // ScriptToFile write config content to specific path
-func (c *TiEMFileServerScript) ScriptToFile(file string) error {
+func (c *TiUniManagerFileServerScript) ScriptToFile(file string) error {
 	config, err := c.Script()
 	if err != nil {
 		return err
@@ -107,9 +107,9 @@ func (c *TiEMFileServerScript) ScriptToFile(file string) error {
 	return os.WriteFile(file, config, 0755)
 }
 
-// ScriptWithTemplate generate the TiEMFileServer config content by tpl
-func (c *TiEMFileServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
-	tmpl, err := template.New("TiEMFileServer").Parse(tpl)
+// ScriptWithTemplate generate the TiUniManagerFileServer config content by tpl
+func (c *TiUniManagerFileServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
+	tmpl, err := template.New("TiUniManagerFileServer").Parse(tpl)
 	if err != nil {
 		return nil, err
 	}

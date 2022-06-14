@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
-	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiunimanager/tiup/templates/config"
+	"github.com/pingcap/tiunimanager/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/meta"
 	"github.com/pingcap/tiup/pkg/set"
@@ -263,7 +263,7 @@ func (i *MonitorInstance) InitConfig(
 // cluster, the rules is correct, if deploying dm cluster, we should remove rules for tidb and install
 // rules for dm.
 func (i *MonitorInstance) installRules(ctx context.Context, e ctxt.Executor, deployDir, clusterName, clusterVersion string) error {
-	if i.topo.Type() != TopoTypeTiEM {
+	if i.topo.Type() != TopoTypeTiUniManager {
 		return nil
 	}
 
@@ -273,7 +273,7 @@ func (i *MonitorInstance) installRules(ctx context.Context, e ctxt.Executor, dep
 		if err != nil {
 			return errors.Annotatef(err, "stderr: %s", string(stderr))
 		}
-			srcPath := PackagePath(ComponentTiEMMetaDBServer, clusterVersion, i.OS(), i.Arch())
+			srcPath := PackagePath(ComponentTiUniManagerMetaDBServer, clusterVersion, i.OS(), i.Arch())
 			dstPath := filepath.Join(tmp, filepath.Base(srcPath))
 
 			err = e.Transfer(ctx, srcPath, dstPath, false, 0)

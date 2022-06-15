@@ -28,7 +28,7 @@ After building TiUniManager, it is good idea to test it using:
 make test
 ```
 
-### Preparation
+## Preparation
 
 Before you can actually run the service, you need to prepare TiUP and certs.
 

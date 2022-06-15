@@ -28,11 +28,11 @@ After building TiUniManager, it is good idea to test it using:
 make test
 ```
 
-## Preparation
+### Preparation
 
 Before you can actually run the service, you need to prepare TiUP and certs.
 
-### Prepare TiUP
+#### Prepare TiUP
 
 1. Install TiUP by following instructions in [Deploy TiUP on the control machine](https://docs.pingcap.com/tidb/stable/production-deployment-using-tiup#step-2-deploy-tiup-on-the-control-machine).
 
@@ -43,7 +43,7 @@ Before you can actually run the service, you need to prepare TiUP and certs.
    $ TIUP_HOME=/home/tidb/.tiup tiup mirror set https://tiup-mirrors.pingcap.com
    ```
 
-### Prepare certs
+#### Prepare certs
 
 You need to prepare the following certs in the directory `./bin/cert`, where `aes.key` contains a 32 character string.
 

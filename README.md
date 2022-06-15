@@ -28,12 +28,41 @@ After building TiUniManager, it is good idea to test it using:
 make test
 ```
 
+### Preparation
+
+Before you can actually run the service, you need to prepare TiUP and certs.
+
+### Prepare TiUP
+
+1. Install TiUP by following instructions in [Deploy TiUP on the control machine](https://docs.pingcap.com/tidb/stable/production-deployment-using-tiup#step-2-deploy-tiup-on-the-control-machine).
+
+2. Prepare `TIUP_HOME` which will be used by TiUniManger.
+
+   ```shell
+   $ mkdir -p /home/tidb/.tiup/bin
+   $ TIUP_HOME=/home/tidb/.tiup tiup mirror set https://tiup-mirrors.pingcap.com
+   ```
+
+### Prepare certs
+
+You need to prepare the following certs in the directory `./bin/cert`, where `aes.key` contains a 32 character string.
+
+- aes.key
+- etcd-ca.pem
+- etcd-server-key.pem
+- etcd-server.pem
+- server.crt
+- server.csr
+- server.key
+
+You can follow [GENERATE CERTS](./build_helper/GENERATE_CERTS.md) to generate these certs.
+
 ### Run Service
 If you want to run the service locally, try the following commands, enjoy it!
 
 start cluster-server
 ```shell
-$ ./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108
+$ ./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108 --skip-host-init=true --em-version=InTesting --deploy-user=tidb --deploy-group=tidb
 ```
 
 start openapi-server

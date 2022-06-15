@@ -1,4 +1,13 @@
+<p align="center">
+  <br>
+  <img src="./docs/img/tiunimanager.svg" alt="logo" height="80px">
+  <br>
+  <br>
+</p>
+
 # TiUniManager
+
+[![License](https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square)](./LICENSE)
 
 ## Contents
 
@@ -110,3 +119,15 @@ func (d *Db) CheckUser(ctx context.Context, req *dbPb.CheckUserRequest, rsp *dbP
 ```
 
 Use something like `logger.NewContext(ctx, logger.Fields{"micro-service": "CheckUser"})` to create a new ctx from the old ctx with new customized log fields added.
+
+## Interested in contributing?
+
+Read through our [contributing guidelines](./CONTRIBUTING.md) to learn about our submission process and more.
+
+If you want to contribute through code, read the [development guide](./doc/development.md) to learn about our development process, and how to build your changes to TiUniManager UI.
+
+## License
+
+Copyright 2022 PingCAP. All rights reserved.
+
+Licensed under the [Apache 2.0 License](./LICENSE).

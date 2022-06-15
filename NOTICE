@@ -1,0 +1,92 @@
+// ------------------------------------------------------------------
+ // NOTICE file corresponding to the section 4d of The Apache License,
+ // Version 2.0, in this case for
+ // ------------------------------------------------------------------
+
+AlertManager
+version: 0.23.0
+https://github.com/prometheus/alertmanager/blob/main/LICENSE
+
+Elastic Search OSS
+version: 7.10.2
+https://github.com/elastic/elasticsearch/blob/v7.10.2/LICENSE.txt
+Copyright 2022 PingCAP
+Fix log4j bug by upgrading version to 2.17.2.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Filebeat OSS
+version: 7.10.2
+https://github.com/elastic/beats/blob/v7.10.2/LICENSE.txt
+Copyright 2022 PingCAP
+Add TiDB parse module.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Kibana OSS
+version: 7.10.2
+https://github.com/elastic/kibana/blob/v7.10.2/LICENSE.txt
+Copyright 2022 PingCAP
+Add default index pattern.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Grafana OSS
+version: 7.5.15
+https://github.com/grafana/grafana/blob/7316bdc99f24fb37363e3945fa01a74c9baad862/LICENSE
+Copyright 2022 PingCAP
+Add default dashboards, configurations and alert rules.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Jaeger
+version: 1.26.0
+https://github.com/jaegertracing/jaeger/blob/v1.26.0/LICENSE
+
+Nginx
+version: 1.20.1
+http://nginx.org/LICENSE
+
+Node Exporter
+version: 1.2.2
+https://github.com/prometheus/node_exporter/blob/v1.2.2/LICENSE
+
+Prometheus
+version: 2.29.2
+https://github.com/prometheus/prometheus/blob/v2.29.2/LICENSE
+
+etcd
+version: 3.0.0
+https://github.com/etcd-io/etcd/blob/v3.0.0/LICENSE
+
+sqlite
+version: 3.7.17
+https://www.sqlite.org/copyright.html

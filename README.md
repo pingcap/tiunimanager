@@ -124,8 +124,6 @@ Use something like `logger.NewContext(ctx, logger.Fields{"micro-service": "Check
 
 Read through our [contributing guidelines](./CONTRIBUTING.md) to learn about our submission process and more.
 
-If you want to contribute through code, read the [development guide](./doc/development.md) to learn about our development process, and how to build your changes to TiUniManager UI.
-
 ## License
 
 Copyright 2022 PingCAP. All rights reserved.

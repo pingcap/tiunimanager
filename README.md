@@ -36,7 +36,7 @@ Before you can actually run the service, you need to prepare TiUP and certs.
 
 1. Install TiUP by following instructions in [Deploy TiUP on the control machine](https://docs.pingcap.com/tidb/stable/production-deployment-using-tiup#step-2-deploy-tiup-on-the-control-machine).
 
-2. Prepare TIUP_HOME which will be used by TiUniManger by executing following command.
+2. Prepare `TIUP_HOME` which will be used by TiUniManger.
 
    ```shell
    $ mkdir -p /home/tidb/.tiup/bin

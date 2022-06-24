@@ -11,7 +11,7 @@
 
 TiUniManager is a database management platform built for operating and managing TiDB, a distributed database.
 
-It allows users to manage TiDB clusters through OpenAPI or [TiUniManager UI](https://github.com/pingcap/tiunimanager), the web-based UI.
+It allows users to manage TiDB clusters through OpenAPI or [TiUniManager UI](https://github.com/pingcap/tiunimanager-ui), the web-based UI.
 
 ## Contents
 

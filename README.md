@@ -67,14 +67,14 @@ You can follow [GENERATE CERTS](./build_helper/GENERATE_CERTS.md) to generate th
 
 2. start cluster-server
 
+	```shell
+	./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108 --skip-host-init=true --em-version=InTesting --deploy-user=tidb --deploy-group=tidb
+	```
+
 	> **NOTICE：**
 	> 
 	> - `--skip-host-init=true` is necessary as deploying `TiUniManager` using built binary will not help configure SSH login without password, and you need to refer step `Configure SSH login without password` in [DEPLOY TiDB](./build_helper/DEPLOY_TIDB.md) to do so.
 	> - `--skip-host-init` is set false while deploying `TiUniManager` using `TiUP`, please refer [TiUniManager install and maintain](https://docs.pingcap.com/zh/tidb/dev/tiunimanager-install-and-maintain)
-
-	```shell
-	./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108 --skip-host-init=true --em-version=InTesting --deploy-user=tidb --deploy-group=tidb
-	```
 
 3. open a new terminal, then start openapi-server
 

@@ -9,6 +9,10 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square)](./LICENSE)
 
+`TiUniManager` is a database management platform built for operating and managing TiDB, a distributed database.
+
+It allows users to manage TiDB clusters through OpenAPI or [TiUniManager UI](https://github.com/pingcap/tiunimanager-ui), the web-based UI.
+
 ## Contents
 
 - library - Common components and resources.
@@ -16,11 +20,11 @@
 - micro-cluster - Core service.
 - docs - Documentation.
 
-## Get Started
+## Deploy TiUniManager
 
 ### Prerequisites
 
-The followings are required for developing TiUniManager UI:
+The followings are required for developing `TiUniManager`:
 
 - [Git](https://git-scm.com/downloads)
 - [Go 1.17+](https://go.dev/doc/install)
@@ -33,7 +37,7 @@ Before you can actually run the service, you need to prepare TiUP and certs.
 
 1. Install TiUP by following instructions in [Deploy TiUP on the control machine](https://docs.pingcap.com/tidb/stable/production-deployment-using-tiup#step-2-deploy-tiup-on-the-control-machine).
 
-2. Prepare `TIUP_HOME` which will be used by TiUniManger.
+2. Prepare `TIUP_HOME` which will be used by `TiUniManger`.
 
    ```shell
    $ mkdir -p /home/tidb/.tiup/bin
@@ -56,23 +60,31 @@ You can follow [GENERATE CERTS](./build_helper/GENERATE_CERTS.md) to generate th
 
 ### Build and Run TiUniManager
 
-TiUniManager can be compiled and used on Linux, OSX, CentOS, It is as simple as:
-```
-make
-```
+1. `TiUniManager` can be compiled and used on Linux, OSX, CentOS, It is as simple as:
+	```
+	make
+	```
 
-start cluster-server
-```shell
-./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108 --skip-host-init=true --em-version=InTesting --deploy-user=tidb --deploy-group=tidb
-```
+2. start cluster-server
 
-start openapi-server
-```shell
-./bin/openapi-server --host=127.0.0.1 --port=4100 --metrics-port=4103 --registry-address=127.0.0.1:4106
-```
+	```shell
+	./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108 --skip-host-init=true --em-version=InTesting --deploy-user=tidb --deploy-group=tidb
+	```
+
+	> **NOTICE：**
+	> 
+	> - `--skip-host-init=true` is necessary as deploying `TiUniManager` using built binary will not help configure SSH login without password, and you need to refer step `Configure SSH login without password` in [DEPLOY TiDB](./build_helper/DEPLOY_TIDB.md) to do so.
+	> - `--skip-host-init` is set false while deploying `TiUniManager` using `TiUP`, please refer [TiUniManager install and maintain](https://docs.pingcap.com/zh/tidb/dev/tiunimanager-install-and-maintain)
+
+3. open a new terminal, then start openapi-server
+
+	```shell
+	./bin/openapi-server --host=127.0.0.1 --port=4100 --metrics-port=4103 --registry-address=127.0.0.1:4106
+	```
 
 ### Try it out
-via swagger : http://localhost:4100/swagger/index.html
+
+Now you can check API using Swagger: http://127.0.0.1:4100/swagger/index.html, and you can use `TiUniManager` to [DEPLOY TiDB](./build_helper/DEPLOY_TIDB.md).
 
 ## Interested in contributing?
 

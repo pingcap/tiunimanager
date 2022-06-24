@@ -9,6 +9,10 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square)](./LICENSE)
 
+TiUniManager is a database management platform built for operating and managing TiDB, a distributed database.
+
+It allows users to manage TiDB clusters through OpenAPI or [TiUniManager UI](https://github.com/pingcap/tiunimanager), the web-based UI.
+
 ## Contents
 
 - library - Common components and resources.
@@ -16,7 +20,7 @@
 - micro-cluster - Core service.
 - docs - Documentation.
 
-## Get Started
+## Deploy TiUniManager
 
 ### Prerequisites
 
@@ -72,7 +76,8 @@ start openapi-server
 ```
 
 ### Try it out
-via swagger : http://localhost:4100/swagger/index.html
+
+Now you can check API using Swagger: http://127.0.0.1:4100/swagger/index.html, and you can [use TiUniManager to deploy TiDB clusters](./build_helper/DEPLOY_TIDB.md).
 
 ## Interested in contributing?
 

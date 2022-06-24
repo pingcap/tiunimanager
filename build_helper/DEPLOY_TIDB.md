@@ -1,6 +1,6 @@
 # Preface
 
-This doc will introduce the procedure to deploy a TiDB cluster using TiUniManager by calling OpenAPI. You can also do most of the following steps through [TiUniManager UI](https://github.com/pingcap/tiunimanager) except for [configuring SSH login without password](#configure-ssh-login-without-password).
+This doc will introduce the procedure to deploy a TiDB cluster using TiUniManager by calling OpenAPI. You can also do most of the following steps through [TiUniManager UI](https://github.com/pingcap/tiunimanager-ui) except for [configuring SSH login without password](#configure-ssh-login-without-password).
 
 ## Change `admin`'s Password
 

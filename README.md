@@ -70,7 +70,7 @@ start cluster-server
 ./bin/cluster-server --host=127.0.0.1 --port=4101 --metrics-port=4104 --registry-address=127.0.0.1:4106 --elasticsearch-address=127.0.0.1:4108 --skip-host-init=true --em-version=InTesting --deploy-user=tidb --deploy-group=tidb
 ```
 
-start openapi-server
+open a new terminal, then start openapi-server
 ```shell
 ./bin/openapi-server --host=127.0.0.1 --port=4100 --metrics-port=4103 --registry-address=127.0.0.1:4106
 ```

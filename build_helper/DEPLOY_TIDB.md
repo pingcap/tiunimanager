@@ -6,9 +6,7 @@ This doc will introduce the procedure to deploy a TiDB cluster using TiUniManage
 
 For security issue, the admin's default password is expired, which means you need to change it before calling other APIs.
 
-1. Log in using default password to get the token
-
-    {{< copyable "shell-regular" >}}
+1. Login using default password to get the token
 
     ```shell
     curl -X 'POST' \
@@ -27,23 +25,17 @@ For security issue, the admin's default password is expired, which means you nee
 
     1. Connect to meta DB of TiUniManager
 
-        {{< copyable "shell-regular" >}}
-
         ```shell
         sqlite3 em.db
         ```
 
     2. Get the ID
 
-        {{< copyable "shell-regular" >}}
-
         ```sqlite
         sqlite> select ID from users where name='admin';
         ```
 
 3. Update password
-
-    {{< copyable "shell-regular" >}}
 
     ```shell
     curl -X 'POST' \
@@ -56,11 +48,9 @@ For security issue, the admin's default password is expired, which means you nee
     }'
     ```
 
-3. Log in using new password to get the token
+4. Login using new password to get the token
 
     Now you may need to use this token to call the APIs for the following steps.
-
-    {{< copyable "shell-regular" >}}
 
     ```shell
     curl -X 'POST' \
@@ -86,8 +76,6 @@ For security issue, the admin's default password is expired, which means you nee
 
     Add user `tidb` and set password
 
-    {{< copyable "shell-regular" >}}
-
     ```shell
     useradd tidb
     passwd tidb
@@ -97,23 +85,17 @@ For security issue, the admin's default password is expired, which means you nee
 
     1. Generate key pair
 
-        {{< copyable "shell-regular" >}}
-
         ```shell
         ssh-keygen -t rsa
         ```
 
     2. Copy the public key to all resouce hosts
 
-        {{< copyable "shell-regular" >}}
-
         ```shell
         ssh-copy-id -i ~/.ssh/id_rsa.pub tidb@<RESOURCE IP>
         ```
 
     3. Store identity file
-
-        {{< copyable "shell-regular" >}}
 
         ```shell
         mkdir -p /home/tidb/.ssh
@@ -122,8 +104,6 @@ For security issue, the admin's default password is expired, which means you nee
 
     4. Verify login without password
 
-        {{< copyable "shell-regular" >}}
-
         ```shell
         ssh tidb@<RESOURCE IP> -i /home/tidb/.ssh/tiup_rsa
         ```       
@@ -131,8 +111,6 @@ For security issue, the admin's default password is expired, which means you nee
 ## Import hosts
 
 Before calling the OpenAPI, please generate the host file. You can find the template file in `<project's root path>/resource/hostInfo_template.xlsx`.
-
-{{< copyable "shell-regular" >}}
 
 ```shell
 curl -X 'POST' \
@@ -146,15 +124,11 @@ curl -X 'POST' \
 
 Since it is an async task, you may need to check the status before continuing.
 
-{{< copyable "shell-regular" >}}
-
 ```shell
 curl -X GET "http://127.0.0.1:4100/api/v1/workflow/<WORKFLOW ID>" -H "Authorization: Bearer <TOKEN>"
 ```
 
 ## Create TiDB Cluster
-
-{{< copyable "shell-regular" >}}
 
 ```shell
 curl -X 'POST' \
@@ -217,8 +191,6 @@ curl -X 'POST' \
 ```
 
 Since it is an async task, you may need to check the status before continuing.
-
-{{< copyable "shell-regular" >}}
 
 ```shell
 curl -X GET "http://127.0.0.1:4100/api/v1/workflow/<WORKFLOW ID>" -H "Authorization: Bearer <TOKEN>"

@@ -244,14 +244,13 @@ func fullDataBeforeVersions() error {
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDumplingThreadNum, ConfigValue: constants.DefaultDumplingThreadNum})
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRetainedPortRange, ConfigValue: constants.DefaultRetainedPortRange})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultTiUPHome, ConfigValue: constants.DefaultTiUPHome})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultEMHome, ConfigValue: constants.DefaultEMHome})
 		return nil
 	}).BreakIf(func() error {
 		framework.LogForkFile(constants.LogFileSystem).Info("init default parameters")
 		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
 		return initBySql(nil, parameterSqlFile, "parameters")
-	}).BreakIf(func() error {
-		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-		return initBySql(nil, tiUPSqlFile, "tiup config")
 	}).If(func(err error) {
 		framework.LogForkFile(constants.LogFileSystem).Errorf("init data failed, err = %s", err.Error())
 	}).Else(func() {

@@ -46,6 +46,9 @@ const (
 
 	ConfigKeyDefaultSSHPort  string = "config_default_ssh_port"
 	ConfigKeyExtraVMFacturer string = "config_extra_vm_facturer"
+
+	ConfigKeyDefaultTiUPHome string = "default_tiup_home"
+	ConfigKeyDefaultEMHome   string = "em_tiup_home"
 )
 
 type SystemState string

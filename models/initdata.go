@@ -178,22 +178,11 @@ var allVersionInitializers = []system.VersionInitializer{
 		})
 	}},
 	{inTestingVersion, func() error {
-		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
-			return errors.OfNullable(nil).BreakIf(func() error {
-				return tx.Create(&system.VersionInfo{
-					ID:          "InTesting",
-					Desc:        "test version",
-					ReleaseNote: "test",
-				}).Error
-			}).ContinueIf(func() error {
-				framework.LogForkFile(constants.LogFileSystem).Info("init default system config")
-				defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultTiUPHome, ConfigValue: constants.DefaultTiUPHome})
-				defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultEMHome, ConfigValue: constants.DefaultEMHome})
-				return nil
-			}).If(func(err error) {
-				framework.LogForkFile(constants.LogFileSystem).Errorf("init intesting data failed, err = %s", err.Error())
-			}).Present()
-		})
+		return defaultDb.base.Create(&system.VersionInfo{
+			ID:          "InTesting",
+			Desc:        "test version",
+			ReleaseNote: "test",
+		}).Error
 	}},
 }
 
@@ -255,14 +244,13 @@ func fullDataBeforeVersions() error {
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDumplingThreadNum, ConfigValue: constants.DefaultDumplingThreadNum})
 		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyRetainedPortRange, ConfigValue: constants.DefaultRetainedPortRange})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultTiUPHome, ConfigValue: constants.DefaultTiUPHome})
+		defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultEMHome, ConfigValue: constants.DefaultEMHome})
 		return nil
 	}).BreakIf(func() error {
 		framework.LogForkFile(constants.LogFileSystem).Info("init default parameters")
 		parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters.sql"
 		return initBySql(nil, parameterSqlFile, "parameters")
-	}).BreakIf(func() error {
-		tiUPSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/tiup_configs.sql"
-		return initBySql(nil, tiUPSqlFile, "tiup config")
 	}).If(func(err error) {
 		framework.LogForkFile(constants.LogFileSystem).Errorf("init data failed, err = %s", err.Error())
 	}).Else(func() {

@@ -23,9 +23,14 @@
 
 package constants
 
-const TiUPBinPath = "tiup"
-const TiUPTopologyTmpFilePrefix = "em-topology"
-const TiUPCollectorTmpFilePrefix = "em-collector"
+const (
+	TiUPBinPath                = "tiup"
+	TiUPTopologyTmpFilePrefix  = "em-topology"
+	TiUPCollectorTmpFilePrefix = "em-collector"
+
+	DefaultTiUPHome string = "/home/tidb/.tiup"
+	DefaultEMHome   string = "/home/tidb/.em"
+)
 
 type EMInstanceStatus string
 

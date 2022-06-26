@@ -178,11 +178,22 @@ var allVersionInitializers = []system.VersionInitializer{
 		})
 	}},
 	{inTestingVersion, func() error {
-		return defaultDb.base.Create(&system.VersionInfo{
-			ID:          "InTesting",
-			Desc:        "test version",
-			ReleaseNote: "test",
-		}).Error
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&system.VersionInfo{
+					ID:          "InTesting",
+					Desc:        "test version",
+					ReleaseNote: "test",
+				}).Error
+			}).ContinueIf(func() error {
+				framework.LogForkFile(constants.LogFileSystem).Info("init default system config")
+				defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultTiUPHome, ConfigValue: constants.DefaultTiUPHome})
+				defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyDefaultEMHome, ConfigValue: constants.DefaultEMHome})
+				return nil
+			}).If(func(err error) {
+				framework.LogForkFile(constants.LogFileSystem).Errorf("init intesting data failed, err = %s", err.Error())
+			}).Present()
+		})
 	}},
 }
 

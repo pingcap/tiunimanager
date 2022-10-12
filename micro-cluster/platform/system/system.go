@@ -131,6 +131,8 @@ var SupportedProducts = []structs.ProductWithVersions{
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v5.4.0"},
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.0.0"},
 			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.1.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.2.0"},
+			{ProductID: string(constants.EMProductIDTiDB), Arch: string(constants.ArchX8664), Version: "v6.3.0"},
 		},
 	},
 }

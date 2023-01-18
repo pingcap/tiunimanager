@@ -138,6 +138,17 @@ service ClusterService {
     rpc QueryCheckReports(RpcRequest) returns(RpcResponse);
     rpc GetCheckReport(RpcRequest) returns(RpcResponse);
     rpc QueryPlatformLog(RpcRequest) returns(RpcResponse);
+
+    // sqleditor
+    rpc CreateSQLFile(RpcRequest) returns(RpcResponse);
+    rpc UpdateSQLFile(RpcRequest) returns(RpcResponse);
+    rpc DeleteSQLFile(RpcRequest) returns(RpcResponse);
+    rpc ShowSQLFile(RpcRequest) returns(RpcResponse);
+    rpc ListSQLFile(RpcRequest) returns(RpcResponse);
+    rpc ShowTableMeta(RpcRequest) returns(RpcResponse);
+    rpc ShowClusterMeta(RpcRequest) returns(RpcResponse);
+    rpc CreateSession(RpcRequest) returns(RpcResponse);
+    rpc CloseSession(RpcRequest) returns(RpcResponse);
 }
 
 message RpcRequest {
@@ -156,5 +167,3 @@ message RpcPage {
     int32 pageSize = 2;
     int32 total = 3;
 }
-
-

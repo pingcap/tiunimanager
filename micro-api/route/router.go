@@ -300,18 +300,18 @@ func Route(g *gin.Engine) {
 		{
 			sqleditor := dataApps.Group("/sqleditor")
 			{
-				sqleditor.POST("clusters/:clusterId/session", metrics.HandleMetrics(constants.MetricsCreateSession), sqleditApi.CreateSession)
-				sqleditor.DELETE("clusters/:clusterId/session/:sessionId", metrics.HandleMetrics(constants.MetricsCloseSession), sqleditApi.CloseSession)
-
-				sqleditor.GET("clusters/:clusterId/meta", metrics.HandleMetrics(constants.MetricsShowClusterMeta), sqleditApi.ShowClusterMeta)
-				sqleditor.GET("clusters/:clusterId/dbs/:dbName/:tableName/meta", metrics.HandleMetrics(constants.MetricsShowTableMeta), sqleditApi.ShowTableMeta)
-				sqleditor.POST("clusters/:clusterId/sqlfiles", metrics.HandleMetrics(constants.MetricsCreateSQLFile), sqleditApi.CreateSQLFile)
-				sqleditor.PUT("clusters/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsUpdateSQLFile), sqleditApi.UpdateSQLFile)
-				sqleditor.DELETE("clusters/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsDeleteSQLFile), sqleditApi.DeleteSQLFile)
-				sqleditor.GET("clusters/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsShowSQLFile), sqleditApi.ShowSQLFile)
-				sqleditor.GET("clusters/:clusterId/sqlfiles", metrics.HandleMetrics(constants.MetricsListSQLFile), sqleditApi.ListSQLFile)
-
-				sqleditor.POST("clusters/:clusterId/statements", metrics.HandleMetrics(constants.MetricsStatements), sqleditApi.Statements)
+				sqleditor.Use(interceptor.VerifyIdentity)
+				sqleditor.Use(interceptor.AuditLog)
+				sqleditor.POST("/:clusterId/session", metrics.HandleMetrics(constants.MetricsCreateSession), sqleditApi.CreateSession)
+				sqleditor.DELETE("/:clusterId/session/:sessionId", metrics.HandleMetrics(constants.MetricsCloseSession), sqleditApi.CloseSession)
+				sqleditor.GET("/:clusterId/meta", metrics.HandleMetrics(constants.MetricsShowClusterMeta), sqleditApi.ShowClusterMeta)
+				sqleditor.GET("/:clusterId/dbs/:dbName/:tableName/meta", metrics.HandleMetrics(constants.MetricsShowTableMeta), sqleditApi.ShowTableMeta)
+				sqleditor.POST("/:clusterId/sqlfiles", metrics.HandleMetrics(constants.MetricsCreateSQLFile), sqleditApi.CreateSQLFile)
+				sqleditor.PUT("/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsUpdateSQLFile), sqleditApi.UpdateSQLFile)
+				sqleditor.DELETE("/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsDeleteSQLFile), sqleditApi.DeleteSQLFile)
+				sqleditor.GET("/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsShowSQLFile), sqleditApi.ShowSQLFile)
+				sqleditor.GET("/:clusterId/sqlfiles", metrics.HandleMetrics(constants.MetricsListSQLFile), sqleditApi.ListSQLFile)
+				sqleditor.POST("/:clusterId/statements", metrics.HandleMetrics(constants.MetricsStatements), sqleditApi.Statements)
 			}
 		}
 	}

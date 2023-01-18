@@ -17,6 +17,9 @@ package sqleditor
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap/tiunimanager/common/client"
+	"github.com/pingcap/tiunimanager/message/dataapps/sqleditor"
+	"github.com/pingcap/tiunimanager/micro-api/controller"
 )
 
 // CreateSession
@@ -25,13 +28,20 @@ import (
 // @Description create session result
 // @Tags sqleditor
 // @Param cluster_id path string true "cluster ID"
-// @Param request_body body sqleditor.SessionParam true "request_body"
+// @Param request_body body sqleditor.CreateSessionReq true "request_body"
 // @Accept json
 // @Produce json
-// @Success 200 {object} sqleditor.SessionRes
+// @Success 200 {object} sqleditor.CreateSessionRes
 // @Router /clusters/{cluster_id}/session [post]
 func CreateSession(c *gin.Context) {
-
+	req := sqleditor.CreateSessionReq{
+		ClusterID: c.Param("clusterId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSession, &sqleditor.CreateSessionRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // Close Session godoc
@@ -46,6 +56,15 @@ func CreateSession(c *gin.Context) {
 // @Success 200
 // @Router /clusters/{cluster_id}/session/{session_id} [delete]
 func CloseSession(c *gin.Context) {
+	req := sqleditor.CloseSessionReq{
+		ClusterID: c.Param("clusterId"),
+		SessionID: c.Param("sessionId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CloseSession, &sqleditor.CloseSessionRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 
 }
 
@@ -71,12 +90,20 @@ func Statements(c *gin.Context) {
 // @Tags sqleditor
 // @Param cluster_id path string true "cluster ID"
 // @Param isbrief query string true "value: true or false"
+// @Param showSystemDB query string true "value: true or false"
 // @Accept json
 // @Produce json
-// @Success 200 {object} sqleditor.ClusterMetaRes
+// @Success 200 {object} []sqleditor.DBMeta
 // @Router /clusters/{cluster_id}/meta [get]
 func ShowClusterMeta(c *gin.Context) {
-
+	req := sqleditor.ShowClusterMetaReq{
+		ClusterID: c.Param("clusterId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ShowClusterMeta, &[]sqleditor.DBMeta{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // Show Table Meta godoc
@@ -88,9 +115,19 @@ func ShowClusterMeta(c *gin.Context) {
 // @Param table_name path string true "table_name"
 // @Accept json
 // @Produce json
-// @Success 200 {object} sqleditor.ShowTableMetaRes
+// @Success 200 {object} sqleditor.MetaRes
 // @Router /clusters/{cluster_id}/dbs/{db_name}/{table_name}/meta [get]
 func ShowTableMeta(c *gin.Context) {
+	req := sqleditor.ShowTableMetaReq{
+		ClusterID: c.Param("clusterId"),
+		DbName:    c.Param("dbName"),
+		TableName: c.Param("tableName"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ShowTableMeta, &sqleditor.MetaRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 
 }
 
@@ -99,12 +136,86 @@ func ShowTableMeta(c *gin.Context) {
 // @Description create sql file
 // @Tags sqleditor
 // @Param cluster_id path string true "cluster ID"
-// @Param request_body body sqleditor.SqlEditorFile true "request_body"
+// @Param request_body body sqleditor.SQLFileReq true "request_body"
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.CreateSQLFileRes
-// @Router /clusters/{cluster_id}/sqlfiles [post]
+// @Router /{cluster_id}/sqlfiles [post]
 func CreateSQLFile(c *gin.Context) {
+	req := sqleditor.SQLFileReq{
+		ClusterID: c.Param("clusterId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateSQLFile, &sqleditor.CreateSQLFileRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// Update SQL File godoc
+// @Summary update sql file
+// @Description update sql file
+// @Tags sqleditor
+// @Param cluster_id path string true "cluster ID"
+// @Param sql_file_id path string true "sql file ID"
+// @Param request_body body sqleditor.SQLFileUpdateReq true "request_body"
+// @Accept json
+// @Produce json
+// @Success 200 {object} sqleditor.UpdateSQLFileRes
+// @Router /{cluster_id}/sqlfiles/{sql_file_id} [put]
+func UpdateSQLFile(c *gin.Context) {
+	req := sqleditor.SQLFileUpdateReq{
+		ClusterID:       c.Param("clusterId"),
+		SqlEditorFileID: c.Param("sqlFileId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateSQLFile, &sqleditor.UpdateSQLFileRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// Delete SQL File godoc
+// @Summary delete sql file
+// @Description delete sql file
+// @Tags sqleditor
+// @Param cluster_id path string true "cluster ID"
+// @Param sql_file_id path string true "sql file ID"
+// @Accept json
+// @Produce json
+// @Success 200 {object} sqleditor.DeleteSQLFileRes
+// @Router /{cluster_id}/sqlfiles/{sql_file_id} [delete]
+func DeleteSQLFile(c *gin.Context) {
+	req := sqleditor.SQLFileDeleteReq{
+		ClusterID:       c.Param("clusterId"),
+		SqlEditorFileID: c.Param("sqlFileId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteSQLFile, &sqleditor.DeleteSQLFileRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// List SQL File godoc
+// @Summary list sql file
+// @Description list sql file
+// @Tags sqleditor
+// @Param cluster_id path string true "cluster ID"
+// @Param queryReq query sqleditor.ListSQLFileReq false "query request"
+// @Accept json
+// @Produce json
+// @Success 200 {object} sqleditor.ListSQLFileRes
+// @Router /{cluster_id}/sqlfiles [get]
+func ListSQLFile(c *gin.Context) {
+	req := sqleditor.ListSQLFileReq{
+		ClusterID: c.Param("clusterId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestFromQuery(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ListSQLFile, &sqleditor.ListSQLFileRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 
 }
 
@@ -117,49 +228,15 @@ func CreateSQLFile(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.ShowSQLFileRes
-// @Router /clusters/{cluster_id}/sqlfiles/{sql_file_id} [get]
+// @Router /{cluster_id}/sqlfiles/{sql_file_id} [get]
 func ShowSQLFile(c *gin.Context) {
-
-}
-
-// Update SQL File godoc
-// @Summary update sql file
-// @Description update sql file
-// @Tags sqleditor
-// @Param cluster_id path string true "cluster ID"
-// @Param sql_file_id path string true "sql file ID"
-// @Param request_body body sqleditor.SqlEditorFile true "request_body"
-// @Accept json
-// @Produce json
-// @Success 200 {object} sqleditor.UpdateSQLFileRes
-// @Router /clusters/{cluster_id}/sqlfiles/{sql_file_id} [put]
-func UpdateSQLFile(c *gin.Context) {
-
-}
-
-// Delete SQL File godoc
-// @Summary delete sql file
-// @Description delete sql file
-// @Tags sqleditor
-// @Param cluster_id path string true "cluster ID"
-// @Param sql_file_id path string true "sql file ID"
-// @Accept json
-// @Produce json
-// @Success 200 {object} sqleditor.DeleteSQLFileRes
-// @Router /clusters/{cluster_id}/sqlfiles/{sql_file_id} [delete]
-func DeleteSQLFile(c *gin.Context) {
-
-}
-
-// List SQL File godoc
-// @Summary list sql file
-// @Description list sql file
-// @Tags sqleditor
-// @Param cluster_id path string true "cluster ID"
-// @Accept json
-// @Produce json
-// @Success 200 {object} sqleditor.ListSQLFileRes
-// @Router /clusters/{cluster_id}/sqlfiles [get]
-func ListSQLFile(c *gin.Context) {
-
+	req := sqleditor.ShowSQLFileReq{
+		ClusterID:       c.Param("clusterId"),
+		SqlEditorFileID: c.Param("sqlFileId"),
+	}
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ShowSQLFile, &sqleditor.ShowSQLFileRes{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }

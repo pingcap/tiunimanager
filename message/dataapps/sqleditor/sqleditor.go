@@ -15,7 +15,15 @@
 
 package sqleditor
 
-import "time"
+import (
+	"time"
+
+	"github.com/pingcap/tiunimanager/common/structs"
+)
+
+const (
+	DEFAULTPAGESIZE = 10
+)
 
 type BasicRes struct {
 	Code    int    `json:"code"`
@@ -23,26 +31,22 @@ type BasicRes struct {
 }
 
 type CreateSQLFileRes struct {
-	BasicRes
-	Data *uint64 `json:"data"`
+	ID string `json:"id"`
 }
 
 type UpdateSQLFileRes struct {
-	BasicRes
-	Data string `json:"data"`
 }
 
 type ShowSQLFileRes struct {
-	BasicRes
-	Data SqlEditorFile `json:"data"`
+	SqlEditorFile
 }
 type DeleteSQLFileRes struct {
-	BasicRes
-	Data string `json:"data"`
 }
 type ListSQLFileRes struct {
-	BasicRes
-	Data []SqlEditorFile `json:"data"`
+	Total    int64           `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"pageSize"`
+	List     []SqlEditorFile `json:"list"`
 }
 
 type StatementParam struct {
@@ -50,12 +54,26 @@ type StatementParam struct {
 	Sql       string `json:"sql"`
 }
 
-type ShowClusterMetaParam struct {
-	IsBrief int `json:"isbrief"`
+type ShowClusterMetaReq struct {
+	IsBrief      bool   `json:"isbrief" form:"isBrief"`
+	ClusterID    string `json:"clusterID"`
+	ShowSystemDB bool   `json:"showSystemDB" form:"showSystemDB"`
 }
 
-type SessionParam struct {
-	Database string `json:"database"`
+type ShowTableMetaReq struct {
+	ClusterID string `json:"clusterID"`
+	DbName    string `json:"dbName"`
+	TableName string `json:"tableName"`
+}
+
+type CreateSessionReq struct {
+	ClusterID string `json:"clusterID"`
+	Database  string `json:"database"`
+}
+
+type CloseSessionReq struct {
+	ClusterID string `json:"clusterID"`
+	SessionID string `json:"sessionID"`
 }
 
 type DataRes struct {
@@ -96,15 +114,15 @@ type SqlEditorMessage struct {
 }
 
 type MetaRes struct {
-	ClusterId uint64     `json:"clusterid"`
+	ClusterId string     `json:"clusterid"`
 	Database  string     `json:"database"`
 	Table     string     `json:"table"`
 	Columns   []*Columns `json:"columns"`
 }
 
 type SqlEditorFile struct {
-	ID        uint64    `json:"id"`
-	ClusterId uint64    `json:"cluster_id"`
+	ID        string    `json:"id"`
+	ClusterID string    `json:"cluster_id"`
 	Database  string    `json:"database"`
 	Name      string    `json:"name"`
 	Content   string    `json:"content"`
@@ -116,9 +134,32 @@ type SqlEditorFile struct {
 }
 
 type SQLFileReq struct {
-	Database string `json:"database"`
-	Name     string `json:"name"`
-	Content  string `json:"content"`
+	Database  string `json:"database"`
+	Name      string `json:"name"`
+	Content   string `json:"content"`
+	ClusterID string `json:"cluster_id,omitempty"`
+}
+type SQLFileUpdateReq struct {
+	SqlEditorFileID string `json:"sqlEditorFileID,omitempty"`
+	Database        string `json:"database"`
+	Name            string `json:"name"`
+	Content         string `json:"content"`
+	ClusterID       string `json:"cluster_id,omitempty"`
+}
+
+type SQLFileDeleteReq struct {
+	SqlEditorFileID string `json:"sqlEditorFileID,omitempty"`
+	ClusterID       string `json:"cluster_id,omitempty"`
+}
+
+type ShowSQLFileReq struct {
+	SqlEditorFileID string `json:"sqlEditorFileID,omitempty"`
+	ClusterID       string `json:"cluster_id,omitempty"`
+}
+
+type ListSQLFileReq struct {
+	ClusterID string `json:"cluster_id,omitempty"`
+	structs.PageRequest
 }
 
 type DBMeta struct {
@@ -132,31 +173,11 @@ type TablesMeta struct {
 }
 
 type StatementsRes struct {
-	BasicRes
 	Data *DataRes `json:"data"`
 }
 
-type ClusterMetaRes struct {
-	BasicRes
-	Data []*DBMeta `json:"data"`
+type CreateSessionRes struct {
+	SessionID string `json:"sessionID"`
 }
-
-type ShowDBsRes struct {
-	BasicRes
-	Data []string `json:"data"`
-}
-
-type ShowTablesRes struct {
-	BasicRes
-	Data []string `json:"data"`
-}
-
-type ShowTableMetaRes struct {
-	BasicRes
-	Data *MetaRes `json:"data"`
-}
-
-type SessionRes struct {
-	BasicRes
-	Data string `json:"data"`
+type CloseSessionRes struct {
 }

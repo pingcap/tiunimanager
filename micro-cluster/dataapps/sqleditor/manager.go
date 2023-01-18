@@ -28,7 +28,6 @@ import (
 
 var manager *Manager
 var once sync.Once
-var serviceOnce sync.Once
 
 const (
 	EXPIRESEC = 2 * 14400

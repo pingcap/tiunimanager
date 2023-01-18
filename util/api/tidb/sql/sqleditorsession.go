@@ -15,6 +15,9 @@ func CreateSession(ctx context.Context, clusterID string, expireSec uint64, data
 
 	}
 	db, err := meta.CreateSQLLinkWithDatabase(ctx, clusterMeta, database)
+	if err != nil {
+		return
+	}
 	db.SetMaxOpenConns(100)
 	db.SetMaxIdleConns(20)
 	db.SetConnMaxLifetime(time.Second * time.Duration(expireSec))

@@ -146,7 +146,7 @@ func GetClusterMetaData(ctx context.Context, clusterID string, isBrief bool, sho
 	defer db.Close()
 
 	//query db
-	rows, err := db.Query(fmt.Sprintf(dbSql))
+	rows, err := db.Query(dbSql)
 	if err != nil {
 		return dbmetaList, err
 	}
@@ -225,7 +225,7 @@ func GetClusterMetaData(ctx context.Context, clusterID string, isBrief bool, sho
 		}
 
 		tableArray := make([]string, 0)
-		for k, _ := range tableArrayTemp {
+		for k := range tableArrayTemp {
 			tableArray = append(tableArray, k)
 		}
 		sort.Sort(Alphabetic(tableArray))

@@ -29,8 +29,8 @@ import (
 	"github.com/pingcap/tiunimanager/micro-cluster/registry"
 	clusterService "github.com/pingcap/tiunimanager/micro-cluster/service"
 	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/dataapps/sqleditor/dbagent"
 	"github.com/pingcap/tiunimanager/proto/clusterservices"
-	"github.com/pingcap/tiunimanager/util/api/tidb/sql"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -57,7 +57,7 @@ func main() {
 		With(prometheus.Labels{metrics.ServiceLabel: f.GetServiceMeta().ServiceName.ServerName()}).
 		SetToCurrentTime()
 
-	sql.Init()
+	dbagent.Init()
 
 	f.StartService()
 }

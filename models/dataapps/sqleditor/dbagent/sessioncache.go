@@ -1,4 +1,4 @@
-package sql
+package dbagent
 
 import (
 	"database/sql"

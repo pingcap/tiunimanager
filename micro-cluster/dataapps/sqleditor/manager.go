@@ -19,11 +19,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/pingcap/tiunimanager/common/errors"
 	"github.com/pingcap/tiunimanager/library/framework"
 	"github.com/pingcap/tiunimanager/message/dataapps/sqleditor"
+	"github.com/pingcap/tiunimanager/micro-cluster/cluster/management/meta"
 	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/dataapps/sqleditor/dbagent"
 	sqleditorfile "github.com/pingcap/tiunimanager/models/dataapps/sqleditor/sqlfile"
-	"github.com/pingcap/tiunimanager/util/api/tidb/sql"
 )
 
 var manager *Manager
@@ -198,7 +200,17 @@ func (p *Manager) ListSqlFile(ctx context.Context, request sqleditor.ListSQLFile
 // @return *sqleditor.MetaRes
 // @return error
 func (p *Manager) ShowTableMeta(ctx context.Context, request sqleditor.ShowTableMetaReq) (res *sqleditor.MetaRes, err error) {
-	return sql.GetTableMetaData(ctx, request.ClusterID, request.DbName, request.TableName)
+	clusterMeta, err := meta.Get(ctx, request.ClusterID)
+	if err != nil {
+		return
+	}
+	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		return res, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+	dbModel := dbagent.NewDBAgent(db)
+	return dbModel.GetTableMetaData(ctx, request.ClusterID, request.DbName, request.TableName)
 }
 
 // ShowClusterMeta
@@ -209,7 +221,17 @@ func (p *Manager) ShowTableMeta(ctx context.Context, request sqleditor.ShowTable
 // @return []*sqleditor.DBMeta
 // @return error
 func (p *Manager) ShowClusterMeta(ctx context.Context, request sqleditor.ShowClusterMetaReq) (res []*sqleditor.DBMeta, err error) {
-	return sql.GetClusterMetaData(ctx, request.ClusterID, request.IsBrief, request.ShowSystemDB)
+	clusterMeta, err := meta.Get(ctx, request.ClusterID)
+	if err != nil {
+		return
+	}
+	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		return res, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+	dbModel := dbagent.NewDBAgent(db)
+	return dbModel.GetClusterMetaData(ctx, request.ClusterID, request.IsBrief, request.ShowSystemDB)
 }
 
 // CreateSession
@@ -220,8 +242,17 @@ func (p *Manager) ShowClusterMeta(ctx context.Context, request sqleditor.ShowClu
 // @return []*sqleditor.CreateSessionRes
 // @return error
 func (p *Manager) CreateSession(ctx context.Context, request sqleditor.CreateSessionReq) (res *sqleditor.CreateSessionRes, err error) {
-
-	sessionID, err := sql.CreateSession(ctx, request.ClusterID, EXPIRESEC, request.Database)
+	clusterMeta, err := meta.Get(ctx, request.ClusterID)
+	if err != nil {
+		return
+	}
+	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		return res, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+	dbModel := dbagent.NewDBAgent(db)
+	sessionID, err := dbModel.CreateSession(ctx, request.ClusterID, EXPIRESEC, request.Database)
 	if err != nil {
 		return
 	}
@@ -238,6 +269,17 @@ func (p *Manager) CreateSession(ctx context.Context, request sqleditor.CreateSes
 // @Parameter request
 // @return sqleditor.CloseSessionRes
 // @return error
-func (p *Manager) CloseSession(ctx context.Context, request sqleditor.CloseSessionReq) (*sqleditor.CloseSessionRes, error) {
-	return &sqleditor.CloseSessionRes{}, sql.CloseSession(ctx, request.SessionID)
+func (p *Manager) CloseSession(ctx context.Context, request sqleditor.CloseSessionReq) (res *sqleditor.CloseSessionRes, err error) {
+	clusterMeta, err := meta.Get(ctx, request.ClusterID)
+	if err != nil {
+		return
+	}
+	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		return res, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+	dbModel := dbagent.NewDBAgent(db)
+
+	return &sqleditor.CloseSessionRes{}, dbModel.CloseSession(ctx, request.SessionID)
 }

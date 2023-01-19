@@ -357,6 +357,10 @@ func GetSqlEditorFileReaderWriter() sqleditorfile.ReaderWriter {
 	return defaultDb.sqleditorfileReaderWriter
 }
 
+func SetSqlEditorFileReaderWriter(rw sqleditorfile.ReaderWriter) {
+	defaultDb.sqleditorfileReaderWriter = rw
+}
+
 func SetAccountReaderWriter(rw account.ReaderWriter) {
 	defaultDb.accountReaderWriter = rw
 }

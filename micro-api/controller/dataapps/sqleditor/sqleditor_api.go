@@ -32,7 +32,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.CreateSessionRes
-// @Router /clusters/{cluster_id}/session [post]
+// @Router /{cluster_id}/session [post]
 func CreateSession(c *gin.Context) {
 	req := sqleditor.CreateSessionReq{
 		ClusterID: c.Param("clusterId"),
@@ -54,7 +54,7 @@ func CreateSession(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200
-// @Router /clusters/{cluster_id}/session/{session_id} [delete]
+// @Router /{cluster_id}/session/{session_id} [delete]
 func CloseSession(c *gin.Context) {
 	req := sqleditor.CloseSessionReq{
 		ClusterID: c.Param("clusterId"),
@@ -78,7 +78,7 @@ func CloseSession(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.StatementsRes
-// @Router /clusters/{cluster_id}/statements [post]
+// @Router /{cluster_id}/statements [post]
 func Statements(c *gin.Context) {
 
 }
@@ -94,7 +94,7 @@ func Statements(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} []sqleditor.DBMeta
-// @Router /clusters/{cluster_id}/meta [get]
+// @Router /{cluster_id}/meta [get]
 func ShowClusterMeta(c *gin.Context) {
 	req := sqleditor.ShowClusterMetaReq{
 		ClusterID: c.Param("clusterId"),
@@ -116,7 +116,7 @@ func ShowClusterMeta(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.MetaRes
-// @Router /clusters/{cluster_id}/dbs/{db_name}/{table_name}/meta [get]
+// @Router /{cluster_id}/dbs/{db_name}/{table_name}/meta [get]
 func ShowTableMeta(c *gin.Context) {
 	req := sqleditor.ShowTableMetaReq{
 		ClusterID: c.Param("clusterId"),

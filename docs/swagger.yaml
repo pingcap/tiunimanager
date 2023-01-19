@@ -3413,6 +3413,121 @@ info:
   title: EM UI API
   version: "1.0"
 paths:
+  /{cluster_id}/dbs/{db_name}/{table_name}/meta:
+    get:
+      consumes:
+      - application/json
+      description: table meta
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: db name
+        in: path
+        name: db_name
+        required: true
+        type: string
+      - description: table_name
+        in: path
+        name: table_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.MetaRes'
+      summary: show table meta
+      tags:
+      - sqleditor
+  /{cluster_id}/meta:
+    get:
+      consumes:
+      - application/json
+      description: show all db meta
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: 'value: true or false'
+        in: query
+        name: isbrief
+        required: true
+        type: string
+      - description: 'value: true or false'
+        in: query
+        name: showSystemDB
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/sqleditor.DBMeta'
+            type: array
+      summary: show all db meta
+      tags:
+      - sqleditor
+  /{cluster_id}/session:
+    post:
+      consumes:
+      - application/json
+      description: create session result
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: request_body
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/sqleditor.CreateSessionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.CreateSessionRes'
+      summary: create session
+      tags:
+      - sqleditor
+  /{cluster_id}/session/{session_id}:
+    delete:
+      consumes:
+      - application/json
+      description: close session result
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: close session
+      tags:
+      - sqleditor
   /{cluster_id}/sqlfiles:
     get:
       consumes:
@@ -3551,6 +3666,33 @@ paths:
           schema:
             $ref: '#/definitions/sqleditor.UpdateSQLFileRes'
       summary: update sql file
+      tags:
+      - sqleditor
+  /{cluster_id}/statements:
+    post:
+      consumes:
+      - application/json
+      description: execute sql result
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: request_body
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/sqleditor.StatementParam'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.StatementsRes'
+      summary: execute sql
       tags:
       - sqleditor
   /backups/:
@@ -4129,148 +4271,6 @@ paths:
       summary: create a cluster
       tags:
       - cluster
-  /clusters/{cluster_id}/dbs/{db_name}/{table_name}/meta:
-    get:
-      consumes:
-      - application/json
-      description: table meta
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: db name
-        in: path
-        name: db_name
-        required: true
-        type: string
-      - description: table_name
-        in: path
-        name: table_name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.MetaRes'
-      summary: show table meta
-      tags:
-      - sqleditor
-  /clusters/{cluster_id}/meta:
-    get:
-      consumes:
-      - application/json
-      description: show all db meta
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: 'value: true or false'
-        in: query
-        name: isbrief
-        required: true
-        type: string
-      - description: 'value: true or false'
-        in: query
-        name: showSystemDB
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/sqleditor.DBMeta'
-            type: array
-      summary: show all db meta
-      tags:
-      - sqleditor
-  /clusters/{cluster_id}/session:
-    post:
-      consumes:
-      - application/json
-      description: create session result
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: request_body
-        in: body
-        name: request_body
-        required: true
-        schema:
-          $ref: '#/definitions/sqleditor.CreateSessionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.CreateSessionRes'
-      summary: create session
-      tags:
-      - sqleditor
-  /clusters/{cluster_id}/session/{session_id}:
-    delete:
-      consumes:
-      - application/json
-      description: close session result
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: session ID
-        in: path
-        name: session_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: close session
-      tags:
-      - sqleditor
-  /clusters/{cluster_id}/statements:
-    post:
-      consumes:
-      - application/json
-      description: execute sql result
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: request_body
-        in: body
-        name: request_body
-        required: true
-        schema:
-          $ref: '#/definitions/sqleditor.StatementParam'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.StatementsRes'
-      summary: execute sql
-      tags:
-      - sqleditor
   /clusters/{clusterId}:
     delete:
       consumes:

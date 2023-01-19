@@ -231,7 +231,7 @@ func (p *Manager) ShowClusterMeta(ctx context.Context, request sqleditor.ShowClu
 	}
 	defer db.Close()
 	dbModel := dbagent.NewDBAgent(db)
-	return dbModel.GetClusterMetaData(ctx, request.ClusterID, request.IsBrief, request.ShowSystemDB)
+	return dbModel.GetClusterMetaData(ctx, request.IsBrief, request.ShowSystemDB)
 }
 
 // CreateSession

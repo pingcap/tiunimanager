@@ -22,6 +22,7 @@ type SessionCache struct {
 
 const (
 	DelayCloseSessionSec = 30
+	ClearInterval        = 100
 	MaxNum               = 100
 )
 
@@ -30,22 +31,14 @@ var storage = &SessionCache{}
 func cronClearExpireSession(storage *SessionCache) {
 	for {
 		curTimestamp := time.Now().Unix()
-		num := 0
 		storage.sessionMap.Range(func(k, v interface{}) bool {
 			val := v.(*SessionItem)
 			if curTimestamp > int64(val.EndSec+DelayCloseSessionSec) {
 				storage.sessionMap.Delete(k)
-				// NOTE(bing.wang) conn will be closed by sql.DB automatically
-				// sqlDB, err := val.Conn.DB()
-				// if err != nil {
-				//	return true
-				// }
-				// sqlDB.Close()
 			}
-			num += 1
 			return true
 		})
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * ClearInterval)
 	}
 }
 func CloseSessionCache(sessionId string) error {
@@ -56,7 +49,7 @@ func CloseSessionCache(sessionId string) error {
 	sessionItem := val.(*SessionItem)
 	sessionItem.EndSec = uint64(time.Now().Unix() - DelayCloseSessionSec)
 	//conn will be closed by sql.DB automatically
-	//storage.sessionMap.Store(sessionId, sessionItem)
+	storage.sessionMap.Store(sessionId, sessionItem)
 	return nil
 }
 

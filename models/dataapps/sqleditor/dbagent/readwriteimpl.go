@@ -92,7 +92,7 @@ func (db *DBAgent) GetTableMetaData(ctx context.Context, clusterID string, dbNam
 	}, nil
 }
 
-func (db *DBAgent) GetClusterMetaData(ctx context.Context, clusterID string, isBrief bool, showSystemDBFlag bool) (dbmetaList []*sqleditor.DBMeta, err error) {
+func (db *DBAgent) GetClusterMetaData(ctx context.Context, isBrief bool, showSystemDBFlag bool) (dbmetaList []*sqleditor.DBMeta, err error) {
 	dbmetaList = make([]*sqleditor.DBMeta, 0)
 	detailmetaDict := make(map[string][]*sqleditor.Columns)
 

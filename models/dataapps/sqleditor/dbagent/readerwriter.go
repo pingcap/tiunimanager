@@ -24,7 +24,7 @@ import (
 
 type ReaderWriter interface {
 	GetTableMetaData(ctx context.Context, clusterID string, dbName string, tableName string) (metaRes *sqleditor.MetaRes, err error)
-	GetClusterMetaData(ctx context.Context, clusterID *sql.DB, isBrief bool, showSystemDBFlag bool) (dbmetaList []*sqleditor.DBMeta, err error)
+	GetClusterMetaData(ctx context.Context, isBrief bool, showSystemDBFlag bool) (dbmetaList []*sqleditor.DBMeta, err error)
 	CreateSession(ctx context.Context, clusterID string, expireSec uint64, database string) (sessionID string, err error)
 	CloseSession(ctx context.Context, sessionID string) error
 	GetSession(ctx context.Context, sessionID string) (*sql.Conn, error)

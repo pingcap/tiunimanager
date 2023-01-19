@@ -246,7 +246,7 @@ func (p *Manager) CreateSession(ctx context.Context, request sqleditor.CreateSes
 	if err != nil {
 		return
 	}
-	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	db, err := meta.CreateSQLLinkWithDatabase(ctx, clusterMeta, request.Database)
 	if err != nil {
 		return res, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
 	}

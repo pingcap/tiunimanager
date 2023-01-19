@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	DEFAULTPAGESIZE = 10
+	DEFAULTPAGESIZE = 100
 )
 
 type BasicRes struct {

@@ -31,6 +31,7 @@ import (
 	platformdignose "github.com/pingcap/tiunimanager/micro-api/controller/platform/dignose"
 	"github.com/pingcap/tiunimanager/micro-api/controller/platform/system"
 
+	sqleditApi "github.com/pingcap/tiunimanager/micro-api/controller/dataapps/sqleditor"
 	"github.com/pingcap/tiunimanager/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap/tiunimanager/micro-api/controller/parametergroup"
 	platformApi "github.com/pingcap/tiunimanager/micro-api/controller/platform"
@@ -294,6 +295,24 @@ func Route(g *gin.Engine) {
 		systemGroup := apiV1.Group("/system")
 		{
 			systemGroup.GET("/info", system.GetSystemInfo)
+		}
+		dataApps := apiV1.Group("/dataapps")
+		{
+			sqleditor := dataApps.Group("/sqleditor")
+			{
+				sqleditor.Use(interceptor.VerifyIdentity)
+				sqleditor.Use(interceptor.AuditLog)
+				sqleditor.POST("/:clusterId/session", metrics.HandleMetrics(constants.MetricsCreateSession), sqleditApi.CreateSession)
+				sqleditor.DELETE("/:clusterId/session/:sessionId", metrics.HandleMetrics(constants.MetricsCloseSession), sqleditApi.CloseSession)
+				sqleditor.GET("/:clusterId/meta", metrics.HandleMetrics(constants.MetricsShowClusterMeta), sqleditApi.ShowClusterMeta)
+				sqleditor.GET("/:clusterId/dbs/:dbName/:tableName/meta", metrics.HandleMetrics(constants.MetricsShowTableMeta), sqleditApi.ShowTableMeta)
+				sqleditor.POST("/:clusterId/sqlfiles", metrics.HandleMetrics(constants.MetricsCreateSQLFile), sqleditApi.CreateSQLFile)
+				sqleditor.PUT("/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsUpdateSQLFile), sqleditApi.UpdateSQLFile)
+				sqleditor.DELETE("/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsDeleteSQLFile), sqleditApi.DeleteSQLFile)
+				sqleditor.GET("/:clusterId/sqlfiles/:sqlFileId", metrics.HandleMetrics(constants.MetricsShowSQLFile), sqleditApi.ShowSQLFile)
+				sqleditor.GET("/:clusterId/sqlfiles", metrics.HandleMetrics(constants.MetricsListSQLFile), sqleditApi.ListSQLFile)
+				sqleditor.POST("/:clusterId/statements", metrics.HandleMetrics(constants.MetricsStatements), sqleditApi.Statements)
+			}
 		}
 	}
 

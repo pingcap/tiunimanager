@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap/tiunimanager/common/client"
 	"github.com/pingcap/tiunimanager/common/constants"
@@ -28,6 +29,7 @@ import (
 	"github.com/pingcap/tiunimanager/micro-cluster/registry"
 	clusterService "github.com/pingcap/tiunimanager/micro-cluster/service"
 	"github.com/pingcap/tiunimanager/models"
+	"github.com/pingcap/tiunimanager/models/dataapps/sqleditor/dbagent"
 	"github.com/pingcap/tiunimanager/proto/clusterservices"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -54,6 +56,8 @@ func main() {
 	f.GetMetrics().ServerStartTimeGaugeMetric.
 		With(prometheus.Labels{metrics.ServiceLabel: f.GetServiceMeta().ServiceName.ServerName()}).
 		SetToCurrentTime()
+
+	dbagent.Init()
 
 	f.StartService()
 }

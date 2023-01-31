@@ -18,6 +18,7 @@ package rbac
 import (
 	"context"
 	"fmt"
+
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/pingcap/tiunimanager/common/constants"
@@ -75,8 +76,8 @@ func NewRBACManager() *RBACManager {
 }
 
 /*
-	1. init role and permission
-	2. bind admin role for admin user
+1. init role and permission
+2. bind admin role for admin user
 */
 func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	framework.LogWithContext(ctx).Infof("begin init default rbac...")
@@ -129,6 +130,13 @@ func (mgr *RBACManager) initDefaultRBAC(ctx context.Context) {
 	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
 		{
 			Resource: string(constants.RbacResourceWorkflow),
+			Action:   string(constants.RbacActionAll),
+		},
+	}}, true)
+
+	mgr.AddPermissionsForRole(ctx, message.AddPermissionsForRoleReq{Role: string(constants.RbacRoleAdmin), Permissions: []structs.RbacPermission{
+		{
+			Resource: string(constants.RbacResourceSQLEditor),
 			Action:   string(constants.RbacActionAll),
 		},
 	}}, true)

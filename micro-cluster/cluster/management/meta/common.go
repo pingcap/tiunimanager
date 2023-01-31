@@ -154,7 +154,9 @@ func CompareTiDBVersion(v1, v2 string) (bool, error) {
 
 // ScaleOutPreCheck
 // @Description when scale out TiFlash, check placement rules
-//				when scale out PD, suggest pd instances 1,3,5,7
+//
+//	when scale out PD, suggest pd instances 1,3,5,7
+//
 // @Parameter	cluster meta
 // @Parameter	computes
 // @Return		error
@@ -217,12 +219,30 @@ func CreateSQLLink(ctx context.Context, meta *ClusterMeta) (*sql.DB, error) {
 	}
 	return db, nil
 }
+func CreateSQLLinkWithDatabase(ctx context.Context, meta *ClusterMeta, database string) (*sql.DB, error) {
+	if meta == nil {
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "parameter is invalid")
+	}
+	address := meta.GetClusterConnectAddresses()
+	if len(address) <= 0 {
+		return nil, errors.NewError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, "component TiDB not found!")
+	}
+	rootUser, _ := meta.GetDBUserNamePassword(ctx, constants.Root)
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+		rootUser.Name, rootUser.Password.Val, address[0].IP, address[0].Port, database))
+	if err != nil {
+		return nil, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	return db, nil
+}
 
 // ScaleInPreCheck
 // @Description When scale in TiFlash, ensure the number of remaining TiFlash instances is
-//				greater than or equal to the maximum number of copies of all data tables;
-//				When scale in TiKV, ensure the number of remaining TiKV instances is greater than
-//				or equal to the copies
+//
+//	greater than or equal to the maximum number of copies of all data tables;
+//	When scale in TiKV, ensure the number of remaining TiKV instances is greater than
+//	or equal to the copies
+//
 // @Parameter	cluster meta
 // @Parameter	instance which will be deleted
 // @Return		error

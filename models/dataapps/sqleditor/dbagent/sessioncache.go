@@ -73,7 +73,6 @@ func CreateSessionCache(conn *sql.Conn, expireSec uint64) string {
 }
 
 func Init() {
-
 	storage.maxNum = MaxNum
 	go cronClearExpireSession(storage)
 }

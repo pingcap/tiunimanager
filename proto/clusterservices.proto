@@ -149,6 +149,7 @@ service ClusterService {
     rpc ShowClusterMeta(RpcRequest) returns(RpcResponse);
     rpc CreateSession(RpcRequest) returns(RpcResponse);
     rpc CloseSession(RpcRequest) returns(RpcResponse);
+    rpc Statements(RpcRequest) returns(RpcResponse);
 }
 
 message RpcRequest {

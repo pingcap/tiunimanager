@@ -44,7 +44,7 @@ func CreateSession(c *gin.Context) {
 	}
 }
 
-// Close Session godoc
+// CloseSession godoc
 // @Summary close session
 // @Schemes
 // @Description close session result
@@ -68,7 +68,7 @@ func CloseSession(c *gin.Context) {
 
 }
 
-// Execute SQL godoc
+// Statements godoc
 // @Summary execute sql
 // @Schemes
 // @Description execute sql result
@@ -80,10 +80,18 @@ func CloseSession(c *gin.Context) {
 // @Success 200 {object} sqleditor.StatementsRes
 // @Router /dataapps/sqleditor/{cluster_id}/statements [post]
 func Statements(c *gin.Context) {
-
+	if body, ok := controller.HandleJsonRequestFromBody(c,
+		&sqleditor.StatementParam{},
+		func(c *gin.Context, req interface{}) error {
+			req.(*sqleditor.StatementParam).ClusterID = c.Param("clusterId")
+			return nil
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.Statements,
+			&sqleditor.StatementsRes{}, body, controller.DefaultTimeout)
+	}
 }
 
-// Show All DB Meta godoc
+// ShowClusterMeta show All DB Meta godoc
 // @Summary show all db meta
 // @Schemes
 // @Description show all db meta
@@ -106,7 +114,7 @@ func ShowClusterMeta(c *gin.Context) {
 	}
 }
 
-// Show Table Meta godoc
+// ShowTableMeta godoc
 // @Summary show table meta
 // @Description table meta
 // @Tags sqleditor
@@ -131,7 +139,7 @@ func ShowTableMeta(c *gin.Context) {
 
 }
 
-// Create SQL File godoc
+// CreateSQLFile godoc
 // @Summary create sql file
 // @Description create sql file
 // @Tags sqleditor
@@ -152,7 +160,7 @@ func CreateSQLFile(c *gin.Context) {
 	}
 }
 
-// Update SQL File godoc
+// UpdateSQLFile godoc
 // @Summary update sql file
 // @Description update sql file
 // @Tags sqleditor
@@ -175,7 +183,7 @@ func UpdateSQLFile(c *gin.Context) {
 	}
 }
 
-// Delete SQL File godoc
+// DeleteSQLFile godoc
 // @Summary delete sql file
 // @Description delete sql file
 // @Tags sqleditor
@@ -197,7 +205,7 @@ func DeleteSQLFile(c *gin.Context) {
 	}
 }
 
-// List SQL File godoc
+// ListSQLFile godoc
 // @Summary list sql file
 // @Description list sql file
 // @Tags sqleditor
@@ -219,7 +227,7 @@ func ListSQLFile(c *gin.Context) {
 
 }
 
-// Show SQL File godoc
+// ShowSQLFile godoc
 // @Summary show sql file
 // @Description show sql file
 // @Tags sqleditor

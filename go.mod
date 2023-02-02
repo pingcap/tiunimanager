@@ -34,8 +34,9 @@ require (
 	github.com/opentracing/basictracer-go v1.0.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20211026125417-57bd13f7b5f0
-	github.com/pingcap/errors v0.11.5-0.20201126102027-b0a155152ca3
+	github.com/pingcap/errors v0.11.5-0.20210425183316-da1aaba5fb63
 	github.com/pingcap/kvproto v0.0.0-20220125073028-58f2ac94aa38
+	github.com/pingcap/tidb/parser v0.0.0-20221205144403-71863b42b97d
 	github.com/pingcap/tiup v1.9.0
 	github.com/pkg/sftp v1.10.1
 	github.com/prometheus/client_golang v1.11.0
@@ -63,7 +64,6 @@ require (
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20220207234003-57398862261d
-	golang.org/x/tools v0.1.7 // indirect
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0

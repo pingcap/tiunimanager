@@ -283,3 +283,28 @@ func (p *Manager) CloseSession(ctx context.Context, request sqleditor.CloseSessi
 
 	return &sqleditor.CloseSessionRes{}, dbModel.CloseSession(ctx, request.SessionID)
 }
+
+// Statements
+// @Description:
+// @Receiver p
+// @Parameter ctx
+// @Parameter request
+// @return sqleditor.StatementsRes
+// @return error
+func (p *Manager) Statements(ctx context.Context, request sqleditor.StatementParam) (res *sqleditor.StatementsRes, err error) {
+	if request.SessionId == "" {
+		return nil, errors.NewError(errors.TIUNIMANAGER_PARAMETER_INVALID, "sessionId is empty")
+	}
+	clusterMeta, err := meta.Get(ctx, request.ClusterID)
+	if err != nil {
+		return
+	}
+	db, err := meta.CreateSQLLink(ctx, clusterMeta)
+	if err != nil {
+		return res, errors.WrapError(errors.TIUNIMANAGER_CONNECT_TIDB_ERROR, err.Error(), err)
+	}
+	defer db.Close()
+	dbModel := dbagent.NewDBAgent(db)
+
+	return dbModel.ExecSqlWithSession(ctx, request.SessionId, request.Sql)
+}

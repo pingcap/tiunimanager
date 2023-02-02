@@ -50,6 +50,7 @@ type ListSQLFileRes struct {
 }
 
 type StatementParam struct {
+	ClusterID string `json:"clusterId" swaggerignore:"true"`
 	SessionId string `json:"sessionid"`
 	Sql       string `json:"sql"`
 }

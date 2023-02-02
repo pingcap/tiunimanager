@@ -287,6 +287,21 @@ func (handler *ClusterServiceHandler) ShowTableMeta(ctx context.Context, req *cl
 	return nil
 }
 
+func (handler *ClusterServiceHandler) Statements(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "Statements", int(resp.GetCode()))
+	defer handlePanic(ctx, "Statements", resp)
+
+	request := &sqleditorparam.StatementParam{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceCluster), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := handler.sqleditorManager.Statements(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
 func (handler *ClusterServiceHandler) ShowClusterMeta(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
 	start := time.Now()
 	defer metrics.HandleClusterMetrics(start, "ShowClusterMeta", int(resp.GetCode()))

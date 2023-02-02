@@ -32,7 +32,7 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.CreateSessionRes
-// @Router /dataapps/sqleditor/{cluster_id}/session [post]
+// @Router /{cluster_id}/session [post]
 func CreateSession(c *gin.Context) {
 	req := sqleditor.CreateSessionReq{
 		ClusterID: c.Param("clusterId"),
@@ -44,7 +44,7 @@ func CreateSession(c *gin.Context) {
 	}
 }
 
-// CloseSession godoc
+// Close Session godoc
 // @Summary close session
 // @Schemes
 // @Description close session result
@@ -54,7 +54,7 @@ func CreateSession(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200
-// @Router /dataapps/sqleditor/{cluster_id}/session/{session_id} [delete]
+// @Router /{cluster_id}/session/{session_id} [delete]
 func CloseSession(c *gin.Context) {
 	req := sqleditor.CloseSessionReq{
 		ClusterID: c.Param("clusterId"),
@@ -68,7 +68,7 @@ func CloseSession(c *gin.Context) {
 
 }
 
-// Statements godoc
+// Execute SQL godoc
 // @Summary execute sql
 // @Schemes
 // @Description execute sql result
@@ -78,7 +78,7 @@ func CloseSession(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.StatementsRes
-// @Router /dataapps/sqleditor/{cluster_id}/statements [post]
+// @Router /{cluster_id}/statements [post]
 func Statements(c *gin.Context) {
 	if body, ok := controller.HandleJsonRequestFromBody(c,
 		&sqleditor.StatementParam{},
@@ -91,7 +91,7 @@ func Statements(c *gin.Context) {
 	}
 }
 
-// ShowClusterMeta show All DB Meta godoc
+// Show All DB Meta godoc
 // @Summary show all db meta
 // @Schemes
 // @Description show all db meta
@@ -102,7 +102,7 @@ func Statements(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} []sqleditor.DBMeta
-// @Router /dataapps/sqleditor/{cluster_id}/meta [get]
+// @Router /{cluster_id}/meta [get]
 func ShowClusterMeta(c *gin.Context) {
 	req := sqleditor.ShowClusterMetaReq{
 		ClusterID: c.Param("clusterId"),
@@ -114,7 +114,7 @@ func ShowClusterMeta(c *gin.Context) {
 	}
 }
 
-// ShowTableMeta godoc
+// Show Table Meta godoc
 // @Summary show table meta
 // @Description table meta
 // @Tags sqleditor
@@ -124,7 +124,7 @@ func ShowClusterMeta(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.MetaRes
-// @Router /dataapps/sqleditor/{cluster_id}/dbs/{db_name}/{table_name}/meta [get]
+// @Router /{cluster_id}/dbs/{db_name}/{table_name}/meta [get]
 func ShowTableMeta(c *gin.Context) {
 	req := sqleditor.ShowTableMetaReq{
 		ClusterID: c.Param("clusterId"),
@@ -139,7 +139,7 @@ func ShowTableMeta(c *gin.Context) {
 
 }
 
-// CreateSQLFile godoc
+// Create SQL File godoc
 // @Summary create sql file
 // @Description create sql file
 // @Tags sqleditor
@@ -148,7 +148,7 @@ func ShowTableMeta(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.CreateSQLFileRes
-// @Router /dataapps/sqleditor/{cluster_id}/sqlfiles [post]
+// @Router /{cluster_id}/sqlfiles [post]
 func CreateSQLFile(c *gin.Context) {
 	req := sqleditor.SQLFileReq{
 		ClusterID: c.Param("clusterId"),
@@ -160,7 +160,7 @@ func CreateSQLFile(c *gin.Context) {
 	}
 }
 
-// UpdateSQLFile godoc
+// Update SQL File godoc
 // @Summary update sql file
 // @Description update sql file
 // @Tags sqleditor
@@ -170,7 +170,7 @@ func CreateSQLFile(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.UpdateSQLFileRes
-// @Router /dataapps/sqleditor/{cluster_id}/sqlfiles/{sql_file_id} [put]
+// @Router /{cluster_id}/sqlfiles/{sql_file_id} [put]
 func UpdateSQLFile(c *gin.Context) {
 	req := sqleditor.SQLFileUpdateReq{
 		ClusterID:       c.Param("clusterId"),
@@ -183,7 +183,7 @@ func UpdateSQLFile(c *gin.Context) {
 	}
 }
 
-// DeleteSQLFile godoc
+// Delete SQL File godoc
 // @Summary delete sql file
 // @Description delete sql file
 // @Tags sqleditor
@@ -192,7 +192,7 @@ func UpdateSQLFile(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.DeleteSQLFileRes
-// @Router /dataapps/sqleditor/{cluster_id}/sqlfiles/{sql_file_id} [delete]
+// @Router /{cluster_id}/sqlfiles/{sql_file_id} [delete]
 func DeleteSQLFile(c *gin.Context) {
 	req := sqleditor.SQLFileDeleteReq{
 		ClusterID:       c.Param("clusterId"),
@@ -205,7 +205,7 @@ func DeleteSQLFile(c *gin.Context) {
 	}
 }
 
-// ListSQLFile godoc
+// List SQL File godoc
 // @Summary list sql file
 // @Description list sql file
 // @Tags sqleditor
@@ -214,7 +214,7 @@ func DeleteSQLFile(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.ListSQLFileRes
-// @Router /dataapps/sqleditor/{cluster_id}/sqlfiles [get]
+// @Router /{cluster_id}/sqlfiles [get]
 func ListSQLFile(c *gin.Context) {
 	req := sqleditor.ListSQLFileReq{
 		ClusterID: c.Param("clusterId"),
@@ -227,7 +227,7 @@ func ListSQLFile(c *gin.Context) {
 
 }
 
-// ShowSQLFile godoc
+// Show SQL File godoc
 // @Summary show sql file
 // @Description show sql file
 // @Tags sqleditor
@@ -236,7 +236,7 @@ func ListSQLFile(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} sqleditor.ShowSQLFileRes
-// @Router /dataapps/sqleditor/{cluster_id}/sqlfiles/{sql_file_id} [get]
+// @Router /{cluster_id}/sqlfiles/{sql_file_id} [get]
 func ShowSQLFile(c *gin.Context) {
 	req := sqleditor.ShowSQLFileReq{
 		ClusterID:       c.Param("clusterId"),

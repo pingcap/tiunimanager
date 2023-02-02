@@ -3123,429 +3123,6 @@ var doc = `{
                 }
             }
         },
-        "/dataapps/sqleditor/{cluster_id}/dbs/{db_name}/{table_name}/meta": {
-            "get": {
-                "description": "table meta",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "show table meta",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "db name",
-                        "name": "db_name",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "table_name",
-                        "name": "table_name",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.MetaRes"
-                        }
-                    }
-                }
-            }
-        },
-        "/dataapps/sqleditor/{cluster_id}/meta": {
-            "get": {
-                "description": "show all db meta",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "show all db meta",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "value: true or false",
-                        "name": "isbrief",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "value: true or false",
-                        "name": "showSystemDB",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/sqleditor.DBMeta"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/dataapps/sqleditor/{cluster_id}/session": {
-            "post": {
-                "description": "create session result",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "create session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "request_body",
-                        "name": "request_body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.CreateSessionReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.CreateSessionRes"
-                        }
-                    }
-                }
-            }
-        },
-        "/dataapps/sqleditor/{cluster_id}/session/{session_id}": {
-            "delete": {
-                "description": "close session result",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "close session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "session ID",
-                        "name": "session_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/dataapps/sqleditor/{cluster_id}/sqlfiles": {
-            "get": {
-                "description": "list sql file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "list sql file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "name": "cluster_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Current page location",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Number of this request",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.ListSQLFileRes"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "create sql file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "create sql file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "request_body",
-                        "name": "request_body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.SQLFileReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.CreateSQLFileRes"
-                        }
-                    }
-                }
-            }
-        },
-        "/dataapps/sqleditor/{cluster_id}/sqlfiles/{sql_file_id}": {
-            "get": {
-                "description": "show sql file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "show sql file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "sql file ID",
-                        "name": "sql_file_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.ShowSQLFileRes"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "update sql file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "update sql file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "sql file ID",
-                        "name": "sql_file_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "request_body",
-                        "name": "request_body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.SQLFileUpdateReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.UpdateSQLFileRes"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "delete sql file",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "delete sql file",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "sql file ID",
-                        "name": "sql_file_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.DeleteSQLFileRes"
-                        }
-                    }
-                }
-            }
-        },
-        "/dataapps/sqleditor/{cluster_id}/statements": {
-            "post": {
-                "description": "execute sql result",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sqleditor"
-                ],
-                "summary": "execute sql",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster ID",
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "request_body",
-                        "name": "request_body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.StatementParam"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/sqleditor.StatementsRes"
-                        }
-                    }
-                }
-            }
-        },
         "/downstream/": {
             "delete": {
                 "security": [
@@ -7819,6 +7396,429 @@ var doc = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/dbs/{db_name}/{table_name}/meta": {
+            "get": {
+                "description": "table meta",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "show table meta",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "db name",
+                        "name": "db_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "table_name",
+                        "name": "table_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.MetaRes"
+                        }
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/meta": {
+            "get": {
+                "description": "show all db meta",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "show all db meta",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "value: true or false",
+                        "name": "isbrief",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "value: true or false",
+                        "name": "showSystemDB",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/sqleditor.DBMeta"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/session": {
+            "post": {
+                "description": "create session result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "create session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request_body",
+                        "name": "request_body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.CreateSessionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.CreateSessionRes"
+                        }
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/session/{session_id}": {
+            "delete": {
+                "description": "close session result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "close session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "session ID",
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/sqlfiles": {
+            "get": {
+                "description": "list sql file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "list sql file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "cluster_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Current page location",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of this request",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.ListSQLFileRes"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "create sql file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "create sql file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request_body",
+                        "name": "request_body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.SQLFileReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.CreateSQLFileRes"
+                        }
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/sqlfiles/{sql_file_id}": {
+            "get": {
+                "description": "show sql file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "show sql file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "sql file ID",
+                        "name": "sql_file_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.ShowSQLFileRes"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "update sql file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "update sql file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "sql file ID",
+                        "name": "sql_file_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request_body",
+                        "name": "request_body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.SQLFileUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.UpdateSQLFileRes"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete sql file",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "delete sql file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "sql file ID",
+                        "name": "sql_file_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.DeleteSQLFileRes"
+                        }
+                    }
+                }
+            }
+        },
+        "/{cluster_id}/statements": {
+            "post": {
+                "description": "execute sql result",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sqleditor"
+                ],
+                "summary": "execute sql",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster ID",
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request_body",
+                        "name": "request_body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.StatementParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqleditor.StatementsRes"
                         }
                     }
                 }

@@ -3413,6 +3413,288 @@ info:
   title: EM UI API
   version: "1.0"
 paths:
+  /{cluster_id}/dbs/{db_name}/{table_name}/meta:
+    get:
+      consumes:
+      - application/json
+      description: table meta
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: db name
+        in: path
+        name: db_name
+        required: true
+        type: string
+      - description: table_name
+        in: path
+        name: table_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.MetaRes'
+      summary: show table meta
+      tags:
+      - sqleditor
+  /{cluster_id}/meta:
+    get:
+      consumes:
+      - application/json
+      description: show all db meta
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: 'value: true or false'
+        in: query
+        name: isbrief
+        required: true
+        type: string
+      - description: 'value: true or false'
+        in: query
+        name: showSystemDB
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/sqleditor.DBMeta'
+            type: array
+      summary: show all db meta
+      tags:
+      - sqleditor
+  /{cluster_id}/session:
+    post:
+      consumes:
+      - application/json
+      description: create session result
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: request_body
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/sqleditor.CreateSessionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.CreateSessionRes'
+      summary: create session
+      tags:
+      - sqleditor
+  /{cluster_id}/session/{session_id}:
+    delete:
+      consumes:
+      - application/json
+      description: close session result
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: session ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: close session
+      tags:
+      - sqleditor
+  /{cluster_id}/sqlfiles:
+    get:
+      consumes:
+      - application/json
+      description: list sql file
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - in: query
+        name: cluster_id
+        type: string
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.ListSQLFileRes'
+      summary: list sql file
+      tags:
+      - sqleditor
+    post:
+      consumes:
+      - application/json
+      description: create sql file
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: request_body
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/sqleditor.SQLFileReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.CreateSQLFileRes'
+      summary: create sql file
+      tags:
+      - sqleditor
+  /{cluster_id}/sqlfiles/{sql_file_id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete sql file
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: sql file ID
+        in: path
+        name: sql_file_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.DeleteSQLFileRes'
+      summary: delete sql file
+      tags:
+      - sqleditor
+    get:
+      consumes:
+      - application/json
+      description: show sql file
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: sql file ID
+        in: path
+        name: sql_file_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.ShowSQLFileRes'
+      summary: show sql file
+      tags:
+      - sqleditor
+    put:
+      consumes:
+      - application/json
+      description: update sql file
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: sql file ID
+        in: path
+        name: sql_file_id
+        required: true
+        type: string
+      - description: request_body
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/sqleditor.SQLFileUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.UpdateSQLFileRes'
+      summary: update sql file
+      tags:
+      - sqleditor
+  /{cluster_id}/statements:
+    post:
+      consumes:
+      - application/json
+      description: execute sql result
+      parameters:
+      - description: cluster ID
+        in: path
+        name: cluster_id
+        required: true
+        type: string
+      - description: request_body
+        in: body
+        name: request_body
+        required: true
+        schema:
+          $ref: '#/definitions/sqleditor.StatementParam'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqleditor.StatementsRes'
+      summary: execute sql
+      tags:
+      - sqleditor
   /backups/:
     get:
       consumes:
@@ -5270,288 +5552,6 @@ paths:
       summary: update system config
       tags:
       - UpdateSystemConfig
-  /dataapps/sqleditor/{cluster_id}/dbs/{db_name}/{table_name}/meta:
-    get:
-      consumes:
-      - application/json
-      description: table meta
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: db name
-        in: path
-        name: db_name
-        required: true
-        type: string
-      - description: table_name
-        in: path
-        name: table_name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.MetaRes'
-      summary: show table meta
-      tags:
-      - sqleditor
-  /dataapps/sqleditor/{cluster_id}/meta:
-    get:
-      consumes:
-      - application/json
-      description: show all db meta
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: 'value: true or false'
-        in: query
-        name: isbrief
-        required: true
-        type: string
-      - description: 'value: true or false'
-        in: query
-        name: showSystemDB
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/sqleditor.DBMeta'
-            type: array
-      summary: show all db meta
-      tags:
-      - sqleditor
-  /dataapps/sqleditor/{cluster_id}/session:
-    post:
-      consumes:
-      - application/json
-      description: create session result
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: request_body
-        in: body
-        name: request_body
-        required: true
-        schema:
-          $ref: '#/definitions/sqleditor.CreateSessionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.CreateSessionRes'
-      summary: create session
-      tags:
-      - sqleditor
-  /dataapps/sqleditor/{cluster_id}/session/{session_id}:
-    delete:
-      consumes:
-      - application/json
-      description: close session result
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: session ID
-        in: path
-        name: session_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: close session
-      tags:
-      - sqleditor
-  /dataapps/sqleditor/{cluster_id}/sqlfiles:
-    get:
-      consumes:
-      - application/json
-      description: list sql file
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - in: query
-        name: cluster_id
-        type: string
-      - description: Current page location
-        in: query
-        name: page
-        type: integer
-      - description: Number of this request
-        in: query
-        name: pageSize
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.ListSQLFileRes'
-      summary: list sql file
-      tags:
-      - sqleditor
-    post:
-      consumes:
-      - application/json
-      description: create sql file
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: request_body
-        in: body
-        name: request_body
-        required: true
-        schema:
-          $ref: '#/definitions/sqleditor.SQLFileReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.CreateSQLFileRes'
-      summary: create sql file
-      tags:
-      - sqleditor
-  /dataapps/sqleditor/{cluster_id}/sqlfiles/{sql_file_id}:
-    delete:
-      consumes:
-      - application/json
-      description: delete sql file
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: sql file ID
-        in: path
-        name: sql_file_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.DeleteSQLFileRes'
-      summary: delete sql file
-      tags:
-      - sqleditor
-    get:
-      consumes:
-      - application/json
-      description: show sql file
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: sql file ID
-        in: path
-        name: sql_file_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.ShowSQLFileRes'
-      summary: show sql file
-      tags:
-      - sqleditor
-    put:
-      consumes:
-      - application/json
-      description: update sql file
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: sql file ID
-        in: path
-        name: sql_file_id
-        required: true
-        type: string
-      - description: request_body
-        in: body
-        name: request_body
-        required: true
-        schema:
-          $ref: '#/definitions/sqleditor.SQLFileUpdateReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.UpdateSQLFileRes'
-      summary: update sql file
-      tags:
-      - sqleditor
-  /dataapps/sqleditor/{cluster_id}/statements:
-    post:
-      consumes:
-      - application/json
-      description: execute sql result
-      parameters:
-      - description: cluster ID
-        in: path
-        name: cluster_id
-        required: true
-        type: string
-      - description: request_body
-        in: body
-        name: request_body
-        required: true
-        schema:
-          $ref: '#/definitions/sqleditor.StatementParam'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/sqleditor.StatementsRes'
-      summary: execute sql
-      tags:
-      - sqleditor
   /downstream/:
     delete:
       consumes:

@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"github.com/pingcap/tidb/parser"
 	"github.com/pingcap/tidb/parser/ast"
+	_ "github.com/pingcap/tidb/types/parser_driver"
 	"github.com/pingcap/tiunimanager/message/dataapps/sqleditor"
 	"reflect"
 	"time"

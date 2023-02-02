@@ -26,7 +26,7 @@ type SqlEditorFile struct {
 	ID        string    `gorm:"primarykey"`
 	Name      string    `gorm:"default:null;not null;"`
 	ClusterID string    `gorm:"default:null;not null;"`
-	Database  string    `gorm:"default:null;not null;"`
+	Database  string    `gorm:"default:null"`
 	Content   string    `gorm:"default:null;not null;"`
 	IsDeleted int       `gorm:"default:0;not null;"`
 	CreatedBy string    `gorm:"default:null;not null;"`

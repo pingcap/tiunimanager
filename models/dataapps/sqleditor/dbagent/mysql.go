@@ -34,6 +34,7 @@ const (
 	UPDATE  = "update"
 	DELETE  = "delete"
 	DROP    = "drop"
+	USE     = "use"
 	SHOW    = "show"
 	EXPLAIN = "explain"
 	OTHER   = "other"
@@ -49,20 +50,31 @@ func queryDB(ctx context.Context, db *sql.DB, sql string) (stmtRes *sqleditor.St
 	}
 	sqlType := GetStmtType(ctx, stmtNode)
 	//databases := GetDatabases(ctx, stmtNode)
-	startMs := time.Now().UnixNano() / int64(time.Millisecond)
+	startTime := time.Now()
+	startMs := startTime.UnixNano() / int64(time.Millisecond)
 	rows, affect, err := executeSQL(db, sql, sqlType)
-	endMs := time.Now().UnixNano() / int64(time.Millisecond)
+	endTime := time.Now()
+	endMs := endTime.UnixNano() / int64(time.Millisecond)
 	if err != nil {
 		return nil, err
 	}
 
-	dataRes.StartTime = fmt.Sprint(startMs)
-	dataRes.EndTime = fmt.Sprint(endMs)
+	dataRes.StartTime = startTime.Format("2006-01-02 15:04:05")
+	dataRes.EndTime = endTime.Format("2006-01-02 15:04:05")
 	dataRes.ExecuteTime = fmt.Sprint(endMs - startMs)
-	dataRes.RowCount = affect
+	dataRes.Limit = LIMIT
+
+	if sqlType == SELECT || sqlType == SHOW || sqlType == EXPLAIN {
+		dataRes.Query = "Query OK!"
+	} else if sqlType == USE {
+		dataRes.Query = "Database changed!"
+	} else {
+		dataRes.Query = fmt.Sprintf("Query OK, %v rows affected (%.3f sec)", affect, float64(endMs-startMs)/1000.0)
+	}
 
 	scanRows(rows, uint64(LIMIT), dataRes)
 	if rows != nil {
+		dataRes.RowCount = int64(len(dataRes.Rows))
 		rows.Close()
 	}
 	return &sqleditor.StatementsRes{

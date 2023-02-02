@@ -1,4 +1,5 @@
-// +build codes
+//go:build utilcodes
+// +build utilcodes
 
 /******************************************************************************
  * Copyright (c)  2021 PingCAP                                                *

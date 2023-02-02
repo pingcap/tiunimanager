@@ -18,9 +18,10 @@ package dbagent
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/pingcap/tidb/parser"
 	"github.com/pingcap/tidb/parser/ast"
-	_ "github.com/pingcap/tidb/types/parser_driver"
+	_ "github.com/pingcap/tidb/parser/test_driver"
 	"github.com/pingcap/tiunimanager/message/dataapps/sqleditor"
 	"reflect"
 	"time"
@@ -39,7 +40,7 @@ const (
 	LIMIT   = 2000
 )
 
-func (db *DBAgent) queryDB(ctx context.Context, sql string) (stmtRes *sqleditor.StatementsRes, err error) {
+func queryDB(ctx context.Context, db *sql.DB, sql string) (stmtRes *sqleditor.StatementsRes, err error) {
 	dataRes := &sqleditor.DataRes{}
 
 	stmtNode, err := parser.New().ParseOneStmt(sql, "", "")
@@ -49,15 +50,15 @@ func (db *DBAgent) queryDB(ctx context.Context, sql string) (stmtRes *sqleditor.
 	sqlType := GetStmtType(ctx, stmtNode)
 	//databases := GetDatabases(ctx, stmtNode)
 	startMs := time.Now().UnixNano() / int64(time.Millisecond)
-	rows, affect, err := db.executeSQL(sql, sqlType)
+	rows, affect, err := executeSQL(db, sql, sqlType)
 	endMs := time.Now().UnixNano() / int64(time.Millisecond)
 	if err != nil {
 		return nil, err
 	}
 
-	dataRes.StartTime = string(startMs)
-	dataRes.EndTime = string(endMs)
-	dataRes.ExecuteTime = string(endMs - startMs)
+	dataRes.StartTime = fmt.Sprint(startMs)
+	dataRes.EndTime = fmt.Sprint(endMs)
+	dataRes.ExecuteTime = fmt.Sprint(endMs - startMs)
 	dataRes.RowCount = affect
 
 	scanRows(rows, uint64(LIMIT), dataRes)
@@ -69,16 +70,16 @@ func (db *DBAgent) queryDB(ctx context.Context, sql string) (stmtRes *sqleditor.
 	}, nil
 }
 
-func (db *DBAgent) executeSQL(sql string, sqlType string) (*sql.Rows, int64, error) {
+func executeSQL(db *sql.DB, sql string, sqlType string) (*sql.Rows, int64, error) {
 	affect := int64(0)
 	if sqlType == SELECT || sqlType == SHOW || sqlType == EXPLAIN {
-		rows, err := db.DB.Query(sql)
+		rows, err := db.Query(sql)
 		if err != nil {
 			return nil, 0, err
 		}
 		return rows, 0, nil
 	} else {
-		exec, err := db.DB.Exec(sql)
+		exec, err := db.Exec(sql)
 		if err != nil {
 			return nil, 0, err
 		}

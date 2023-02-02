@@ -1074,6 +1074,8 @@ github.com/pingcap/tidb-insight/collector v0.0.0-20220111101533-227008e9835b/go.
 github.com/pingcap/tidb-tools v4.0.0-beta.1.0.20200306084441-875bd09aa3d5+incompatible/go.mod h1:XGdcy9+yqlDSEMTpOXnwf3hiTeqrV6MN/u1se9N8yIM=
 github.com/pingcap/tidb-tools v4.0.0-rc.1.0.20200421113014-507d2bb3a15e+incompatible/go.mod h1:XGdcy9+yqlDSEMTpOXnwf3hiTeqrV6MN/u1se9N8yIM=
 github.com/pingcap/tidb-tools v4.0.0-rc.1.0.20200514040632-f76b3e428e19+incompatible/go.mod h1:XGdcy9+yqlDSEMTpOXnwf3hiTeqrV6MN/u1se9N8yIM=
+github.com/pingcap/tidb/parser v0.0.0-20211124132551-4a1b2e9fe5b5 h1:P29WkuSmY8T61TI2uQRqnBzgm0T0LHedfuAzqGFPEl8=
+github.com/pingcap/tidb/parser v0.0.0-20211124132551-4a1b2e9fe5b5/go.mod h1:MAa22tagoj7nv5b1NBcxPkc5CiUNhqj1wuSQnw4f9WE=
 github.com/pingcap/tidb/parser v0.0.0-20221128063200-0e6364f69b45 h1:Njo6w76VCMlPfTh580sE6eNsEuPt50As/XDqbtUKKzk=
 github.com/pingcap/tidb/parser v0.0.0-20221128063200-0e6364f69b45/go.mod h1:wjvp+T3/T9XYt0nKqGX3Kc1AKuyUcfno6LTc6b2A6ew=
 github.com/pingcap/tidb/parser v0.0.0-20221205144403-71863b42b97d h1:ChCaUDd8cD3EqtMm7sElleFx7S2j6mj+mF4chT5In/I=

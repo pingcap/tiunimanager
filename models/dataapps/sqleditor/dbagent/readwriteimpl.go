@@ -256,7 +256,7 @@ func (db *DBAgent) ExecSqlWithSession(ctx context.Context, sessionID, sql string
 	if err != nil {
 		return nil, err
 	}
-	return db.queryDB(ctx, sql)
+	return queryDB(ctx, db.DB, sql)
 }
 
 type Alphabetic []string

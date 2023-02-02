@@ -48,7 +48,7 @@ EXTERN_PATH := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
 export PATH := $(EXTERN_PATH):$(PATH)
 
 GO              := GO111MODULE=on go
-GOBUILD         := $(GO) build $(BUILD_FLAG) -tags codes
+GOBUILD         := $(GO) build $(BUILD_FLAG) -tags utilcodes
 #GOBUILDCOVERAGE := GOPATH=$(GOPATH) cd tidb-server; $(GO) test -coverpkg="../..." -c .
 GOTEST          := $(GO) test -p $(P)
 OVERALLS        := GO111MODULE=on overalls

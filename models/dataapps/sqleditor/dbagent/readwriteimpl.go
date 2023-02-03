@@ -252,11 +252,11 @@ func (db *DBAgent) GetSession(ctx context.Context, sessionID string) (*sql.Conn,
 }
 
 func (db *DBAgent) ExecSqlWithSession(ctx context.Context, sessionID, sql string) (stmtRes *sqleditor.StatementsRes, err error) {
-	_, err = GetSessionFromCache(sessionID)
+	conn, err := GetSessionFromCache(sessionID)
 	if err != nil {
 		return nil, err
 	}
-	return queryDB(ctx, db.DB, sql)
+	return queryDB(ctx, conn, sql)
 }
 
 type Alphabetic []string

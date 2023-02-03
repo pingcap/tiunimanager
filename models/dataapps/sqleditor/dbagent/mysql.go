@@ -41,7 +41,7 @@ const (
 	LIMIT   = 2000
 )
 
-func queryDB(ctx context.Context, db *sql.DB, sql string) (stmtRes *sqleditor.StatementsRes, err error) {
+func queryDB(ctx context.Context, conn *sql.Conn, sql string) (stmtRes *sqleditor.StatementsRes, err error) {
 	dataRes := &sqleditor.DataRes{}
 
 	stmtNode, err := parser.New().ParseOneStmt(sql, "", "")
@@ -52,7 +52,7 @@ func queryDB(ctx context.Context, db *sql.DB, sql string) (stmtRes *sqleditor.St
 	//databases := GetDatabases(ctx, stmtNode)
 	startTime := time.Now()
 	startMs := startTime.UnixNano() / int64(time.Millisecond)
-	rows, affect, err := executeSQL(db, sql, sqlType)
+	rows, affect, err := executeSQL(ctx, conn, sql, sqlType)
 	endTime := time.Now()
 	endMs := endTime.UnixNano() / int64(time.Millisecond)
 	if err != nil {
@@ -78,20 +78,20 @@ func queryDB(ctx context.Context, db *sql.DB, sql string) (stmtRes *sqleditor.St
 		rows.Close()
 	}
 	return &sqleditor.StatementsRes{
-		dataRes,
+		Data: dataRes,
 	}, nil
 }
 
-func executeSQL(db *sql.DB, sql string, sqlType string) (*sql.Rows, int64, error) {
+func executeSQL(ctx context.Context, conn *sql.Conn, sql string, sqlType string) (*sql.Rows, int64, error) {
 	affect := int64(0)
 	if sqlType == SELECT || sqlType == SHOW || sqlType == EXPLAIN {
-		rows, err := db.Query(sql)
+		rows, err := conn.QueryContext(ctx, sql)
 		if err != nil {
 			return nil, 0, err
 		}
 		return rows, 0, nil
 	} else {
-		exec, err := db.Exec(sql)
+		exec, err := conn.ExecContext(ctx, sql)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -115,6 +115,8 @@ func GetStmtType(ctx context.Context, stmtNode ast.StmtNode) string {
 			return SHOW
 		case *ast.ExplainStmt:
 			return EXPLAIN
+		case *ast.UseStmt:
+			return USE
 		default:
 			return OTHER
 		}

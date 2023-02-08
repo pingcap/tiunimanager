@@ -134,6 +134,7 @@ func (db *DBAgent) GetClusterMetaData(ctx context.Context, isBrief bool, showSys
 
 	//execu query
 	metaRows, err := db.DB.Query(fmt.Sprintf(metaSql, dbArrayStr[:len(dbArrayStr)-1]))
+
 	if err != nil {
 		return dbmetaList, err
 	}
@@ -152,40 +153,53 @@ func (db *DBAgent) GetClusterMetaData(ctx context.Context, isBrief bool, showSys
 		scanArgs[i] = &values[i]
 	}
 
+	tableArrayTemp := make(map[string][]string, 0)
+	for metaRows.Next() {
+		// get RawBytes from data
+		err = metaRows.Scan(scanArgs...)
+		if err != nil {
+			return dbmetaList, err
+		}
+
+		if _, ok := tableArrayTemp[string(values[1])]; !ok {
+			tableArrayTemp[string(values[1])] = make([]string, 0)
+		}
+
+		isExists := false
+		for _, t := range tableArrayTemp[string(values[1])] {
+			if string(values[2]) == t {
+				isExists = true
+				break
+			}
+		}
+		if ! isExists {
+			tableArrayTemp[string(values[1])] = append(tableArrayTemp[string(values[1])], string(values[2]))
+		}
+
+
+		if isBrief {
+			continue
+		}
+
+		col := &sqleditor.Columns{
+			Col:      string(values[3]),
+			DataType: string(values[7]),
+			Nullable: strings.ToLower(string(values[6])) == "yes",
+		}
+
+		if _, ok := detailmetaDict[string(values[1])+":"+string(values[2])]; !ok {
+			detailmetaDict[string(values[1])+":"+string(values[2])] = make([]*sqleditor.Columns, 0)
+		}
+		detailmetaDict[string(values[1])+":"+string(values[2])] = append(detailmetaDict[string(values[1])+":"+string(values[2])], col)
+	}
 	for _, v1 := range dbArray {
-		tableArrayTemp := make(map[string]bool, 0)
 		dbMeta := &sqleditor.DBMeta{Name: v1}
 
-		for metaRows.Next() {
-			// get RawBytes from data
-			err = metaRows.Scan(scanArgs...)
-			if err != nil {
-				return dbmetaList, err
-			}
-			if v1 == string(values[1]) {
-				tableArrayTemp[string(values[2])] = true
-			}
-
-			if isBrief {
-				continue
-			}
-
-			col := &sqleditor.Columns{
-				Col:      string(values[3]),
-				DataType: string(values[7]),
-				Nullable: strings.ToLower(string(values[6])) == "yes",
-			}
-
-			if _, ok := detailmetaDict[v1+":"+string(values[2])]; !ok {
-				detailmetaDict[v1+":"+string(values[2])] = make([]*sqleditor.Columns, 0)
-			}
-			detailmetaDict[v1+":"+string(values[2])] = append(detailmetaDict[v1+":"+string(values[2])], col)
-		}
-
 		tableArray := make([]string, 0)
-		for k := range tableArrayTemp {
-			tableArray = append(tableArray, k)
+		if _, ok := tableArrayTemp[v1]; ok {
+			tableArray = append(tableArray, tableArrayTemp[v1]...)
 		}
+
 		sort.Sort(Alphabetic(tableArray))
 
 		tablesMeta := make([]*sqleditor.TablesMeta, 0)
@@ -193,6 +207,7 @@ func (db *DBAgent) GetClusterMetaData(ctx context.Context, isBrief bool, showSys
 			tMeta := &sqleditor.TablesMeta{Name: table}
 			tablesMeta = append(tablesMeta, tMeta)
 		}
+
 		dbMeta.Tables = tablesMeta
 		dbmetaList = append(dbmetaList, dbMeta)
 	}

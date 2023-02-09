@@ -39,4 +39,6 @@ ignore:
   - "docs/.*"
   - "testing_utils/.*"
   - "micro-api/controller/.*"
-  - "*.pb.micro.go"
+  - "resource/template/.*"
+  - "proto/.*"
+  - "*.xlsx"

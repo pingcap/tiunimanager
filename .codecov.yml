@@ -39,4 +39,3 @@ ignore:
   - "docs/.*"
   - "testing_utils/.*"
   - "micro-api/controller/.*"
-  - "micro-cluster/service/.*"

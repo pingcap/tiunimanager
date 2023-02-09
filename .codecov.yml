@@ -39,3 +39,4 @@ ignore:
   - "docs/.*"
   - "testing_utils/.*"
   - "micro-api/controller/.*"
+  - "proto/.*"

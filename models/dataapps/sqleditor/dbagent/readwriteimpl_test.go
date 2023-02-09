@@ -113,6 +113,21 @@ func TestDbagent_GetClusterMetaData(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	t.Run("brief all", func(t *testing.T) {
+		columns := []string{"schema_name", "t1"}
+		rows := sqlmock.NewRows(columns).AddRow("INFORMATION_SCHEMA", "1")
+		rows = rows.AddRow("test", "2")
+		rows = rows.AddRow("test2", "2")
+		mock.ExpectQuery(dbSql).WillReturnRows(rows)
+		columns2 := []string{"col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8"}
+		rows2 := sqlmock.NewRows(columns2).AddRow("value1", "value2", "value3", "value4", "value5", "value6", "value7", "value8")
+		rows2 = rows2.AddRow("value12", "value22", "value32", "value42", "value52", "value62", "value72", "value82")
+		mock.ExpectQuery(fmt.Sprintf(briefmetaSql, "'INFORMATION_SCHEMA','test','test2'")).WillReturnRows(rows2)
+		_, err := dbagent.GetClusterMetaData(c, true, true)
+		//assert.Equal(t, res[0].Name, "test")
+		assert.NoError(t, err)
+	})
+
 	t.Run("get table failed", func(t *testing.T) {
 		columns := []string{"schema_name", "t1"}
 		rows := sqlmock.NewRows(columns).AddRow("INFORMATION_SCHEMA", "1")

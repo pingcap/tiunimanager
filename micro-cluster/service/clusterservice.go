@@ -20,10 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
+
 	"runtime"
 	"runtime/debug"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
+	sqleditorparam "github.com/pingcap/tiunimanager/message/dataapps/sqleditor"
+	"github.com/pingcap/tiunimanager/micro-cluster/dataapps/sqleditor"
 
 	platformLog "github.com/pingcap/tiunimanager/micro-cluster/platform/log"
 
@@ -81,6 +85,7 @@ type ClusterServiceHandler struct {
 	rbacManager             rbac.RBACService
 	checkManager            check.CheckService
 	platformLogManager      *platformLog.Manager
+	sqleditorManager        *sqleditor.Manager
 }
 
 func handleRequest(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse, requestBody interface{}, permissions []structs.RbacPermission) bool {
@@ -189,7 +194,141 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.rbacManager = rbac.GetRBACService()
 	handler.checkManager = check.GetCheckService()
 	handler.platformLogManager = platformLog.NewManager()
+	handler.sqleditorManager = sqleditor.GetManager()
 	return handler
+}
+
+func (handler *ClusterServiceHandler) CreateSQLFile(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CreateSQLFile", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateSQLFile", resp)
+
+	request := &sqleditorparam.SQLFileReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionCreate)}}) {
+		result, err := handler.sqleditorManager.CreateSQLFile(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateSQLFile(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "UpdateSQLFile", int(resp.GetCode()))
+	defer handlePanic(ctx, "UpdateSQLFile", resp)
+
+	request := &sqleditorparam.SQLFileUpdateReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := handler.sqleditorManager.UpdateSQLFile(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DeleteSQLFile(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "DeleteSQLFile", int(resp.GetCode()))
+	defer handlePanic(ctx, "DeleteSQLFile", resp)
+
+	request := &sqleditorparam.SQLFileDeleteReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionUpdate)}}) {
+		result, err := handler.sqleditorManager.DeleteSQLFile(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ShowSQLFile(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "ShowSQLFile", int(resp.GetCode()))
+	defer handlePanic(ctx, "ShowSQLFile", resp)
+
+	request := &sqleditorparam.ShowSQLFileReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionRead)}}) {
+		result, err := handler.sqleditorManager.ShowSQLFile(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ListSQLFile(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "ListSQLFile", int(resp.GetCode()))
+	defer handlePanic(ctx, "ListSQLFile", resp)
+
+	request := &sqleditorparam.ListSQLFileReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionRead)}}) {
+		result, err := handler.sqleditorManager.ListSqlFile(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ShowTableMeta(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "ShowTableMeta", int(resp.GetCode()))
+	defer handlePanic(ctx, "ShowTableMeta", resp)
+
+	request := &sqleditorparam.ShowTableMetaReq{}
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionRead)}}) {
+		result, err := handler.sqleditorManager.ShowTableMeta(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ShowClusterMeta(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "ShowClusterMeta", int(resp.GetCode()))
+	defer handlePanic(ctx, "ShowClusterMeta", resp)
+
+	request := &sqleditorparam.ShowClusterMetaReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionRead)}}) {
+		result, err := handler.sqleditorManager.ShowClusterMeta(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+func (handler *ClusterServiceHandler) CreateSession(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CreateSession", int(resp.GetCode()))
+	defer handlePanic(ctx, "CreateSession", resp)
+
+	request := &sqleditorparam.CreateSessionReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionAll)}}) {
+		result, err := handler.sqleditorManager.CreateSession(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) CloseSession(ctx context.Context, req *clusterservices.RpcRequest, resp *clusterservices.RpcResponse) error {
+	start := time.Now()
+	defer metrics.HandleClusterMetrics(start, "CloseSession", int(resp.GetCode()))
+	defer handlePanic(ctx, "CloseSession", resp)
+
+	request := &sqleditorparam.CloseSessionReq{}
+
+	if handleRequest(ctx, req, resp, request, []structs.RbacPermission{{Resource: string(constants.RbacResourceSQLEditor), Action: string(constants.RbacActionAll)}}) {
+		result, err := handler.sqleditorManager.CloseSession(framework.NewBackgroundMicroCtx(ctx, false), *request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
 }
 
 func (handler *ClusterServiceHandler) MasterSlaveSwitchover(ctx context.Context, request *clusterservices.RpcRequest, response *clusterservices.RpcResponse) error {

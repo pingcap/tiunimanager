@@ -46,6 +46,7 @@ var RbacResourceMap = map[string]RbacResource{
 	string(RbacResourceProduct):   RbacResourceProduct,
 	string(RbacResourceSystem):    RbacResourceSystem,
 	string(RbacResourceWorkflow):  RbacResourceWorkflow,
+	string(RbacResourceSQLEditor): RbacResourceSQLEditor,
 }
 
 const (
@@ -57,6 +58,7 @@ const (
 	RbacResourceProduct   RbacResource = "PRODUCT"
 	RbacResourceSystem    RbacResource = "SYSTEM"
 	RbacResourceWorkflow  RbacResource = "WORKFLOW"
+	RbacResourceSQLEditor RbacResource = "SQLEDITOR"
 )
 
 // RbacRole Definition rbac role enum

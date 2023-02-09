@@ -296,6 +296,8 @@ mock:
 	mockgen -destination ./test/mockcheck/mock_check.go -package mock_check -source ./models/platform/check/report_read_writer.go
 	mockgen -destination ./test/mockreport/mock_report.go -package mock_report -source ./micro-cluster/platform/check/handler.go
 	mockgen -destination ./test/mockhostsinspect/mock_hosts_inspect.go -package mock_hosts_inspect -source ./micro-cluster/resourcemanager/inspect/hostinspector.go
+	mockgen -destination ./test/mockmodels/mocksqleditor/mock_sqlfile_interface.go -package mock_sqleditorfile -source ./models/dataapps/sqleditor/sqlfile/readerwriter.go
+
 
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1

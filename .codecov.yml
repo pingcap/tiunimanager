@@ -38,3 +38,7 @@ ignore:
   - "*.md"
   - "docs/.*"
   - "testing_utils/.*"
+  - "micro-api/controller/.*"
+  - "resource/template/.*"
+  - "proto/.*"
+  - "*.xlsx"

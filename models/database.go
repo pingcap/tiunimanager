@@ -17,6 +17,7 @@ package models
 
 import (
 	"context"
+
 	"github.com/asim/go-micro/v3/util/file"
 	"github.com/pingcap/tiunimanager/common/constants"
 	"github.com/pingcap/tiunimanager/common/errors"
@@ -27,6 +28,7 @@ import (
 	"github.com/pingcap/tiunimanager/models/cluster/parameter"
 	"github.com/pingcap/tiunimanager/models/cluster/upgrade"
 	"github.com/pingcap/tiunimanager/models/common"
+	sqleditorfile "github.com/pingcap/tiunimanager/models/dataapps/sqleditor/sqlfile"
 	"github.com/pingcap/tiunimanager/models/datatransfer/importexport"
 	"github.com/pingcap/tiunimanager/models/parametergroup"
 	"github.com/pingcap/tiunimanager/models/platform/check"
@@ -71,6 +73,7 @@ type database struct {
 	tiUPConfigReaderWriter           tiup.ReaderWriter
 	reportReaderWriter               check.ReaderWriter
 	systemReaderWriter               system.ReaderWriter
+	sqleditorfileReaderWriter        sqleditorfile.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework) error {
@@ -224,6 +227,7 @@ func (p *database) migrateTables() (err error) {
 		new(account.UserLogin),
 		new(account.UserTenantRelation),
 		new(check.CheckReport),
+		new(sqleditorfile.SqlEditorFile),
 	)
 }
 
@@ -246,6 +250,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.tiUPConfigReaderWriter = tiup.NewGormTiupConfigReadWrite(defaultDb.base)
 	defaultDb.reportReaderWriter = check.NewReportReadWrite(defaultDb.base)
 	defaultDb.systemReaderWriter = system.NewSystemReadWrite(defaultDb.base)
+	defaultDb.sqleditorfileReaderWriter = sqleditorfile.NewSqlEditorReadWrite(defaultDb.base)
 }
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
@@ -348,6 +353,14 @@ func GetAccountReaderWriter() account.ReaderWriter {
 	return defaultDb.accountReaderWriter
 }
 
+func GetSqlEditorFileReaderWriter() sqleditorfile.ReaderWriter {
+	return defaultDb.sqleditorfileReaderWriter
+}
+
+func SetSqlEditorFileReaderWriter(rw sqleditorfile.ReaderWriter) {
+	defaultDb.sqleditorfileReaderWriter = rw
+}
+
 func SetAccountReaderWriter(rw account.ReaderWriter) {
 	defaultDb.accountReaderWriter = rw
 }
@@ -397,7 +410,7 @@ func SetSystemReaderWriter(rw system.ReaderWriter) {
 // @Parameter ctx
 // @Parameter fc
 // @return error
-func Transaction(ctx context.Context, fc func(transactionCtx context.Context) error) (err error){
+func Transaction(ctx context.Context, fc func(transactionCtx context.Context) error) (err error) {
 	if defaultDb.base == nil {
 		return fc(ctx)
 	}

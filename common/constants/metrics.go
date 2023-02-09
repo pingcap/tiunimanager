@@ -157,6 +157,18 @@ const (
 	MetricsVendorUpdate         MetricsType = "vendor/update_vendors"
 	MetricsVendorQuery          MetricsType = "vendor/query_vendors"
 	MetricsVendorQueryAvailable MetricsType = "vendor/query_available_vendors"
+
+	//define sqleditor metrics
+	MetricsCreateSession   MetricsType = "sqleditor/create_session"
+	MetricsCloseSession    MetricsType = "sqleditor/close_session"
+	MetricsShowClusterMeta MetricsType = "sqleditor/show_clustermeta"
+	MetricsShowTableMeta   MetricsType = "sqleditor/show_tablemeta"
+	MetricsCreateSQLFile   MetricsType = "sqleditor/create_sqlfile"
+	MetricsUpdateSQLFile   MetricsType = "sqleditor/update_sqlfile"
+	MetricsDeleteSQLFile   MetricsType = "sqleditor/delete_sqlfile"
+	MetricsShowSQLFile     MetricsType = "sqleditor/show_sqlfile"
+	MetricsListSQLFile     MetricsType = "sqleditor/list_sqlfile"
+	MetricsStatements      MetricsType = "sqleditor/statements"
 )
 
 var EMMetrics = []MetricsType{
@@ -245,4 +257,16 @@ var EMMetrics = []MetricsType{
 	MetricsVendorUpdate,
 	MetricsVendorQuery,
 	MetricsVendorQueryAvailable,
+
+	//define sqleditor metrics
+	MetricsCreateSession,
+	MetricsCloseSession,
+	MetricsShowClusterMeta,
+	MetricsShowTableMeta,
+	MetricsCreateSQLFile,
+	MetricsUpdateSQLFile,
+	MetricsDeleteSQLFile,
+	MetricsShowSQLFile,
+	MetricsListSQLFile,
+	MetricsStatements,
 }

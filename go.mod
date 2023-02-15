@@ -36,7 +36,6 @@ require (
 	github.com/pingcap/check v0.0.0-20211026125417-57bd13f7b5f0
 	github.com/pingcap/errors v0.11.5-0.20210425183316-da1aaba5fb63
 	github.com/pingcap/kvproto v0.0.0-20220125073028-58f2ac94aa38
-	github.com/pingcap/tidb v1.1.0-beta.0.20200630082100-328b6d0a955c // indirect
 	github.com/pingcap/tidb/parser v0.0.0-20221128063200-0e6364f69b45
 	github.com/pingcap/tiup v1.9.0
 	github.com/pkg/sftp v1.10.1

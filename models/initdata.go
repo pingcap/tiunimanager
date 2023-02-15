@@ -177,6 +177,20 @@ var allVersionInitializers = []system.VersionInitializer{
 			}).Present()
 		})
 	}},
+	{"v1.0.3", func() error {
+		return defaultDb.base.WithContext(context.TODO()).Transaction(func(tx *gorm.DB) error {
+			return errors.OfNullable(nil).BreakIf(func() error {
+				return tx.Create(&system.VersionInfo{
+					ID:          "v1.0.3",
+					Desc:        "",
+					ReleaseNote: "",
+				}).Error
+			}).BreakIf(func() error {
+				parameterSqlFile := framework.Current.GetClientArgs().DeployDir + "/sqls/parameters_v1.0.3.sql"
+				return initBySql(tx, parameterSqlFile, "parameters")
+			}).Present()
+		})
+	}},
 	{inTestingVersion, func() error {
 		return defaultDb.base.Create(&system.VersionInfo{
 			ID:          "InTesting",

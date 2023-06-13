@@ -1,11 +1,14 @@
 # See the OWNERS docs at https://go.k8s.io/owners
-approvers:
-  # - tiunimanager-maintainers
-  - haiboumich
-  - Yuiham
-  # - tiunimanager-committers
-  - cchenkey
-  - zhangpeijin-milo
 reviewers:
-  # - tiunimanager-reviewers
   - scsldb
+approvers:
+  - cchenkey
+  - haiboumich
+  - hnes
+  - istudies
+  - jiayang-zheng
+  - rivenwang
+  - Yuiham
+  - Yujie-Xie
+  - zhangpeijin-milo
+  - zywzoe
